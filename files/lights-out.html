@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="zh-CN" data-page-node-id="atXKAWEsuDv4otQ53yeAdG">
+<head data-page-node-id="jKu0K2CbSIGHAv8rrNmbUX">
+<meta charset="utf-8" data-page-node-id="MP8k0F4lKwHadonZJv956S">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" data-page-node-id="5pdS63IfOXIAw1jTgiCvV7">
+<title>灯灭之后</title>
+<style>
+  :root{color-scheme:dark;--ink:#d8caa9;--dim:#83785f;--gold:#d7a84b;--red:#b83d32;--paper:#17150f}
+  *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050605;color:var(--ink);font-family:"Songti SC","Noto Serif SC",serif}
+  canvas{display:block;width:100vw;height:100vh;cursor:crosshair}
+  #hud{position:fixed;inset:0;pointer-events:none;text-shadow:0 2px 4px #000;letter-spacing:.08em}
+  .top{position:absolute;left:24px;right:24px;top:18px;display:flex;justify-content:space-between;gap:16px}.panel{background:#080906bb;border:1px solid #6d604633;padding:10px 14px;backdrop-filter:blur(3px)}
+  #meters{min-width:310px}.meter{display:grid;grid-template-columns:74px 160px 42px;align-items:center;gap:8px;font-size:13px;margin:3px 0}.bar{height:7px;background:#29271f;border:1px solid #5d543e}.fill{height:100%;background:linear-gradient(90deg,#8d5821,#edc363);transition:width .2s}.fill.danger{background:linear-gradient(90deg,#56170f,#be4937)}
+  #objective{text-align:right;line-height:1.7;font-size:13px}.bottom{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);text-align:center}.prompt{padding:8px 16px;background:#080906d8;border:1px solid #8e775044;color:#e7d8b6;min-width:260px;opacity:0;transition:opacity .2s}.prompt.show{opacity:1}
+  #omen{position:absolute;left:50%;top:24%;transform:translate(-50%,-50%);font-size:18px;color:#d2a24a;letter-spacing:.28em;opacity:0;transition:opacity .3s;text-align:center}#omen.show{opacity:1}.state{font-size:12px;color:#9e8d70;margin-top:4px}
+  .screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center,#17150e 0,#080907 58%,#010201 100%);z-index:3;transition:opacity .8s}.screen.hidden{opacity:0;pointer-events:none}.card{width:min(620px,90vw);max-height:92vh;overflow:auto;padding:38px;background:#0b0c09e8;border:1px solid #75644666;box-shadow:0 20px 80px #000;text-align:center}.title{font-size:42px;letter-spacing:.35em;margin:0 0 10px;color:#e7d4a4}.subtitle{color:#968b73;line-height:1.9;margin:0 auto 16px;max-width:500px}.goalflow{display:grid;grid-template-columns:1fr auto 1fr auto 1.15fr;gap:6px;align-items:stretch;margin:14px 0 4px;font-size:12.5px;line-height:1.55}.gstep{border:1px solid #6d604655;padding:10px 8px;text-align:center;display:flex;flex-direction:column;justify-content:center}.gstep b{color:#d6aa59;display:block;margin-bottom:4px;letter-spacing:.14em}.garrow{color:#8d7f5f;font-size:15px;align-self:center}.ctrls{font-size:12px;color:#968b73;margin:10px 0 0;letter-spacing:.04em}.ctrls b{color:#cbb98d;border:1px solid #6d604677;padding:0 5px;margin:0 1px;font-weight:normal;background:#191913;display:inline-block}.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0;text-align:left}.rule{border:1px solid #61563d55;padding:12px;font-size:13px;line-height:1.65}.rule b{display:block;color:#d6aa59;margin-bottom:4px}
+  button{font:inherit;letter-spacing:.15em;color:#ede0bd;background:#4b351c;border:1px solid #ad8952;padding:10px 22px;cursor:pointer;margin:5px}button:hover{background:#684824}.minor{background:#15150f;border-color:#5f5747;color:#a99d85}
+  #modal{position:fixed;inset:0;z-index:4;display:none;align-items:center;justify-content:center;background:#020302dc}#modal.show{display:flex}.paper{width:min(680px,90vw);max-height:85vh;overflow:auto;padding:34px;background:#d2c19c;color:#271f14;box-shadow:0 0 80px #000;border:8px double #746347}.paper h2{letter-spacing:.25em}.paper p{font-size:16px;line-height:2;text-align:left}.paper button{color:#eadfca;background:#45351f}
+  .journal-list{text-align:left;display:grid;gap:12px}.journal-entry{padding:12px;border-bottom:1px solid #604d31}.locked{color:#8e816c}.settings{margin-top:12px;font-size:13px;color:#aaa}
+  @media(max-width:700px){.title{font-size:30px}.rules{grid-template-columns:1fr}.top{left:8px;right:8px;top:8px}.meter{grid-template-columns:62px 100px 35px}#objective{font-size:11px}.panel{padding:7px 9px}.card{padding:24px}}
+</style>
+</head>
+<body data-page-node-id="lpycZrKqLtPMQtevCSUEHR">
+<canvas id="game" aria-label="《灯灭之后》游戏画面" data-page-node-id="hxJhgSIAbTnnkQjXlyE4VE"></canvas>
+<div id="hud" data-page-node-id="GNaSpzKvOdE2uW18CTNsgO">
+  <div class="top" data-page-node-id="z1AVN8jAHbLki3aSve96vN">
+    <div id="meters" class="panel" data-page-node-id="2XhooYrDMuiNyzyw4vvAkP">
+      <div class="meter" data-page-node-id="EKA3KA1cMctQ7cGRwEONRe"><span data-page-node-id="K1qEkX7Ag1ZX7L14nnSE77">灯笼油</span><div class="bar" data-page-node-id="NH0Y1GwDBHY1Z6COaXd72H"><div id="oilBar" class="fill" data-page-node-id="4uRBUudA6N9YJjnfbPHQw9"></div></div><span id="oilText" data-page-node-id="XiAOK1HpLps7McojrKZOAt">100</span></div>
+      <div class="meter" data-page-node-id="WI5bC5WzzEgNc4FCtLIcXE"><span data-page-node-id="jynGI2331akSnaLKICM4xj">鸡鸣</span><div class="bar" data-page-node-id="A1pAzCxlSV7vCPEMm7wJXu"><div id="dawnBar" class="fill" data-page-node-id="EelgaghbfnB0GjOqNX76RE"></div></div><span id="timeText" data-page-node-id="zIAqZE45u1ZyT8dFDHPMQ3">08:00</span></div>
+      <div class="state" id="statusText" data-page-node-id="q6ooADls4RuR0JPFSrp37K">长明灯 0/3 · 灯油 0份 · 火柴 2/8 · 字条 0/5</div>
+    </div>
+    <div id="objective" class="panel" data-page-node-id="B3w1wYIMoYOQ9ovpQ5murm">目标：为三盏长明灯注油<br data-page-node-id="KiMfa8cqzAGLmsRm6cYRT7">WASD / 方向键 / 按住鼠标移动<br data-page-node-id="XGKycEx3StntyenLpIGGiR">E 互动 · F 添灯油 · 空格划火柴 · J 图鉴</div>
+  </div>
+  <div id="omen" data-page-node-id="RpfZapCeso1O9Ijf5Hx7Lt"></div>
+  <div class="bottom" data-page-node-id="CY5yayHptgfLCQiNxXucbw"><div id="prompt" class="prompt" data-page-node-id="3FEDQk9rdVHk5BMR8mcYMB"></div></div>
+</div>
+
+<div id="start" class="screen" data-page-node-id="fM8VnhzOma6TPJpdUdJNay">
+  <div class="card" data-page-node-id="gjfRpcyiaYByCa8Eu0X2HY">
+    <h1 class="title" data-page-node-id="sllid5Zb8qJDoubcmkVCWM">灯灭之后</h1>
+    <p class="subtitle" data-page-node-id="knhLDkhREOko9fQSUdyT7h">雨夜守义庄，规矩只一条：长明灯不可灭。<br data-page-node-id="2aAXRRsnPfNw1xpcyMozV0">三盏灯已暗，鸡鸣尚远。别让黑暗记住你的脚步。</p>
+    <div class="goalflow" data-page-node-id="goalflowG002">
+      <div class="gstep"><b>① 备油拾火</b>收集灯油与火柴，避开黑暗中的它</div>
+      <div class="garrow">→</div>
+      <div class="gstep"><b>② 点亮三灯</b>为西厢·正堂·停棺三盏长明灯注油</div>
+      <div class="garrow">→</div>
+      <div class="gstep"><b>③ 守灯到鸡鸣</b>它会出现掐灯——重燃不耗油，守住任意一盏约30秒即胜</div>
+    </div>
+    <div class="ctrls" data-page-node-id="ctrlsG002"><b>WASD</b>/<b>方向键</b>/<b>按住鼠标</b> 移动　<b>E</b> 拾取/点灯　<b>F</b> 添灯油　<b>空格</b> 划火柴　<b>J</b> 图鉴</div>
+    <div class="rules" data-page-node-id="85e0Yc1ltLI2tRjyQ6dJMI">
+      <div class="rule" data-page-node-id="Q0aJaTKHG8fxACAIpGVhpL"><b data-page-node-id="aXjkLEwliXNoB9sowVCSHf">光即是命</b>灯油越少，随身光圈越窄；长明灯是永久安全处。</div>
+      <div class="rule" data-page-node-id="ahxmKUSSboDjohPsPUV5Wj"><b data-page-node-id="LvzyvloxRIjL78W4S2QSBk">黑暗有耳</b>离开安全光区移动，会引来两点眼光；金眼警告后才会追猎。</div>
+      <div class="rule" data-page-node-id="GlMyNYadlAxG6IvXVfXGYB"><b data-page-node-id="W4uo51myxesB8rlb1JTuEO">火柴是退路</b>空格划亮火柴，短暂照明并驱退逼近之物。三灯齐明后它会来掐灯——守住至少一盏，撑到鸡鸣。</div>
+    </div>
+    <button id="begin" data-page-node-id="tGoXES5jPsje0UiRMlsTCK">提灯入夜</button><button id="openManual" class="minor" data-page-node-id="openManualG002">守夜规程</button><button id="openJournal" class="minor" data-page-node-id="On0izoBH8OqAOnRFR16WnR">字条图鉴</button>
+    <div class="settings" data-page-node-id="EuTRAWe9k27PdqCGCn4H6F"><label data-page-node-id="pDoEhkyjcKgaLlFrvyuO3d"><input id="reducedMotion" type="checkbox" data-page-node-id="yrx45NSagyCgoclTQLaenX"> 减少雨丝与拖影</label></div>
+  </div>
+</div>
+<div id="end" class="screen hidden" data-page-node-id="cxoFmy3jCa34Stl9DUhMkp"><div class="card" data-page-node-id="fejTjYdyHxGGkDAL06XHA6"><h1 id="endTitle" class="title" data-page-node-id="ES7bi4aHyVeIvHCg0FM1M7"></h1><p id="endText" class="subtitle" data-page-node-id="SZSa7FG1NbUxnTMT78lsTJ"></p><button id="restart" data-page-node-id="fs1n7VEkmyLDFG10fhoUmp">再守一夜</button><button id="endJournal" class="minor" data-page-node-id="x2TCHoVxxGCcdLf3fTnNW9">字条图鉴</button></div></div>
+<div id="modal" data-page-node-id="hmanSeeHxqJkCdreSBOrzv"><div class="paper" data-page-node-id="9wylACCxmuJGyKktXHiqM7"><h2 id="modalTitle" data-page-node-id="tOqY8CiiQycY4gSDhG6q05"></h2><div id="modalBody" data-page-node-id="ZKFZZhqLw3Hmd4bibUJMRJ"></div><button id="closeModal" data-page-node-id="3IAclTwoirplNRlFKDS9Zb">收起</button></div></div>
+
+<script>
+(() => {
+  'use strict';
+  // TODO(audio): 后续可加入低频雨声、灯芯噼啪和远处鸡鸣；禁止突发巨响。
+  const W=1440,H=900, canvas=document.querySelector('#game'),ctx=canvas.getContext('2d');
+  const $=s=>document.querySelector(s), clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const STORAGE={notes:'lightsOut.noteCollection',best:'lightsOut.bestRecords',settings:'lightsOut.settings'};
+  const NOTE_TEXTS=[
+    '义庄旧规第一条：夜雨进门，先看三盏长明灯。灯照棺首，不照棺尾；添油只可添一勺，多一分，影子便会比人先醒。',
+    '前任守夜人姓陈。他说后院总有人学鸡叫，声音却从棺木底下传来。第三夜，他把灯挪近去听，翌日只剩一双湿鞋。',
+    '旧账簿夹着一页：无主尸身并非无人认领。村人怕喊出它们的名字，便说“无主”。名字没了，回家的路也跟着没了。',
+    '有人在门背刻字：它们循声，不循人；畏火，不畏灯。长明灯让它们想起自己躺在何处，火柴却让它们想起下葬那日。',
+    '最后一张纸被雨泡软：鸡鸣不是天亮，是活人叫醒活人的约定。若三灯齐明，守夜人念自己的姓名，黑暗便知道谁该留下。'
+  ];
+  const MAP={
+    walls:[
+      {x:50,y:50,w:1340,h:32},{x:50,y:818,w:1340,h:32},{x:50,y:50,w:32,h:800},{x:1358,y:50,w:32,h:800},
+      {x:480,y:50,w:28,h:250},{x:480,y:390,w:28,h:180},{x:480,y:665,w:28,h:185},
+      {x:930,y:50,w:28,h:180},{x:930,y:320,w:28,h:250},{x:930,y:665,w:28,h:185},
+      {x:480,y:540,w:180,h:28},{x:760,y:540,w:198,h:28}
+    ],
+    lamps:[{x:270,y:230,name:'西厢灵灯'},{x:720,y:220,name:'正堂魂灯'},{x:1160,y:690,name:'停棺命灯'}],
+    oils:[{x:170,y:700},{x:400,y:455},{x:590,y:725},{x:845,y:420},{x:1090,y:160},{x:1280,y:390}],
+    matches:[{x:370,y:170},{x:235,y:520},{x:650,y:410},{x:825,y:735},{x:1040,y:450},{x:1280,y:760}],
+    notes:[{x:120,y:125},{x:420,y:770},{x:620,y:135},{x:1040,y:785},{x:1300,y:115}],
+    labels:[{x:230,y:95,t:'西厢回廊'},{x:670,y:95,t:'义庄正堂'},{x:1090,y:95,t:'东厢杂房'},{x:665,y:610,t:'雨院'},{x:1080,y:610,t:'停棺房'}]
+  };
+  const keys=new Set(),mouse={down:false,x:0,y:0}; let state,loopId,last=0;
+  function loadJSON(k,fallback){try{return JSON.parse(localStorage.getItem(k))??fallback}catch{return fallback}}
+  function saveJSON(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+  let collection=loadJSON(STORAGE.notes,[false,false,false,false,false]);
+  let best=loadJSON(STORAGE.best,{fastest:null,mostNotes:0});
+  let settings=loadJSON(STORAGE.settings,{reducedMotion:false});
+  $('#reducedMotion').checked=!!settings.reducedMotion;
+
+  function reset(){
+    state={running:true,paused:false,ended:false,elapsed:0,dawn:480,lit:0,carriedOil:0,matches:2,matchGlow:0,message:'',messageTimer:0,
+      player:{x:720,y:450,r:13,speed:125,oil:100,moving:false},
+      hunter:{x:1230,y:760,r:16,state:'wander',timer:0,alert:0,target:{x:1050,y:690},angle:Math.PI,trail:[]},
+      lamps:MAP.lamps.map(v=>({...v,lit:false,fade:0})),oils:MAP.oils.map(v=>({...v,taken:false})),matchesMap:MAP.matches.map(v=>({...v,taken:false})),notes:MAP.notes.map(v=>({...v,taken:false})),
+      runNotes:0,mouseTarget:null,flash:0,tutStep:0,finale:false,darkTimer:0
+    };
+    $('#end').classList.add('hidden'); closeModal(); announce('雨声盖不住脚步。先找灯油：金色微光处按 E 拾取。',5); updateHud();
+  }
+  const TUT=[
+    {when:s=>s.carriedOil>0,msg:'到手了。按 F 把油添进灯笼，或去长明灯处按 E 注入。',dur:5},
+    {when:s=>s.lit>=1,msg:'第一盏灯亮了。地图上所有金色微光都是长明灯的位置——撑到鸡鸣。',dur:5},
+    {when:s=>s.hunter.state!=='wander'&&s.tutStep>=2,msg:'黑暗里有东西动了。靠近它的视线会出事——别在黑暗里久留。',dur:4.5}
+  ];
+  function tutorial(dt){
+    if(state.tutStep>=TUT.length)return;
+    const t=TUT[state.tutStep];
+    if(t.when(state)){state.tutStep++;announce(t.msg,t.dur)}
+  }
+  function circleRect(x,y,r,o){const cx=clamp(x,o.x,o.x+o.w),cy=clamp(y,o.y,o.y+o.h);return (x-cx)**2+(y-cy)**2<r*r}
+  function blocked(x,y,r=13){return MAP.walls.some(w=>circleRect(x,y,r,w))}
+  function moveBody(body,dx,dy,r=body.r){if(!blocked(body.x+dx,body.y,r))body.x+=dx;if(!blocked(body.x,body.y+dy,r))body.y+=dy;body.x=clamp(body.x,70,1370);body.y=clamp(body.y,70,830)}
+  function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+  // ===== 寻路：视线检查 + 粗网格 BFS（墙静态，预计算一次） =====
+  function segBlocked(x1,y1,x2,y2){return MAP.walls.some(w=>{if(Math.max(x1,x2)<w.x-14||Math.min(x1,x2)>w.x+w.w+14||Math.max(y1,y2)<w.y-14||Math.min(y1,y2)>w.y+w.h+14)return false;const d=Math.hypot(x2-x1,y2-y1),n=Math.max(2,Math.ceil(d/10));for(let i=1;i<=n;i++){const t=i/n,px=x1+(x2-x1)*t,py=y1+(y2-y1)*t;if(px>=w.x-14&&px<=w.x+w.w+14&&py>=w.y-14&&py<=w.y+w.h+14)return true}return false})}
+  const GRID=20,GW=Math.ceil(W/GRID),GH=Math.ceil(H/GRID);
+  const gridBlocked=(()=>{const g=new Array(GW*GH).fill(false);for(let gy=0;gy<GH;gy++)for(let gx=0;gx<GW;gx++){const cx=gx*GRID+GRID/2,cy=gy*GRID+GRID/2;if(MAP.walls.some(w=>cx>=w.x-14&&cx<=w.x+w.w+14&&cy>=w.y-14&&cy<=w.y+w.h+14))g[gy*GW+gx]=true}return g})();
+  function nearestFreeCell(c){if(!gridBlocked[c])return c;const cx=c%GW,cy=(c/GW)|0;for(let r=1;r<8;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const nx=cx+dx,ny=cy+dy;if(nx<0||ny<0||nx>=GW||ny>=GH)continue;const n=ny*GW+nx;if(!gridBlocked[n])return n}return c}
+  function findPath(sx,sy,tx,ty){
+    const sc=nearestFreeCell(Math.floor(sy/GRID)*GW+Math.floor(sx/GRID)),tc=nearestFreeCell(Math.floor(ty/GRID)*GW+Math.floor(tx/GRID));
+    if(sc===tc)return null;
+    const prev=new Int32Array(GW*GH).fill(-1);prev[sc]=sc;const q=[sc];let found=false;
+    while(q.length){const c=q.shift();if(c===tc){found=true;break}const cx=c%GW,cy=(c/GW)|0;
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=cx+dx,ny=cy+dy;if(nx<0||ny<0||nx>=GW||ny>=GH)continue;const n=ny*GW+nx;if(prev[n]!==-1||gridBlocked[n])continue;prev[n]=c;q.push(n)}}
+    if(!found)return null;
+    const path=[];let c=tc;while(c!==sc){path.push({x:(c%GW)*GRID+GRID/2,y:((c/GW)|0)*GRID+GRID/2});c=prev[c]}
+    path.reverse();return path;
+  }
+  function inSafeLight(){return state.lamps.some(l=>l.lit&&dist(l,state.player)<150)||state.matchGlow>0}
+  function lanternRadius(){return 96+94*Math.pow(state.player.oil/100,.65)}
+  function near(type,range=34){let bestItem=null,bestD=Infinity;for(const item of state[type]){if(item.taken||item.lit)continue;const d=dist(item,state.player);if(d<range&&d<bestD){bestD=d;bestItem=item}}return bestItem}
+  function announce(text,seconds=2){state.message=text;state.messageTimer=seconds;$('#omen').textContent=text;$('#omen').classList.add('show')}
+  function setHunter(next,reason=''){
+    const h=state.hunter;if(h.state===next)return;h.state=next;h.timer=0;
+    if(next==='alert'){h.alert=1.8;h.target={x:state.player.x,y:state.player.y};announce('黑暗里，两点微光停住了。',1.8)}
+    if(next==='chase'){
+      const d=dist(h,state.player);if(d<390){
+        const spots=[{x:state.player.x+420,y:state.player.y},{x:state.player.x-420,y:state.player.y},{x:state.player.x,y:state.player.y+420},{x:state.player.x,y:state.player.y-420}]
+          .map(q=>({x:clamp(q.x,90,1350),y:clamp(q.y,90,810)})).filter(q=>!blocked(q.x,q.y,12)).sort((a,b)=>dist(b,state.player)-dist(a,state.player));
+        const safe=spots.find(q=>dist(q,state.player)>=390)||spots[0];if(safe){h.x=safe.x;h.y=safe.y}
+      }
+      announce('它听见了。别停。',2.2);
+    }
+    if(next==='lost'){h.target={x:h.x,y:h.y};announce(reason||'眼光从你身上移开了。',1.7)}
+  }
+  function useMatch(){if(!state.running||state.matches<=0||state.matchGlow>0)return;state.matches--;state.matchGlow=2.4;state.flash=.25;if(dist(state.hunter,state.player)<350)setHunter('lost','火光一盛，那双眼退入雨幕。');else announce('火柴亮起，黑暗退开片刻。',1.4);updateHud()}
+  function interact(){
+    if(!state.running)return;
+    const oil=near('oils',38);if(oil){oil.taken=true;state.carriedOil++;announce('拾得一壶灯油。按 F 可添入随身灯笼。');updateHud();return}
+    const match=near('matchesMap',38);if(match){match.taken=true;state.matches=Math.min(8,state.matches+1);announce('拾得一根火柴。');updateHud();return}
+    const note=near('notes',40);if(note){note.taken=true;const i=state.notes.indexOf(note);collection[i]=true;state.runNotes++;saveJSON(STORAGE.notes,collection);openNote(i);updateHud();return}
+    const lamp=state.lamps.find(l=>!l.lit&&dist(l,state.player)<48);if(lamp){if(!state.finale&&state.carriedOil<1){announce('灯盏干涸。还缺一份灯油。');return}if(!state.finale)state.carriedOil--;lamp.lit=true;state.lit++;lamp.shunUntil=state.finale?state.elapsed+8:0;if(state.hunter.extTarget===lamp)state.hunter.extTarget=null;if(state.lit===3&&!state.finale){state.finale=true;if(state.dawn>30)state.elapsed=450;announce('三灯齐明。黑暗不甘心——它要去掐灭长明灯！守住至少一盏，撑到鸡鸣！',5)}else announce(state.finale?`${lamp.name}的火苗重新立了起来。`:`${lamp.name}重新亮了。`,2.4);updateHud()}
+  }
+  function refill(){if(!state.running)return;if(state.carriedOil<1){announce('身上没有灯油。');return}if(state.player.oil>80){announce('灯笼尚满，先留着这份油。');return}state.carriedOil--;state.player.oil=Math.min(100,state.player.oil+34);announce('灯芯重新挺直了一些。');updateHud()}
+  function update(dt){
+    if(!state.running||state.paused)return;
+    state.elapsed+=dt;state.dawn=Math.max(0,480-state.elapsed);state.matchGlow=Math.max(0,state.matchGlow-dt);state.flash=Math.max(0,state.flash-dt);state.messageTimer-=dt;if(state.messageTimer<=0)$('#omen').classList.remove('show');
+    const p=state.player;let dx=0,dy=0;
+    if(keys.has('w')||keys.has('arrowup'))dy--;if(keys.has('s')||keys.has('arrowdown'))dy++;if(keys.has('a')||keys.has('arrowleft'))dx--;if(keys.has('d')||keys.has('arrowright'))dx++;
+    if(mouse.down){const world=screenToWorld(mouse.x,mouse.y),mx=world.x-p.x,my=world.y-p.y;if(Math.hypot(mx,my)>8){dx+=mx;dy+=my}}
+    const mag=Math.hypot(dx,dy);p.moving=mag>.1;if(p.moving){dx/=mag;dy/=mag;moveBody(p,dx*p.speed*dt,dy*p.speed*dt)}
+    const unsafe=!inSafeLight();const burn=unsafe?(p.moving ? .63 : .10):.02;p.oil=Math.max(0,p.oil-dt*burn);
+    autoPickups();updateHunter(dt,unsafe);tutorial(dt);if(p.oil<=0&&dist(state.hunter,p)<30&&!state.finale)lose();if(state.dawn<=0)win();
+    updatePrompt();updateHud();
+  }
+  function autoPickups(){for(const type of ['oils','matchesMap']){const item=near(type,25);if(item)interact()}}
+  function updateHunter(dt,unsafe){
+    const h=state.hunter,p=state.player;h.timer+=dt;const d=dist(h,p);let speed=52;
+    // ===== 终局：黑暗逐盏掐灯，玩家守灯 =====
+    if(state.finale&&state.lit>0){
+      if(h.state==='wander'||h.state==='lost'||h.state==='alert'&&h.alert<=0||h.state==='chase'&&h.timer>1.2){h.state='exterminate';h.timer=0;h.extTimer=0;h.extTarget=null;if(state.lit===3)announce('黑暗中伸出了手——它要去掐灭长明灯！',3)}
+      if(h.state==='exterminate'){
+        speed=80;
+        // 目标管理：锁定一盏直到灭掉；玩家刚重燃的灯 8 秒内不选（防呆板折返）；70%最近/30%随机
+        if(!h.extTarget||!h.extTarget.lit||state.elapsed<(h.extTarget.shunUntil||0)){
+          let cands=state.lamps.filter(l=>l.lit&&state.elapsed>(l.shunUntil||0));
+          if(!cands.length)cands=state.lamps.filter(l=>l.lit);
+          if(cands.length){
+            const nearest=cands.slice().sort((a,b)=>dist(h,a)-dist(h,b))[0];
+            h.extTarget=(cands.length===1||Math.random()<0.7)?nearest:cands[Math.floor(Math.random()*cands.length)];
+            h.extTimer=0;
+          }
+        }
+        const extTarget=h.extTarget&&h.extTarget.lit?h.extTarget:null;
+        // 终局贴身扑击：玩家太近(<110px)即转追逐，拉开(>260px)才回去掐灯
+        if(extTarget&&d<110){h.pounceTimer=(h.pounceTimer||0)+dt;h.target={x:p.x,y:p.y};
+          if(d<h.r+p.r+5){p.oil=Math.max(0,p.oil-25*dt);if(p.oil<=0)lose()}
+          if(d>260)h.pounceTimer=0;
+        }else if(extTarget){
+          h.pounceTimer=0;h.target={x:extTarget.x,y:extTarget.y};
+          if(dist(h,extTarget)<46){
+            h.extTimer+=dt;
+            if(h.extTimer>=3){h.extTimer=0;extTarget.lit=false;state.lit--;h.extTarget=null;announce(`${extTarget.name}被掐灭了！快去重新点亮它——终局点灯不耗灯油！`,3);updateHud()}
+          }else h.extTimer=0;
+          const shielding=extTarget.lit&&dist(p,extTarget)<150;
+          if(shielding&&dist(h,extTarget)<90&&h.extTimer>0)h.extTimer=Math.max(0,h.extTimer-dt*2.5);
+          if(state.matchGlow>0&&d<340){h.extTimer=0;h.target={x:clamp(h.x+(h.x-p.x),90,1350),y:clamp(h.y+(h.y-p.y),90,810)}}
+        }else if(d<h.r+p.r+5)p.oil=Math.max(0,p.oil-25*dt);
+      }
+    }else if(state.finale&&state.lit===0){
+      // 三灯全灭：它不追杀、守在最近熄灭的灯旁阻挠重燃——玩家靠近免费重燃即翻盘
+      state.darkTimer+=dt;
+      if(state.darkTimer>0.1&&state.darkTimer<0.1+dt*2)announce('灯全灭了。它守在灯旁——冲过去点亮任意一盏即可翻盘！',3.5);
+      h.state='exterminate';speed=65;const guard=state.lamps.filter(l=>!l.lit).sort((a,b)=>dist(h,a)-dist(h,b))[0];
+      h.target=guard?{x:guard.x,y:guard.y}:{x:p.x,y:p.y};
+      if(d<h.r+p.r+5)p.oil=Math.max(1,p.oil-4*dt); // 擦碰不致死
+    }else{
+    if(h.state==='wander'){
+      if(h.timer>2.5||dist(h,h.target)<28){h.timer=0;const points=[{x:180,y:740},{x:370,y:360},{x:700,y:700},{x:820,y:170},{x:1100,y:400},{x:1260,y:740}];h.target=points[Math.floor(Math.random()*points.length)]}
+      const hear=unsafe&&p.moving&&(p.oil<22?520:p.oil<50?350:245);if((hear&&d<hear)||(p.oil<=0&&d<650))setHunter('alert');
+    }else if(h.state==='alert'){
+      speed=38;h.alert-=dt;h.target={x:p.x,y:p.y};if(inSafeLight()&&d>230&&!state.finale)setHunter('lost');else if(h.alert<=0)setHunter('chase');
+    }else if(h.state==='chase'){
+      const lampShield=inSafeLight()&&!state.finale;
+      speed=118;h.target={x:p.y===p.y?p.x:p.x,y:p.y};if(state.matchGlow>0&&d<360)setHunter('lost','火光逼退了它。');else if(lampShield&&h.timer>1.1)setHunter('lost','长明灯照出了它不愿记起的东西。');else if(d<h.r+p.r+5){p.oil=Math.max(0,p.oil-25*dt);if(p.oil<=0)lose()}
+    }else if(h.state==='lost'){
+      speed=70;const a=Math.atan2(h.y-p.y,h.x-p.x);h.target={x:clamp(h.x+Math.cos(a)*180,90,1350),y:clamp(h.y+Math.sin(a)*180,90,810)};if(h.timer>2.8)setHunter('wander');
+    }
+    }
+    const a=Math.atan2(h.target.y-h.y,h.target.x-h.x);h.angle=a;
+    // 寻路移动：视线可达走直线，否则沿 BFS 路径（每 0.4s 重算或路径走完重算）
+    let mvx=h.target.x,mvy=h.target.y;
+    if(segBlocked(h.x,h.y,h.target.x,h.target.y)){
+      if(!h.path||h.pathTime===undefined||state.elapsed-h.pathTime>0.4||h.pathGoalX!==h.target.x||h.pathGoalY!==h.target.y){h.path=findPath(h.x,h.y,h.target.x,h.target.y);h.pathTime=state.elapsed;h.pathGoalX=h.target.x;h.pathGoalY=h.target.y;h.pathIdx=0}
+      if(h.path&&h.path.length){const wp=h.path[Math.min(h.pathIdx,h.path.length-1)];if(dist(h,wp)<26&&h.pathIdx<h.path.length-1)h.pathIdx++;mvx=wp.x;mvy=wp.y}
+    }else{h.path=null}
+    const sx=Math.cos(Math.atan2(mvy-h.y,mvx-h.x))*speed*dt,sy=Math.sin(Math.atan2(mvy-h.y,mvx-h.x))*speed*dt;moveBody(h,sx,sy,12);
+    if(!settings.reducedMotion){h.trail.unshift({x:h.x,y:h.y,a:.24});h.trail=h.trail.slice(0,8);h.trail.forEach(t=>t.a*=.88)}
+  }
+  function updatePrompt(){
+    let text='';const lamp=state.lamps.find(l=>!l.lit&&dist(l,state.player)<55);const note=near('notes',48),oil=near('oils',42),match=near('matchesMap',42);
+    if(lamp)text=state.finale?'按 E 重新点亮（终局免费）':(state.carriedOil?`按 E 为「${lamp.name}」注油`:'灯盏干涸：需一份灯油');else if(note)text='按 E 拾取字条';else if(oil)text='靠近或按 E 拾取灯油';else if(match)text='靠近或按 E 拾取火柴';else if(state.player.oil<55&&state.carriedOil)text='按 F 消耗一份灯油，补充灯笼';
+    $('#prompt').textContent=text;$('#prompt').classList.toggle('show',!!text)
+  }
+  function updateHud(){if(!state)return;$('#oilBar').style.width=`${state.player.oil}%`;$('#oilBar').classList.toggle('danger',state.player.oil<25);$('#oilText').textContent=Math.ceil(state.player.oil);$('#dawnBar').style.width=`${state.dawn/4.8}%`;const m=Math.floor(state.dawn/60),s=Math.floor(state.dawn%60);$('#timeText').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;$('#statusText').textContent=`长明灯 ${state.lit}/3 · 灯油 ${state.carriedOil}份 · 火柴 ${state.matches}/8 · 字条 ${state.runNotes}/5`}
+  function win(){if(state.ended)return;state.running=false;state.ended=true;const hidden=state.runNotes===5;best.fastest=best.fastest===null?state.elapsed:Math.min(best.fastest,state.elapsed);best.mostNotes=Math.max(best.mostNotes,state.runNotes);saveJSON(STORAGE.best,best);$('#endTitle').textContent=hidden?'灯以你名':'鸡鸣';$('#endText').innerHTML=hidden?'你念出自己的名字。三盏灯同时一矮，棺木里的低语终于叫对了人——却不是叫你。门外天色发白，你带着五张纸走了出去。':`三盏灯隔雨相望。第一声鸡鸣响起时，那双眼在门槛后合上了。<br>用时 ${formatTime(state.elapsed)} · 本局字条 ${state.runNotes}/5`;$('#end').classList.remove('hidden')}
+  function lose(){if(state.ended)return;state.running=false;state.ended=true;best.mostNotes=Math.max(best.mostNotes,state.runNotes);saveJSON(STORAGE.best,best);$('#endTitle').textContent='灯灭';$('#endText').innerHTML='光圈一点点缩回灯芯。雨还在下。<br><br>黑暗里有人低声说：<br>“今夜，又多了一位守夜人。”';setTimeout(()=>$('#end').classList.remove('hidden'),700)}
+  function formatTime(t){return `${Math.floor(t/60)}分${String(Math.floor(t%60)).padStart(2,'0')}秒`}
+  function openNote(i){state.paused=true;$('#modalTitle').textContent=`字条之${['一','二','三','四','五'][i]}`;$('#modalBody').innerHTML=`<p>${NOTE_TEXTS[i]}</p>`;$('#modal').classList.add('show');keys.clear()}
+  function openJournal(){if(state?.running)state.paused=true;const rows=NOTE_TEXTS.map((t,i)=>`<div class="journal-entry ${collection[i]?'':'locked'}"><b>字条之${['一','二','三','四','五'][i]}</b><br>${collection[i]?t:'纸页尚在雨夜某处。'}</div>`).join('');$('#modalTitle').textContent='守夜字条图鉴';$('#modalBody').innerHTML=`<div class="journal-list">${rows}</div><p>最快逃脱：${best.fastest===null?'尚无':formatTime(best.fastest)}　最多字条：${best.mostNotes}/5</p>`;$('#modal').classList.add('show');keys.clear()}
+  function openManual(){
+    if(state?.running)state.paused=true;
+    $('#modalTitle').textContent='守夜规程（义庄旧例）';
+    $('#modalBody').innerHTML=`
+      <p><b>你的目标</b>：撑到鸡鸣（顶部倒计时走完）即算守夜成功。三盏长明灯是唯一的依仗。</p>
+      <p><b>第一步 · 备料</b>：地图上的金色微光都是道具，靠近即自动拾取——<b>灯油壶</b>（拾取后按 <b>F</b> 添入随身灯笼，油越少光圈越窄）、<b>火柴</b>（按 <b>空格</b> 划亮，2.4 秒强光驱退它，也能打断它掐灯）、<b>字条</b>（按 <b>E</b> 拾取，集齐 5 张有隐藏结局）。</p>
+      <p><b>第二步 · 点灯</b>：手持一份灯油走到熄灭的长明灯旁按 <b>E</b> 注油点亮。三盏位置：西厢回廊、义庄正堂、停棺房。亮着的灯是永久安全区（光区内灯油几乎不耗），但它被你吸引后就没法安心点灯了。</p>
+      <p><b>第三步 · 守灯（终局）</b>：三灯齐明后，黑暗会来<b>逐盏掐灭</b>长明灯（灯上出现红色读条弧，约 3 秒）。此时——你不会死，除非撞上它；重新点灯<b>不耗灯油</b>；冲过去点亮被掐灭的灯；离它太近它会转身扑你（拉开距离它就回去掐灯）。<b>守住任意一盏灯到鸡鸣即胜</b>。</p>
+      <p><b>关于它</b>：黑暗里移动会弄出声响，声音越大它越容易察觉——先是两点金眼停住（警告），随后才会扑来。点亮的灯旁它不敢久留；火柴能逼退它。<b>灯全灭</b>时它会守在灯旁，但你冲过去免费重燃任意一盏即可翻盘。</p>
+      <p><b>键位</b>：WASD / 方向键 / 按住鼠标 移动 · <b>E</b> 互动 · <b>F</b> 添灯油 · <b>空格</b> 火柴 · <b>J</b> 图鉴 · <b>Esc</b> 关闭</p>`;
+    $('#modal').classList.add('show');keys.clear();
+  }
+  function closeModal(){$('#modal').classList.remove('show');if(state?.running)state.paused=false}
+  function resize(){DPR=Math.min(devicePixelRatio||1,2);canvas.width=innerWidth*DPR;canvas.height=innerHeight*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}
+  let DPR=1;
+  function view(){const scale=Math.min(innerWidth/W,innerHeight/H);return {s:scale,x:(innerWidth-W*scale)/2,y:(innerHeight-H*scale)/2}}
+  function screenToWorld(x,y){const v=view();return{x:(x-v.x)/v.s,y:(y-v.y)/v.s}}
+  function draw(){const v=view();ctx.setTransform(v.s*DPR,0,0,v.s*DPR,v.x*DPR,v.y*DPR);ctx.save();ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,innerWidth,innerHeight);ctx.restore();ctx.setTransform(v.s*DPR,0,0,v.s*DPR,v.x*DPR,v.y*DPR);drawWorld();drawDarkness();drawAtmosphere();ctx.setTransform(DPR,0,0,DPR,0,0)}
+  function drawWorld(){
+    ctx.fillStyle='#1a1c16';ctx.fillRect(0,0,W,H);ctx.fillStyle='#3b372c';ctx.fillRect(82,82,1276,736);
+    ctx.strokeStyle='#453f30';ctx.lineWidth=1;for(let x=90;x<1360;x+=34){ctx.beginPath();ctx.moveTo(x,82);ctx.lineTo(x,818);ctx.stroke()}for(let y=90;y<820;y+=34){ctx.beginPath();ctx.moveTo(82,y);ctx.lineTo(1358,y);ctx.stroke()}
+    ctx.fillStyle='#584a36';for(const w of MAP.walls){ctx.fillRect(w.x,w.y,w.w,w.h);ctx.strokeStyle='#9a8054';ctx.strokeRect(w.x+.5,w.y+.5,w.w-1,w.h-1)}
+    ctx.fillStyle='#a89a78';ctx.font='16px "Songti SC"';for(const l of MAP.labels)ctx.fillText(l.t,l.x,l.y);
+    for(const o of state.oils)if(!o.taken){ctx.fillStyle='#c08428';ctx.fillRect(o.x-9,o.y-13,18,25);ctx.fillStyle='#f4d07c';ctx.fillRect(o.x-5,o.y-18,10,6)}
+    for(const m of state.matchesMap)if(!m.taken){ctx.strokeStyle='#eec36a';ctx.lineWidth=3;for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(m.x-10,m.y+i*5);ctx.lineTo(m.x+10,m.y+i*5);ctx.stroke()}}
+    for(const n of state.notes)if(!n.taken){ctx.save();ctx.translate(n.x,n.y);ctx.rotate(-.12);ctx.fillStyle='#d6c694';ctx.fillRect(-12,-9,24,18);ctx.strokeStyle='#6a5a38';ctx.strokeRect(-12,-9,24,18);ctx.restore()}
+    for(const l of state.lamps)drawLamp(l);
+    drawHunter();drawPlayer();
+  }
+  function drawLamp(l){ctx.save();ctx.translate(l.x,l.y);if(l.lit){const g=ctx.createRadialGradient(0,0,2,0,0,52);g.addColorStop(0,'#ffd985ee');g.addColorStop(1,'#c37b1800');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,52,0,Math.PI*2);ctx.fill()}ctx.fillStyle=l.lit?'#f4c95e':'#7c6a44';ctx.fillRect(-11,-18,22,30);ctx.strokeStyle=l.lit?'#b8933f':'#b08c48';ctx.lineWidth=1.5;ctx.strokeRect(-11,-18,22,30);ctx.fillStyle=l.lit?'#fff6c8':'#ffd884';ctx.beginPath();ctx.arc(0,-12,5.5,0,Math.PI*2);ctx.fill();ctx.restore()}
+  function drawPlayer(){const p=state.player;ctx.save();ctx.translate(p.x,p.y);ctx.fillStyle='#c8bea3';ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#392b1d';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#d6a94b';ctx.beginPath();ctx.arc(12,3,5,0,Math.PI*2);ctx.fill();ctx.restore()}
+  function drawHunter(){const h=state.hunter;for(const t of h.trail){ctx.fillStyle=`rgba(25,12,12,${t.a})`;ctx.beginPath();ctx.arc(t.x,t.y,13,0,Math.PI*2);ctx.fill()}const colors={wander:'#6e2c26',alert:'#e1a742',chase:'#ff4b37',lost:'#918b7d',exterminate:'#c99038'},c=colors[h.state]||colors.wander;ctx.save();ctx.translate(h.x,h.y);ctx.rotate(h.angle);ctx.shadowColor=c;ctx.shadowBlur=h.state==='chase'?18:h.state==='alert'?12:6;ctx.fillStyle=c;const pulse=1+Math.sin(state.elapsed*(h.state==='chase'?13:4))*.12;ctx.beginPath();ctx.ellipse(8,-6,5*pulse,2.8,0,0,Math.PI*2);ctx.ellipse(8,6,5*pulse,2.8,0,0,Math.PI*2);ctx.fill();ctx.restore();
+    // 灭灯进度环：掐灯时在目标灯上方画进度弧
+    if(h.state==='exterminate'&&h.extTimer>0){const target=state.lamps.filter(l=>l.lit).sort((a,b)=>dist(h,a)-dist(h,b))[0];if(target&&dist(h,target)<46){ctx.save();ctx.strokeStyle='rgba(255,120,80,.9)';ctx.lineWidth=4;ctx.beginPath();ctx.arc(target.x,target.y,30,-Math.PI/2,-Math.PI/2+Math.PI*2*(h.extTimer/3));ctx.stroke();ctx.restore()}}
+  }
+  function drawDarkness(){
+    drawWorldBeacons();
+    ctx.save();ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='destination-out';
+    cutLight(state.player.x,state.player.y,lanternRadius(),1);for(const l of state.lamps)cutLight(l.x,l.y,l.lit?190:130,l.lit?.95:.6);if(state.matchGlow>0)cutLight(state.player.x,state.player.y,330,.98);ctx.restore();
+    ctx.save();ctx.globalCompositeOperation='screen';for(const l of state.lamps)glow(l.x,l.y,l.lit?185:120,l.lit?'rgba(214,150,44,.22)':'rgba(214,160,60,.12)');glow(state.player.x,state.player.y,lanternRadius(),'rgba(224,164,64,.14)');if(state.flash>0){ctx.fillStyle=`rgba(255,224,150,${state.flash})`;ctx.fillRect(0,0,W,H)}ctx.restore();
+    drawItemBeacons();
+  }
+  // 道具脉冲信标：画在黑暗层之上，保证玩家在整屏任何位置都能定位道具
+  function drawItemBeacons(){
+    ctx.save();ctx.globalCompositeOperation='screen';const pulse=.5+.3*Math.sin(state.elapsed*2.2);
+    for(const o of state.oils)if(!o.taken)glow(o.x,o.y,36,`rgba(255,208,110,${pulse*.75})`);
+    for(const m of state.matchesMap)if(!m.taken)glow(m.x,m.y,32,`rgba(255,178,90,${pulse*.65})`);
+    for(const n of state.notes)if(!n.taken)glow(n.x,n.y,32,`rgba(240,225,170,${pulse*.6})`);
+    ctx.restore();
+  }
+  function drawWorldBeacons(){
+    ctx.save();ctx.globalCompositeOperation='screen';for(const l of state.lamps)if(!l.lit){const pulse=.5+.25*Math.sin(state.elapsed*1.6);const g=ctx.createRadialGradient(l.x,l.y,2,l.x,l.y,110);g.addColorStop(0,`rgba(255,216,140,${pulse})`);g.addColorStop(.5,`rgba(255,200,110,${pulse*.4})`);g.addColorStop(1,'rgba(255,200,110,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(l.x,l.y,110,0,Math.PI*2);ctx.fill()}ctx.restore();
+  }
+  function cutLight(x,y,r,a){const g=ctx.createRadialGradient(x,y,r*.12,x,y,r);g.addColorStop(0,`rgba(0,0,0,${a})`);g.addColorStop(.55,`rgba(0,0,0,${a*.9})`);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
+  function glow(x,y,r,color){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
+  function drawAtmosphere(){if(!settings.reducedMotion){ctx.strokeStyle='rgba(135,155,160,.12)';ctx.lineWidth=1;for(let i=0;i<55;i++){const x=(i*83+state.elapsed*115)%W,y=(i*137+state.elapsed*250)%H;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-8,y+20);ctx.stroke()}}const vig=ctx.createRadialGradient(W/2,H/2,340,W/2,H/2,860);vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(0,0,0,.35)');ctx.fillStyle=vig;ctx.fillRect(0,0,W,H)}
+  function frame(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;if(state)update(dt);if(state)draw();loopId=requestAnimationFrame(frame)}
+  addEventListener('resize',resize);addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();keys.add(k);if(e.repeat)return;if(k==='e')interact();if(k==='f')refill();if(k===' ')useMatch();if(k==='j')openJournal();if(k==='escape')closeModal()});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+  canvas.addEventListener('pointerdown',e=>{mouse.down=true;mouse.x=e.clientX;mouse.y=e.clientY});addEventListener('pointermove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});addEventListener('pointerup',()=>mouse.down=false);addEventListener('blur',()=>{keys.clear();mouse.down=false});
+  $('#begin').onclick=()=>{reset();$('#start').classList.add('hidden')};$('#restart').onclick=()=>reset();$('#openJournal').onclick=openJournal;$('#endJournal').onclick=openJournal;$('#openManual').onclick=openManual;$('#closeModal').onclick=closeModal;$('#reducedMotion').onchange=e=>{settings.reducedMotion=e.target.checked;saveJSON(STORAGE.settings,settings)};
+  resize();reset();state.running=false;requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

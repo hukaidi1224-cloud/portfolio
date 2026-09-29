@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>心跳</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;
+                              width:100%;
+                              height:100%;
+                              overflow:hidden;
+                              background:#07070a;
+                              color:#ded8c9;
+                              font-family:"Noto Serif SC","Songti SC",serif}canvas{display:block;
+                              width:100%;
+                              height:100%;
+                              cursor:crosshair}.panel{position:fixed;
+                              inset:0;
+                              display:flex;
+                              align-items:center;
+                              justify-content:center;
+                              background:radial-gradient(circle at 50% 45%,#17171d,#050507 72%);
+                              z-index:5}.card{width:min(560px,90vw);
+                              padding:38px 42px;
+                              border:1px solid #35343a;
+                              background:#0c0c10e8;
+                              box-shadow:0 24px 80px #000;
+                              text-align:center}.hidden{display:none}.title{font-size:44px;
+                              letter-spacing:.5em;
+                              margin-right:-.5em;
+                              color:#eee8da}.sub{color:#8e8980;
+                              line-height:1.9;
+                              margin:18px 0 28px}.btn{border:1px solid #777168;
+                              background:#17171b;
+                              color:#e8e1d1;
+                              padding:11px 26px;
+                              margin:6px;
+                              cursor:pointer;
+                              font:inherit;
+                              letter-spacing:.16em}.btn:hover,.btn:focus{border-color:#ded5be;
+                              background:#222126}.small{font-size:13px;
+                              color:#77736c;
+                              line-height:1.8}.top{position:fixed;
+                              z-index:3;
+                              left:20px;
+                              right:20px;
+                              top:16px;
+                              display:flex;
+                              gap:18px;
+                              align-items:center;
+                              pointer-events:none;
+                              text-shadow:0 2px 4px #000}.meter{width:150px;
+                              height:8px;
+                              border:1px solid #4d4847;
+                              background:#111}.fill{height:100%;
+                              transition:width .1s}.heart{background:#8a2020}.blind{background:#d7d6d0}.label{font:12px system-ui;
+                              color:#aaa}.chapter{margin-left:auto;
+                              text-align:right}.tip{position:fixed;
+                              left:50%;
+                              bottom:45px;
+                              transform:translateX(-50%);
+                              z-index:4;
+                              padding:9px 15px;
+                              background:#09090dcc;
+                              border:1px solid #343238;
+                              font:14px system-ui;
+                              color:#d6d0c3;
+                              opacity:0;
+                              transition:opacity .25s;
+                              pointer-events:none}.tip.show{opacity:1}.modal{position:fixed;
+                              z-index:6;
+                              inset:0;
+                              display:none;
+                              align-items:center;
+                              justify-content:center;
+                              background:#050507df}.modal.open{display:flex}.note{text-align:left;
+                              line-height:1.9;
+                              white-space:pre-wrap}.setting{display:flex;
+                              justify-content:center;
+                              gap:8px;
+                              align-items:center;
+                              font:13px system-ui;
+                              color:#9d988f;
+                              margin-top:18px}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div class="top hidden" id="hud"><span class="label">心率 <b id="hrText">60</b></span><div class="meter"><div id="hrBar" class="fill heart"></div></div><span class="label">雪盲</span><div class="meter"><div id="blindBar" class="fill blind"></div></div><span class="label">安神香 <b id="incenseText">1</b>/2</span><div class="chapter"><b id="levelName"></b><br><span class="label" id="objective"></span></div></div>
+<div class="tip" id="tip"></div>
+<section class="panel" id="menu"><div class="card"><div class="title">心跳</div><p class="sub">你替昏睡的东家，去山神祠还一炷香。<br>暴雪夜里，它看不见。它听心跳。</p><button class="btn" id="startBtn">推门入夜</button><button class="btn" id="notesBtn">守夜人手记</button><label class="setting"><input id="reduce" type="checkbox"> 减少动态效果</label><p class="small">WASD / 方向键移动　按住左键睁眼　按住空格屏息　E 交互</p></div></section>
+<section class="modal" id="dialog"><div class="card"><h2 id="dialogTitle"></h2><div class="note" id="dialogText"></div><button class="btn" id="dialogBtn">继续</button></div></section>
+<script>
+(()=>{'use strict';
+                              
+const VIEW_W=960,VIEW_H=540,MAP_W=1280,MAP_H=800,GRID=40,BLIND_RATE={rise:14,fall:10},PLAYER_SPEED=126,TOUCH=18,TAU=Math.PI*2;
+const designManifest={version:'2.6-hudinline',world:[MAP_W,MAP_H],view:[VIEW_W,VIEW_H],states:['patrol','listen','suspicious','chase','search','confused'],visionModel:'persistent-walls-explored-content'};
+                              
+const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d');
+                              
+const $=s=>document.querySelector(s), hud=$('#hud'),tipEl=$('#tip');
+                              
+const saveKey='g013-heartbeat-v2';
+                              
+let save={notes:[],best:[null,null,null],reduce:false};
+                              try{save={...save,...JSON.parse(localStorage.getItem(saveKey)||'{}')}}catch(e){}
+const persist=()=>{try{localStorage.setItem(saveKey,JSON.stringify(save))}catch(e){}};
+                              
+$('#reduce').checked=!!save.reduce;
+                               $('#reduce').onchange=e=>{save.reduce=e.target.checked;
+                              persist()};
+                              
+const notes=[
+'初一。东家说山里没有野兽，只有听声的神。我问它听什么。他把手按在我心口，没回话。',
+'初二。闭眼后反倒清楚。心跳像一颗石子，一圈圈投进黑夜。它在哪一圈上，我不敢数，也不敢回头。',
+'初三。长明灯下能喘口气，可灯边的雪留着光纹。它看不见我，却记得我来过，还会回来找。',
+'初四。风口把心跳吹散了。我听不清它，它也听不清我。黑暗里的安静，未必是慈悲，也许只是风。',
+'初五。古镜不照人，只照心跳。我在镜前故意害怕，它果然追着镜里的我跑了，直到镜面发冷。',
+'初六。还香不是还愿。东家每年换一个守夜人，只因山神爱听新鲜的心跳，而旧人总会安静。'
+];
+                              
+const border=[[0,0,1280,24],[0,776,1280,24],[0,0,24,800],[1256,0,24,800]];
+const levels=[
+{type:'escape',name:'第一夜·客房到祠堂',intro:'别怕。它听的不是脚步，是心跳。',start:[80,680],exit:[1190,100],wind:null,
+walls:[...border,[180,80,24,230],[180,390,24,260],[180,390,230,24],[390,160,24,254],[390,520,24,180],[520,24,24,250],[520,350,24,230],[520,350,250,24],[750,120,24,254],[750,500,24,276],[880,24,24,250],[880,350,24,260],[880,350,220,24],[1080,120,24,254],[1080,500,24,276],[1140,374,116,24],[250,560,160,24],[610,650,220,24],[970,610,180,24]],
+lamps:[[270,680],[650,430]],incense:[[300,130],[970,690]],noteSpots:[[330,470,0],[1010,260,1]],footprints:[[110,680],[150,650],[210,620],[270,610]],taskPoints:[],monsters:[{path:[[900,680],[1150,680],[1150,460],[940,460]]}]},
+{type:'task',name:'第二夜·风雪口',intro:'找到三处刻印，站定唤醒它们。唤醒会发出声响——它在听；风声会扰乱彼此。',start:[70,700],exit:[1190,90],wind:[360,140,560,500],
+walls:[...border,[160,24,24,230],[160,340,24,300],[160,340,220,24],[360,140,24,224],[360,500,24,276],[500,24,24,280],[500,400,24,240],[500,400,220,24],[700,160,24,264],[700,540,24,236],[840,24,24,280],[840,400,24,240],[840,400,240,24],[1060,160,24,264],[1060,540,24,236],[240,650,180,24],[600,650,180,24],[960,650,210,24]],
+lamps:[[260,690],[650,460]],incense:[[260,120],[1010,720]],noteSpots:[[300,450,2],[970,240,3]],footprints:[[100,700],[140,680],[200,660]],taskPoints:[[300,220,false],[650,250,false],[1010,520,false]],monsters:[{path:[[500,700],[940,700],[940,480],[560,480]]}]},
+{type:'task',name:'第三夜·山神祠',intro:'找到三处刻印，站定唤醒它们。唤醒会发出声响——它在听；古镜会照歪心跳。',start:[70,700],exit:[1200,100],wind:null,mirrors:[[430,160,430,480],[820,280,820,650]],
+walls:[...border,[150,24,24,250],[150,350,24,300],[150,350,220,24],[350,140,24,234],[350,500,24,276],[500,24,24,250],[500,370,24,270],[500,370,220,24],[700,160,24,234],[700,520,24,256],[850,24,24,250],[850,390,24,250],[850,390,230,24],[1060,160,24,254],[1060,540,24,236],[250,650,180,24],[600,650,180,24],[960,650,210,24]],
+lamps:[[270,690]],incense:[[260,120],[980,710]],noteSpots:[[600,110,4],[980,500,5]],footprints:[[100,700],[150,680],[220,650]],taskPoints:[[260,220,false],[640,470,false],[980,220,false]],monsters:[{path:[[560,700],[1020,700],[1020,460],[600,460]]}]}
+];
+                              
+let mode='menu',levelIndex=0,level=null,player=null,monsters=[],keys={},mouse={x:VIEW_W/2,y:VIEW_H/2,down:false},last=0,viewA=0,tipTimer=0,blindFlash=0,levelStart=0,litTrace=[],animation=0,camera={x:0,y:0},interactState={point:-1,progress:0},explored=new Set(),tipFlags={},simTime=0,pulseClock=0,pulseAge=99,lastPulseT=null;
+                              
+function makeMonster(def){let p=def.path[0];
+                              return{x:p[0],y:p[1],path:def.path.map(a=>[...a]),pi:1,state:'patrol',stateT:0,hearT:0,lastHeard:-99,target:null,chaseT:0,veiled:true,nav:[],navT:0,navKey:'',searchPoints:[],searchI:0,searchWait:0,cooldown:0,calmT:0,markerT:0};
+                              }
+function beginLevel(i){levelIndex=i;
+                              level=JSON.parse(JSON.stringify(levels[i]));
+                              player={x:level.start[0],y:level.start[1],r:8,heart:60,blind:0,forced:0,breath:0,gasp:0,incense:1,calm:0};
+                              monsters=level.monsters.map(makeMonster);
+                              litTrace=[];
+                              explored=new Set();
+                              tipFlags={amber:false,amberCount:0};
+                              simTime=0;
+                              pulseClock=0;
+                              pulseAge=99;
+                              lastPulseT=null;
+                              interactState={point:-1,progress:0};
+                              levelStart=performance.now();
+                              viewA=0;
+                              mode='play';
+                              hud.classList.remove('hidden');
+                              $('#menu').classList.add('hidden');
+                              showTip(level.intro,4);
+                              }
+function showTip(t,s=2){tipEl.textContent=t;
+                              tipEl.classList.add('show');
+                              tipTimer=s;
+                              }
+function dialog(title,text,button,cb){mode='dialog';
+                              $('#dialogTitle').textContent=title;
+                              $('#dialogText').textContent=text;
+                              $('#dialogBtn').textContent=button||'继续';
+                              $('#dialog').classList.add('open');
+                              $('#dialogBtn').onclick=()=>{$('#dialog').classList.remove('open');
+                              cb&&cb()};
+                              }
+function reset(){beginLevel(levelIndex)}
+function rectHit(x,y,r){return level.walls.some(w=>x+r>w[0]&&x-r<w[0]+w[2]&&y+r>w[1]&&y-r<w[1]+w[3])||x-r<10||x+r>MAP_W-10||y-r<10||y+r>MAP_H-10;
+                              }
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+                              
+function inWind(p){let z=level.wind;
+                              return !!z&&p.x>z[0]&&p.x<z[0]+z[2]&&p.y>z[1]&&p.y<z[1]+z[3]}
+function inLamp(p){return level.lamps.some(l=>Math.hypot(p.x-l[0],p.y-l[1])<120)}
+function sonar(h,wind=false){if(wind){if(h<=110)return{tier:0,spread:Math.PI,lines:0};
+                              if(h<130)return{tier:1,spread:Math.PI/4,lines:0};
+                              return{tier:2,spread:Math.PI/18,lines:3}}if(h<70)return{tier:0,spread:Math.PI,lines:0};
+                              if(h<=110)return{tier:1,spread:Math.PI/4,lines:0};
+                              return{tier:2,spread:Math.PI/18,lines:3}}
+function hearInterval(h,wind=false){let n=h<70?Infinity:h>=130?.8:h>110?1.4:2.5;
+                              return wind?n*2:n}
+function segmentBlocked(ax,ay,bx,by){let steps=Math.ceil(Math.hypot(bx-ax,by-ay)/8);for(let i=1;i<steps;i++){let t=i/steps,x=ax+(bx-ax)*t,y=ay+(by-ay)*t;if(level.walls.some(w=>x>w[0]&&x<w[0]+w[2]&&y>w[1]&&y<w[1]+w[3]))return true}return false}
+function firstWallHit(ax,ay,bx,by){let dx=bx-ax,dy=by-ay,best=null,bestT=Infinity;
+                              for(let i=0;i<level.walls.length;i++){let w=level.walls[i],t0=0,t1=1;
+                              for(let [p,q] of [[dx,w[0]-ax],[-dx,ax-(w[0]+w[2])],[dy,w[1]-ay],[-dy,ay-(w[1]+w[3])]]){if(Math.abs(p)<1e-9){if(q>0){t0=2;break}}else{let t=q/p;if(p>0)t0=Math.max(t0,t);else t1=Math.min(t1,t)}}
+                              if(t0<=t1&&t0>=0&&t0<=1&&t0<bestT){bestT=t0;best={x:ax+dx*t0,y:ay+dy*t0,wall:i,active:true}}}
+                              return best}
+function visibleMonster(m){let lookX=mouse.x+camera.x,lookY=mouse.y+camera.y,ang=Math.atan2(m.y-player.y,m.x-player.x),look=Math.atan2(lookY-player.y,lookX-player.x);
+                              let d=Math.abs(Math.atan2(Math.sin(ang-look),Math.cos(ang-look)));
+                              return viewA>.15&&dist(player,m)<260&&d<35*Math.PI/180&&!segmentBlocked(player.x,player.y,m.x,m.y)}
+const exploreKey=(x,y)=>Math.floor(x/GRID)+','+Math.floor(y/GRID);
+function isExplored(x,y){return explored.has(exploreKey(x,y))}
+function markExplored(){let look=Math.atan2(mouse.y+camera.y-player.y,mouse.x+camera.x-player.x),half=35*Math.PI/180,minX=Math.max(0,Math.floor((player.x-260)/GRID)),maxX=Math.min(MAP_W/GRID-1,Math.floor((player.x+260)/GRID)),minY=Math.max(0,Math.floor((player.y-260)/GRID)),maxY=Math.min(MAP_H/GRID-1,Math.floor((player.y+260)/GRID));for(let cy=minY;cy<=maxY;cy++)for(let cx=minX;cx<=maxX;cx++){let x=cx*GRID+GRID/2,y=cy*GRID+GRID/2,a=Math.atan2(y-player.y,x-player.x),delta=Math.abs(Math.atan2(Math.sin(a-look),Math.cos(a-look)));if(Math.hypot(x-player.x,y-player.y)<=260&&delta<=half&&!segmentBlocked(player.x,player.y,x,y))explored.add(cx+','+cy)}}
+function setState(m,s){if(s==='chase'&&m.state!=='suspicious')return;
+                              let previous=m.state;
+                              m.state=s;
+                              m.stateT=0;
+                              m.calmT=0;
+                              if(s==='confused')m.target=null;
+                              if(s==='chase'){m.chaseT=4;m.veiled=false}
+                              if(s==='suspicious'&&previous!=='suspicious'&&!tipFlags.amber){tipFlags.amber=true;tipFlags.amberCount++;showTip('琥珀光亮起——它察觉到你了。光在墙上，危险在那面墙后；屏息或拉开距离躲开它。',4)}
+                              }
+function mirrorTarget(p){if(levelIndex!==2||!level.mirrors)return p;
+                              let best=null,bd=90;
+                              for(let q of level.mirrors){let d=Math.abs(p.x-q[0]);
+                              if(d<bd&&p.y>q[1]&&p.y<q[3]){bd=d;
+                              best={x:2*q[0]-p.x,y:p.y,mirror:true}}}return best||p}
+function cellBlocked(cx,cy){let x=cx*GRID+GRID/2,y=cy*GRID+GRID/2;return rectHit(x,y,12)}
+function astar(sx,sy,tx,ty){let cols=Math.ceil(MAP_W/GRID),rows=Math.ceil(MAP_H/GRID),sc=[clamp(Math.floor(sx/GRID),0,cols-1),clamp(Math.floor(sy/GRID),0,rows-1)],tc=[clamp(Math.floor(tx/GRID),0,cols-1),clamp(Math.floor(ty/GRID),0,rows-1)],key=(x,y)=>x+','+y,open=[{x:sc[0],y:sc[1],g:0,f:0}],came=new Map(),cost=new Map([[key(...sc),0]]),seen=new Set();
+ while(open.length){open.sort((a,b)=>a.f-b.f);let n=open.shift(),nk=key(n.x,n.y);if(seen.has(nk))continue;seen.add(nk);if(n.x===tc[0]&&n.y===tc[1]){let out=[];while(came.has(nk)){out.push({x:n.x*GRID+GRID/2,y:n.y*GRID+GRID/2});let p=came.get(nk);n={x:p[0],y:p[1]};nk=key(n.x,n.y)}return out.reverse()}for(let q of [[1,0],[-1,0],[0,1],[0,-1]]){let x=n.x+q[0],y=n.y+q[1],k=key(x,y);if(x<0||y<0||x>=cols||y>=rows||cellBlocked(x,y))continue;let g=n.g+1;if(g<(cost.get(k)??Infinity)){cost.set(k,g);came.set(k,[n.x,n.y]);open.push({x,y,g,f:g+Math.abs(x-tc[0])+Math.abs(y-tc[1])})}}}return[]}
+function navigate(m,x,y,s,dt){let key=Math.round(x/20)+','+Math.round(y/20);m.navT-=dt;if(m.navT<=0||m.navKey!==key||!m.nav.length){m.nav=astar(m.x,m.y,x,y);m.navT=.5;m.navKey=key}let t=m.nav[0]||{x,y};if(Math.hypot(t.x-m.x,t.y-m.y)<8){m.nav.shift();t=m.nav[0]||{x,y}}moveM(m,t.x,t.y,s,dt)}
+function heardNow(m){return player.heart>=70&&(m.stateT-m.lastHeard)<=hearInterval(player.heart,inWind(player))}
+function beginSearch(m){m.state='search';m.stateT=0;m.searchI=0;m.searchWait=0;let tx=m.target?m.target.x:m.x,ty=m.target?m.target.y:m.y,a=Math.atan2(player.y-ty,player.x-tx);m.searchPoints=[{x:clamp(m.x+Math.cos(a+1.2)*80,30,MAP_W-30),y:clamp(m.y+Math.sin(a+1.2)*80,30,MAP_H-30)},{x:clamp(m.x+Math.cos(a-1.2)*80,30,MAP_W-30),y:clamp(m.y+Math.sin(a-1.2)*80,30,MAP_H-30)}]}
+function updateMonster(m,dt){m.stateT+=dt;
+                              m.cooldown=Math.max(0,m.cooldown-dt);
+                              m.markerT=Math.max(0,m.markerT-dt);
+                              let d=dist(player,m),initialState=m.state;
+                               
+ if((m.state==='patrol'||m.state==='listen'||m.state==='suspicious'||m.state==='search')&&(player.heart>=70||interactState.point>=0)){m.hearT-=dt;
+                              let interval=hearInterval(Math.max(70,player.heart),inWind(player));
+                              if(m.hearT<=0){let precision=sonar(player.heart,inWind(player));
+                              let err=m.state==='suspicious'?55:precision.tier===1?55:precision.tier===2?12:0,ang=Math.random()*TAU;
+                              let heard={x:player.x+Math.cos(ang)*err,y:player.y+Math.sin(ang)*err};
+                              m.target=mirrorTarget(heard);
+                              m.lastHeard=m.stateT;
+                              m.hearT=interval;
+                              m.markerT=.35;
+                              if(m.state==='search'){setState(m,'suspicious')}else if(m.state!=='suspicious')setState(m,'listen')}}
+ if((m.state==='patrol'||m.state==='listen')&&m.cooldown<=0&&d<260&&player.heart>=85){let ang=Math.random()*TAU;
+                              m.target=mirrorTarget({x:player.x+Math.cos(ang)*55,y:player.y+Math.sin(ang)*55});
+                              setState(m,'suspicious')}
+ if(m.state==='suspicious'&&initialState==='suspicious'&&d<90&&player.heart>=100){player.heart=clamp(player.heart+25,0,160);
+                              setState(m,'chase')}
+ if(m.state==='patrol'){let t=m.path[m.pi],dd=Math.hypot(t[0]-m.x,t[1]-m.y);
+                              if(dd<5)m.pi=(m.pi+1)%m.path.length;
+                              else navigate(m,t[0],t[1],44,dt)}
+ else if(m.state==='listen'){if(!m.target)setState(m,'confused');
+                              else if(Math.hypot(m.target.x-m.x,m.target.y-m.y)<8)setState(m,'confused');
+                              else navigate(m,m.target.x,m.target.y,PLAYER_SPEED*.5,dt)}
+ else if(m.state==='suspicious'){if(d>320||player.heart<70)m.calmT+=dt;else m.calmT=0;
+                              if(m.calmT>=3){m.cooldown=2;setState(m,'patrol')}
+                              else if(m.target)navigate(m,m.target.x,m.target.y,PLAYER_SPEED*.6,dt)}
+ else if(m.state==='chase'){m.chaseT-=dt;
+                              navigate(m,player.x,player.y,PLAYER_SPEED*1.05,dt);
+                              if(dist(player,m)<TOUCH)death();
+                              else if(m.chaseT<=0){m.target=m.target||{x:player.x,y:player.y};beginSearch(m)}}
+ else if(m.state==='search'){if(player.heart>=70&&m.hearT<=0){setState(m,'suspicious')}else{let t=m.searchPoints[m.searchI];if(!t){m.cooldown=3;setState(m,'patrol')}else if(Math.hypot(t.x-m.x,t.y-m.y)<12){m.searchWait+=dt;if(m.searchWait>=1){m.searchWait=0;m.searchI++}}else navigate(m,t.x,t.y,48,dt)}}
+ else if(m.state==='confused'){if(player.heart>110){m.hearT=0;
+                              setState(m,'patrol')}else if(m.stateT>=3)setState(m,'patrol')}
+ }
+function moveM(m,x,y,s,dt){let a=Math.atan2(y-m.y,x-m.x),nx=m.x+Math.cos(a)*s*dt,ny=m.y+Math.sin(a)*s*dt;
+                              if(!rectHit(nx,ny,10)){m.x=nx;m.y=ny;return}let sx=m.x+Math.cos(a)*s*dt;if(!rectHit(sx,m.y,10))m.x=sx;let sy=m.y+Math.sin(a)*s*dt;if(!rectHit(m.x,sy,10))m.y=sy}
+function death(){if(mode!=='play')return;
+                              mode='dead';
+                              dialog('心跳被它听见','你没有死在黑暗里。\n你死在自己的恐惧里。','本关重来',reset)}
+function update(dt){if(mode!=='play')return;
+                              simTime+=dt;
+                              tipTimer-=dt;
+                              if(tipTimer<=0)tipEl.classList.remove('show');
+                              
+ let wantsEye=mouse.down&&player.forced<=0, target=wantsEye?1:0;
+                              viewA+=clamp(target-viewA,-dt/.12,dt/.12);
+                              if(wantsEye&&viewA>.05)markExplored();
+                              player.forced=Math.max(0,player.forced-dt);
+                              player.gasp=Math.max(0,player.gasp-dt);
+                              player.calm=Math.max(0,player.calm-dt);
+                              
+ let holding=keys.Space&&player.gasp<=0&&player.calm<=0;
+                              player.breath=holding?player.breath+dt:0;
+                              if(player.breath>4){player.breath=0;
+                              player.gasp=1;
+                              player.heart=110;
+                              showTip('呛咳声被风雪接住了。',2)}
+ let dx=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0),dy=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0),moving=false;
+                              
+ if(!holding&&player.gasp<=0&&(dx||dy)){let n=Math.hypot(dx,dy);
+                              dx/=n;
+                              dy/=n;
+                              let nx=player.x+dx*PLAYER_SPEED*dt,ny=player.y+dy*PLAYER_SPEED*dt;
+                              if(!rectHit(nx,player.y,player.r)){player.x=nx;
+                              moving=true}if(!rectHit(player.x,ny,player.r)){player.y=ny;
+                              moving=true}}
+ if(moving&&interactState.point>=0){interactState={point:-1,progress:0};showTip('移动打断了读条。')}
+ let lamp=inLamp(player);
+                              if(wantsEye){if(!lamp)player.blind+=BLIND_RATE.rise*dt}else player.blind-=BLIND_RATE.fall*dt;
+                              player.blind=clamp(player.blind,0,100);
+                              if(player.blind>=100){player.blind=30;
+                              player.forced=3;
+                              blindFlash=.8;
+                              mouse.down=false;
+                              showTip('雪白淹没了视野。',2)}blindFlash=Math.max(0,blindFlash-dt);
+                              
+ let nearest=Math.min(...monsters.map(m=>dist(player,m)));
+                              let gain=nearest<220?3+(220-nearest)/160*27:0;
+                              player.heart+=gain*dt+(moving?2*dt:0);
+                              if(wantsEye){for(let m of monsters)if(visibleMonster(m)){m.veiled=false;player.heart+=8*dt;if(m.state==='suspicious'){player.heart=clamp(player.heart+25,0,160);setState(m,'chase')}}}
+                              if(interactState.point>=0){let p=level.taskPoints[interactState.point];if(!p||p[2]||monsters.some(m=>m.state==='chase')){interactState={point:-1,progress:0};showTip('追猎打断了读条。')}else{interactState.progress+=dt;player.heart+=15*dt;for(let m of monsters)m.hearT=0;if(interactState.progress>=3){p[2]=true;interactState={point:-1,progress:0};showTip('刻印已唤醒。')}}}
+                              if(holding)player.heart-=25*dt;
+                              if(lamp)player.heart-=8*dt;
+                              if(player.calm>0)player.heart=60;
+                              else player.heart=clamp(player.heart,60,160);
+                              updatePulse(dt);
+                              
+ for(let m of monsters)updateMonster(m,dt);
+                              for(let l of level.lamps)if(Math.hypot(player.x-l[0],player.y-l[1])<120&&!litTrace.some(t=>t.l===l)){litTrace.push({x:l[0],y:l[1],t:6,l})}for(let t of litTrace)t.t-=dt;
+                              litTrace=litTrace.filter(t=>t.t>0);
+                              
+ interactAuto();
+                              camera=getCamera();
+                              updateHUD();
+                              }
+function tasksDone(){return !level.taskPoints.length||level.taskPoints.every(p=>p[2])}
+function getInteractHintVisible(){return mode==='play'&&interactState.point<0&&level.taskPoints.some(p=>!p[2]&&Math.hypot(player.x-p[0],player.y-p[1])<44)}
+function getHudTaskProgress(){return level&&level.type==='task'?`刻印 ${level.taskPoints.filter(p=>p[2]).length}/3`:''}
+function updatePulse(dt){pulseAge+=dt;if(player.heart<70){pulseClock=0;return}let interval=hearInterval(player.heart,inWind(player));pulseClock+=dt;if(pulseClock>=interval){pulseClock%=interval;pulseAge=0;lastPulseT=simTime}}
+function interactAuto(){if(Math.hypot(player.x-level.exit[0],player.y-level.exit[1])<25){if(tasksDone())finishLevel();else showTip('先唤醒三处刻印。')}
+                              }
+function interact(){if(mode!=='play')return;
+                              if(Math.hypot(player.x-level.exit[0],player.y-level.exit[1])<30){if(tasksDone())finishLevel();else showTip('三处刻印尚未唤醒。');return}for(let i=0;i<level.taskPoints.length;i++){let p=level.taskPoints[i];if(!p[2]&&Math.hypot(player.x-p[0],player.y-p[1])<34){interactState={point:i,progress:0};showTip('站定 3 秒唤醒刻印。');return}}for(let p of level.incense){if(!p[2]&&Math.hypot(player.x-p[0],player.y-p[1])<30&&player.incense<2){p[2]=1;
+                              player.incense++;
+                              showTip('拾得一枚安神香');
+                              return}}for(let p of level.noteSpots){if(Math.hypot(player.x-p[0],player.y-p[1])<32){if(!save.notes.includes(p[2])){save.notes.push(p[2]);
+                              persist()}dialog('守夜人手记·'+(p[2]+1),notes[p[2]],'收好',()=>mode='play');
+                              return}}if(player.incense>0){player.incense--;
+                              player.calm=6;
+                              player.heart=60;
+                              showTip('香气压住了心跳。',2);
+                              return}showTip('这里没有可交互的东西。')}
+function finishLevel(){let secs=(performance.now()-levelStart)/1000;
+                              save.best[levelIndex]=save.best[levelIndex]==null?secs:Math.min(save.best[levelIndex],secs);
+                              persist();
+                              if(levelIndex<2)dialog(level.name+'·已通过','长明灯在身后缩成一粒星。','走向下一夜',()=>beginLevel(levelIndex+1));
+                              else ending()}
+function ending(){let hidden=save.notes.length===6;
+                              dialog(hidden?'回执':'还香','香火刚落，山门后便传来第二声心跳。\n\n'+(hidden?'山神收下的从不是香。它听你一生的心跳，只等你亲自送上门。':'你把香插进炉灰。东家没说，还完以后要等什么。'),' 回到客栈',()=>{mode='menu';
+                              hud.classList.add('hidden');
+                              $('#menu').classList.remove('hidden')})}
+function updateHUD(){$('#hrText').textContent=Math.round(player.heart);
+                              $('#hrBar').style.width=player.heart/160*100+'%';
+                              $('#blindBar').style.width=player.blind+'%';
+                              $('#incenseText').textContent=player.incense;
+                              $('#levelName').textContent=level.name;
+                              $('#objective').textContent=level.type==='task'?getHudTaskProgress():'穿过山道'}
+function getCamera(){return{x:clamp(player.x-VIEW_W/2,0,MAP_W-VIEW_W),y:clamp(player.y-VIEW_H/2,0,MAP_H-VIEW_H)}}
+function resize(){let d=Math.min(3,devicePixelRatio||1),r=canvas.getBoundingClientRect();
+                              canvas.width=Math.round(r.width*d);
+                              canvas.height=Math.round(r.height*d);
+                              ctx.setTransform(canvas.width/VIEW_W,0,0,canvas.height/VIEW_H,0,0)}window.addEventListener('resize',resize);
+                              resize();
+                              
+function world(){ctx.fillStyle='#0a0a0c';
+                              ctx.fillRect(camera.x,camera.y,VIEW_W,VIEW_H);
+                              for(let key of explored){let [cx,cy]=key.split(',').map(Number),x=cx*GRID,y=cy*GRID;if(inView(x,y,GRID)){ctx.fillStyle=level.wind&&x>=level.wind[0]&&x<level.wind[0]+level.wind[2]&&y>=level.wind[1]&&y<level.wind[1]+level.wind[3]?'#111820':'#101014';ctx.fillRect(x,y,GRID,GRID)}}
+ let g=ctx.createRadialGradient(player.x,player.y,100,player.x,player.y,550);
+                              g.addColorStop(0,'transparent');
+                              g.addColorStop(1,'#00000059');
+                              ctx.fillStyle=g;
+                              ctx.fillRect(camera.x,camera.y,VIEW_W,VIEW_H);drawPersistentWalls()}
+function inView(x,y,pad=140){return x>=camera.x-pad&&x<=camera.x+VIEW_W+pad&&y>=camera.y-pad&&y<=camera.y+VIEW_H+pad}
+function drawPersistentWalls(){ctx.save();ctx.fillStyle='rgba(26,26,31,.35)';ctx.strokeStyle='rgba(110,108,112,.35)';ctx.lineWidth=2;for(let w of level.walls)if(w[0]+w[2]>=camera.x&&w[0]<=camera.x+VIEW_W&&w[1]+w[3]>=camera.y&&w[1]<=camera.y+VIEW_H){ctx.fillRect(...w);ctx.strokeRect(...w)}if(level.mirrors){ctx.strokeStyle='rgba(74,106,106,.45)';ctx.lineWidth=4;for(let m of level.mirrors){ctx.beginPath();ctx.moveTo(m[0],m[1]);ctx.lineTo(m[2],m[3]);ctx.stroke()}}ctx.restore()}
+function scene(alpha=1){ctx.save();
+                              ctx.globalAlpha*=alpha;
+                              ctx.fillStyle='#24242a';
+                              for(let w of level.walls)if(w[0]+w[2]>=camera.x&&w[0]<=camera.x+VIEW_W&&w[1]+w[3]>=camera.y&&w[1]<=camera.y+VIEW_H)ctx.fillRect(...w);
+                              ctx.strokeStyle='#4b4948';
+                              ctx.lineWidth=2;
+                              for(let w of level.walls)if(w[0]+w[2]>=camera.x&&w[0]<=camera.x+VIEW_W&&w[1]+w[3]>=camera.y&&w[1]<=camera.y+VIEW_H)ctx.strokeRect(...w);
+                              if(level.mirrors){ctx.strokeStyle='#4a6a6a';
+                              ctx.lineWidth=6;
+                              for(let m of level.mirrors){ctx.beginPath();
+                              ctx.moveTo(m[0],m[1]);
+                              ctx.lineTo(m[2],m[3]);
+                              ctx.stroke()}}
+ for(let p of level.incense)if(!p[2]&&inView(p[0],p[1])){ctx.fillStyle='#ded5be';
+                              ctx.fillRect(p[0]-2,p[1]-7,4,14)}for(let p of level.noteSpots){ctx.fillStyle='#b9aa8555';
+                              ctx.fillRect(p[0]-7,p[1]-5,14,10)}
+ ctx.fillStyle='#55483a';
+                              ctx.beginPath();
+                              ctx.arc(level.exit[0],level.exit[1],16,0,TAU);
+                              ctx.fill();
+                              ctx.restore()}
+function drawKnownContents(){for(let m of monsters)if(!m.veiled&&isExplored(m.x,m.y)&&inView(m.x,m.y))drawMonster(m);for(let p of level.incense)if(!p[2]&&isExplored(p[0],p[1])&&inView(p[0],p[1])){ctx.fillStyle='#ded5be';ctx.fillRect(p[0]-2,p[1]-7,4,14)}for(let p of level.noteSpots)if(isExplored(p[0],p[1])&&inView(p[0],p[1])){ctx.fillStyle='#b9aa85';ctx.fillRect(p[0]-7,p[1]-5,14,10)}}
+function drawMonster(m){ctx.save();
+                              ctx.translate(m.x,m.y);
+                              ctx.fillStyle='#1a1a1f';
+                              ctx.beginPath();
+                              ctx.ellipse(0,0,12,20,0,0,TAU);
+                              ctx.fill();
+                              ctx.fillStyle='#77736a';
+                              ctx.globalAlpha=.35;
+                              ctx.fillRect(-6,-6,3,2);
+                              ctx.fillRect(3,-6,3,2);
+                              ctx.restore()}
+function rayEnd(a,r=260){for(let d=6;d<=r;d+=6){let x=player.x+Math.cos(a)*d,y=player.y+Math.sin(a)*d;if(rectHit(x,y,1))return{x:player.x+Math.cos(a)*(d-6),y:player.y+Math.sin(a)*(d-6)}}return{x:player.x+Math.cos(a)*r,y:player.y+Math.sin(a)*r}}
+function visionPolygon(){let a=Math.atan2(mouse.y+camera.y-player.y,mouse.x+camera.x-player.x),half=35*Math.PI/180,pts=[];for(let i=0;i<=32;i++)pts.push(rayEnd(a-half+i/32*half*2));return pts}
+function vision(){if(viewA<=.01)return;
+                              let pts=visionPolygon(),r=260;
+                              ctx.save();
+                              ctx.beginPath();
+                              ctx.moveTo(player.x,player.y);
+                              for(let p of pts)ctx.lineTo(p.x,p.y);
+                              ctx.closePath();
+                              ctx.clip();
+                              scene(viewA);
+                              let g=ctx.createRadialGradient(player.x,player.y,r-40,player.x,player.y,r);
+                              g.addColorStop(0,'transparent');
+                              g.addColorStop(1,'#0a0a0c');
+                              ctx.globalAlpha=viewA;
+                              ctx.fillStyle=g;
+                              ctx.fillRect(player.x-r,player.y-r,r*2,r*2);
+                              drawVisionFog(r);
+                              ctx.restore()}
+function getVisionFogLevel(){if(blindFlash>0)return 3;return player.blind<40?0:player.blind<70?1:player.blind<90?2:3}
+function drawVisionFog(r){let fog=getVisionFogLevel();if(!fog||viewA<=0)return;
+                              let advance=player.blind/100,inner=r-(45+advance*150),alpha=[0,.16,.3,.48][fog]*(save.reduce?1:.8+.2*Math.sin(performance.now()/240));
+                              let g=ctx.createRadialGradient(player.x,player.y,Math.max(24,inner),player.x,player.y,r);g.addColorStop(0,'transparent');g.addColorStop(1,`rgba(245,248,255,${alpha})`);ctx.fillStyle=g;ctx.fillRect(player.x-r,player.y-r,r*2,r*2);
+                              ctx.strokeStyle=`rgba(250,252,255,${Math.min(.82,alpha+.2)})`;ctx.lineWidth=fog>=2?7:4;let look=Math.atan2(mouse.y+camera.y-player.y,mouse.x+camera.x-player.x);ctx.beginPath();ctx.arc(player.x,player.y,r-4,look-35*Math.PI/180,look+35*Math.PI/180);ctx.stroke()}
+function glow(){ctx.save();
+                              ctx.globalCompositeOperation='lighter';
+                              for(let l of level.lamps)if(inView(l[0],l[1])){let g=ctx.createRadialGradient(l[0],l[1],3,l[0],l[1],120);
+                              g.addColorStop(0,'#e8d5a0cc');
+                              g.addColorStop(.15,'#7da6ff77');
+                              g.addColorStop(1,'transparent');
+                              ctx.fillStyle=g;
+                              ctx.beginPath();
+                              ctx.arc(l[0],l[1],120,0,TAU);
+                              ctx.fill();
+                              ctx.fillStyle='#dfeaff';
+                              ctx.beginPath();
+                              ctx.arc(l[0],l[1],4,0,TAU);
+                              ctx.fill()}for(let f of level.footprints){ctx.fillStyle='#ded5be55';
+                              ctx.beginPath();
+                              ctx.ellipse(f[0],f[1],5,2,-.2,0,TAU);
+                              ctx.fill()}for(let t of litTrace){ctx.strokeStyle=`rgba(125,166,255,${t.t/12})`;
+                              ctx.beginPath();
+                              ctx.arc(t.x,t.y,25+(6-t.t)*12,0,TAU);
+                              ctx.stroke()}for(let p of level.taskPoints)if(isExplored(p[0],p[1])){let taskPulse=save.reduce?1:.72+.28*Math.sin(performance.now()/900*TAU);ctx.fillStyle=p[2]?'#e0b86f':`rgba(171,225,226,${taskPulse})`;ctx.strokeStyle=p[2]?'#9b6d32':`rgba(202,249,250,${taskPulse})`;ctx.lineWidth=p[2]?3:2;ctx.beginPath();ctx.arc(p[0],p[1],p[2]?10:7+taskPulse*3,0,TAU);ctx.fill();ctx.stroke();if(!p[2]){ctx.beginPath();ctx.moveTo(p[0]-6,p[1]);ctx.lineTo(p[0],p[1]-8);ctx.lineTo(p[0]+6,p[1]);ctx.lineTo(p[0],p[1]+8);ctx.closePath();ctx.stroke()}}drawBeacon();drawSonar();
+                              ctx.restore()}
+function drawBeacon(){let ready=tasksDone(),phase=save.reduce?.7:.7+.2*Math.sin(performance.now()/1500*TAU);ctx.save();ctx.globalAlpha=ready?phase:.25;let g=ctx.createRadialGradient(level.exit[0],level.exit[1],4,level.exit[0],level.exit[1],70);g.addColorStop(0,'#dfeaff');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.beginPath();ctx.arc(level.exit[0],level.exit[1],70,0,TAU);ctx.fill();ctx.fillStyle='#9fbfff';ctx.fillRect(level.exit[0]-4,level.exit[1]-90,8,90);ctx.restore()}
+function drawSonar(){if(player.heart<70||pulseAge>.55)return;let phase=clamp(pulseAge/.55,0,1),r=30+phase*30,tier=getVignetteLevel(),alpha=[0,.1,.18,.25][tier]*(1-phase);
+                              ctx.strokeStyle=tier===3?`rgba(218,62,55,${alpha})`:`rgba(205,211,218,${alpha})`;ctx.lineWidth=tier>=2?3:2;ctx.beginPath();ctx.arc(player.x,player.y,r,0,TAU);ctx.stroke()}
+function getVignetteLevel(){return player.heart<70?0:player.heart<=110?1:player.heart<130?2:3}
+function markerColor(m,d){return m.state==='suspicious'?'amber':m.state==='chase'?'red':'gray'}
+function getSonarMarkers(){let out=[];
+                              for(let i=0;i<monsters.length;i++){let m=monsters[i],d=dist(player,m),persistent=m.state==='suspicious';
+                              if(!persistent&&(player.heart<70||m.markerT<=0))continue;
+                              let tier=persistent?1:sonar(player.heart,inWind(player)).tier;
+                              if(!tier)continue;
+                              let angle=Math.atan2(m.y-player.y,m.x-player.x),color=markerColor(m,d);
+                              if(tier===1)out.push({monster:i,tier,angle,width:Math.PI/2,color,persistent,count:1});
+                              else for(let cone=-1;cone<=1;cone++)out.push({monster:i,tier,angle:angle+cone*.14,width:Math.PI/9,color,persistent:false,count:3})}
+                              return out}
+function getChaseRingVisible(){return monsters.some(m=>m.state==='chase')}
+function getMonsterState(i=0){return monsters[i]?.state||null}
+function getWallGlow(){let m=monsters.find(q=>q.state==='suspicious');
+                              if(!m)return null;
+                              return firstWallHit(player.x,player.y,m.x,m.y)||{x:m.x,y:m.y,wall:null,active:true}}
+function getPulseState(){return{lastPulseT,interval:player.heart<70?Infinity:hearInterval(player.heart,inWind(player)),age:pulseAge}}
+function drawWarnings(){let t=performance.now()/1000,level=getVignetteLevel(),pulse=save.reduce?1:.9+.1*Math.sin(t*player.heart/60*TAU);
+                              if(level){let alpha=[0,.08,.15,.25][level]*pulse,g=ctx.createRadialGradient(VIEW_W/2,VIEW_H/2,145,VIEW_W/2,VIEW_H/2,510);g.addColorStop(0,'transparent');g.addColorStop(1,`rgba(205,42,36,${alpha})`);ctx.fillStyle=g;ctx.fillRect(0,0,VIEW_W,VIEW_H)}
+                              let px=player.x-camera.x,py=player.y-camera.y;
+                              for(let marker of getSonarMarkers()){ctx.strokeStyle=marker.color==='red'?'rgba(235,65,55,.9)':marker.color==='amber'?'rgba(226,164,60,.9)':'rgba(165,165,170,.75)';ctx.lineWidth=marker.tier===1?7:4;ctx.beginPath();ctx.arc(px,py,31,marker.angle-marker.width/2,marker.angle+marker.width/2);ctx.stroke()}
+                              let glow=getWallGlow();if(glow){let x=glow.x-camera.x,y=glow.y-camera.y,g=ctx.createRadialGradient(x,y,2,x,y,26*pulse);g.addColorStop(0,'rgba(255,194,76,.92)');g.addColorStop(.35,'rgba(226,145,43,.55)');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,26*pulse,0,TAU);ctx.fill()}
+                              for(let m of monsters)if(m.state==='chase'){let x=m.x-camera.x,y=m.y-camera.y,r=34*pulse;ctx.strokeStyle='rgba(245,44,44,.88)';ctx.lineWidth=6;ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.stroke()}}
+function overlay(){ctx.save();ctx.setTransform(canvas.width/VIEW_W,0,0,canvas.height/VIEW_H,0,0);if(player.forced>0){let white=blindFlash>0?blindFlash/.8:0;
+                              ctx.fillStyle=`rgba(255,255,255,${white})`;
+                              ctx.fillRect(0,0,VIEW_W,VIEW_H);
+                              ctx.fillStyle=`rgba(5,5,7,${1-white})`;
+                              ctx.fillRect(0,0,VIEW_W,VIEW_H)}drawWarnings();if(getInteractHintVisible()){ctx.fillStyle='#e5e2d8';ctx.font='14px system-ui';ctx.textAlign='center';ctx.fillText('按 E，站定不动唤醒刻印',VIEW_W/2,VIEW_H-64)}if(interactState.point>=0){ctx.fillStyle='#ded5be';ctx.fillRect(VIEW_W/2-90,VIEW_H-45,180*(interactState.progress/3),5)}ctx.restore()}
+function render(){ctx.setTransform(canvas.width/VIEW_W,0,0,canvas.height/VIEW_H,0,0);
+                              ctx.clearRect(0,0,VIEW_W,VIEW_H);
+                              if(!level)return;
+                              ctx.save();ctx.translate(-camera.x,-camera.y);
+                              world();
+                              vision();
+                              drawKnownContents();
+                              glow();
+                              ctx.fillStyle='#f5f0e0';
+                              ctx.beginPath();
+                              ctx.arc(player.x,player.y,6,0,TAU);
+                              ctx.fill();
+                              ctx.strokeStyle='#f5f0e044';
+                              ctx.beginPath();
+                              ctx.arc(player.x,player.y,10+(save.reduce?0:Math.sin(performance.now()/500)*2),0,TAU);
+                              ctx.stroke();ctx.restore();
+                              overlay()}
+function loop(t){let dt=Math.min(.033,(t-last)/1000||0);
+                              last=t;
+                              update(dt);
+                              render();
+                              animation=requestAnimationFrame(loop)}animation=requestAnimationFrame(loop);
+                              
+window.addEventListener('keydown',e=>{keys[e.code]=true;
+                              if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
+                              if(e.code==='KeyE')interact();
+                              if(e.code==='KeyR'&&mode==='play')reset()});
+                              window.addEventListener('keyup',e=>keys[e.code]=false);
+                              canvas.addEventListener('mousemove',e=>{let r=canvas.getBoundingClientRect();
+                              mouse.x=(e.clientX-r.left)/r.width*VIEW_W;
+                              mouse.y=(e.clientY-r.top)/r.height*VIEW_H});
+                              canvas.addEventListener('mousedown',e=>{if(e.button===0)mouse.down=true});
+                              window.addEventListener('mouseup',e=>{if(e.button===0)mouse.down=false});
+                              canvas.oncontextmenu=e=>e.preventDefault();
+                              
+$('#startBtn').onclick=()=>beginLevel(0);
+                              $('#notesBtn').onclick=()=>dialog('守夜人手记',save.notes.length?save.notes.sort().map(i=>notes[i]).join('\n\n'):'尚未拾得手记。','收起',()=>mode='menu');
+                              
+window.__heartbeatTest={designManifest,constants:{VIEW_W,VIEW_H,MAP_W,MAP_H,GRID,PLAYER_SPEED,TOUCH},sonar,hearInterval,levels,notes,getSave:()=>JSON.parse(JSON.stringify(save)),beginLevel,getState:()=>({mode,levelIndex,player:player&&{...player},monsters:monsters.map(m=>({...m,target:m.target&&{...m.target}})),viewA,interactState:{...interactState}}),setPlayer:o=>Object.assign(player,o),setMonster:(i,o)=>Object.assign(monsters[i],o),setInput:o=>Object.assign(keys,o),setMouse:o=>Object.assign(mouse,o),step:(dt,n=1)=>{for(let i=0;
+                              i<n;
+                              i++)update(dt)},render,mirrorTarget,rectHit,astar,segmentBlocked,visibleMonster,beginSearch,getCamera,getTaskPoints:()=>level.taskPoints.map(p=>[...p]),setTaskPoint:(i,v)=>level.taskPoints[i][2]=v,setWalls:ws=>level.walls=ws,getInteractProgress:()=>interactState.progress,getBlindRate:()=>({...BLIND_RATE}),getExploredRatio:()=>explored.size/((MAP_W/GRID)*(MAP_H/GRID)),isExplored,getPersistentWallCount:()=>level.walls.length,getObjectRenderList:()=>({tasks:level.taskPoints.map((p,i)=>isExplored(p[0],p[1])?i:null).filter(i=>i!==null),beacon:true}),getRenderList:()=>monsters.map((m,i)=>!m.veiled&&isExplored(m.x,m.y)?i:null).filter(i=>i!==null),getChaseRingVisible,getSonarMarkers,getVignetteLevel,getMonsterState,getWallGlow,getTipShown:k=>!!tipFlags[k],getTipCount:k=>tipFlags[k+'Count']||0,getInteractHintVisible,getHudTaskProgress,getPulseState,getVisionFogLevel,forceInteract:interact,finishLevel};
+Object.defineProperty(window.__heartbeatTest,'monsterVeiled',{get:()=>monsters[0]?.veiled??true});
+                              
+})();
+                              
+</script>
+</body></html>

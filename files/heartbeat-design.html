@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心跳 - 设计策划案 | 胡凯迪</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.7;
+            color: #ffffff;
+            background-color: #000000;
+            padding: 3rem 1.5rem;
+        }
+        .doc {
+            max-width: 880px;
+            margin: 0 auto;
+        }
+        .back {
+            display: inline-block;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 2.5rem;
+            transition: color 0.3s;
+        }
+        .back:hover { color: #fff; }
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.6rem;
+        }
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 2.8rem;
+        }
+        .tag {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.85);
+            padding: 0.3rem 0.9rem;
+            border-radius: 20px;
+            font-size: 0.82rem;
+        }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 3rem 0 1.2rem;
+            padding-left: 0.9rem;
+            border-left: 3px solid #fff;
+        }
+        h3 {
+            font-size: 1.12rem;
+            font-weight: 600;
+            margin: 1.8rem 0 0.7rem;
+            color: rgba(255,255,255,0.95);
+        }
+        p {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 1rem;
+        }
+        ul, ol {
+            color: rgba(255,255,255,0.7);
+            margin: 0 0 1rem 1.4rem;
+        }
+        li { margin-bottom: 0.4rem; }
+        strong { color: rgba(255,255,255,0.92); font-weight: 600; }
+        .highlight {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            padding: 1.3rem 1.5rem;
+            margin: 1.4rem 0;
+        }
+        .highlight p { margin-bottom: 0.6rem; }
+        .highlight p:last-child { margin-bottom: 0; }
+        .quote {
+            font-size: 1.15rem;
+            color: rgba(255,255,255,0.9);
+            padding: 1.2rem 1.6rem;
+            border-left: 3px solid rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.04);
+            margin: 1.5rem 0;
+            line-height: 1.8;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.2rem 0 1.8rem;
+            font-size: 0.9rem;
+        }
+        th {
+            text-align: left;
+            color: rgba(255,255,255,0.9);
+            font-weight: 600;
+            padding: 0.65rem 0.8rem;
+            border-bottom: 2px solid rgba(255,255,255,0.25);
+        }
+        td {
+            color: rgba(255,255,255,0.65);
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            vertical-align: top;
+        }
+        td:first-child { color: rgba(255,255,255,0.85); font-weight: 500; white-space: nowrap; }
+        .btn-row { margin: 2.5rem 0 1rem; display: flex; gap: 0.8rem; flex-wrap: wrap; }
+        .btn {
+            display: inline-block;
+            padding: 0.7rem 1.4rem;
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s;
+        }
+        .btn:hover { background-color: rgba(255,255,255,0.18); }
+        .lesson {
+            background: rgba(255,255,255,0.04);
+            border-left: 3px solid rgba(255,255,255,0.35);
+            padding: 1rem 1.4rem;
+            margin: 1.2rem 0;
+            color: rgba(255,255,255,0.75);
+            font-size: 0.95rem;
+        }
+        .lesson strong { display: block; margin-bottom: 0.3rem; }
+        @media (max-width: 640px) {
+            h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>心跳</h1>
+        <p class="subtitle">感知即代价 · 生理版潜行 ｜ 中式怪谈 · 单文件网页 Demo</p>
+    </header>
+    <main>
+        <section>
+            <h2>一、立项：一条核心对赌</h2>
+            <p>很多潜行游戏的"感知"是白给的——小地图、高亮、透视，玩家看得一清二楚，怪只是移动的路障。我想反过来：<b>感知本身就是代价。</b>你看得越清楚，说明你离危险越近、心跳越响、暴露越彻底。看得见的瞬间就是最危险的时刻。</p>
+            <p>一句话对赌：把"视觉"和"风险"焊死在同一条生理轴（心跳）上，玩家每一次睁眼都是在用安全换信息。</p>
+
+        </section>
+
+        <section>
+            <h2>二、核心循环</h2>
+            <ul>
+                <li>全黑环境中，怪物靠心跳定位你——离它越近你越怕，心跳越响；</li>
+                <li>心跳声就是你的声呐：听得越清，说明它越近；</li>
+                <li>按住鼠标睁眼（扇形视野）：看得真，但用眼会积蓄雪盲值，攒满强制致盲；</li>
+                <li>屏息可以隐身，但也彻底失去感知——安全与信息不可兼得。</li>
+            </ul>
+
+        </section>
+
+        <section>
+            <h2>三、设计要点</h2>
+            <div class="lesson"><strong>双资源绞紧</strong>心跳半径（威胁感知）与雪盲值（视觉预算）互相挤压：想看清就要睁眼，睁眼加速致盲，致盲后只剩心跳一条信息通道。玩家永远处在"两种残缺"之间做选择。<strong>六态 AI</strong>巡逻/聆听/警觉/追猎/搜寻/困惑六状态，保证怪物"听得懂"你的心跳而不是无脑索敌——困惑态给了玩家声东击西的操作空间。<strong>信息分级配色</strong>灰=中性感知、琥珀=警觉、红=仅追猎，脚下涟漪疏密直接映射心跳节拍，全部信息走视觉通道但不破坏"黑暗"的世界观。            </div>
+
+        </section>
+
+        <section>
+            <h2>四、迭代与教训</h2>
+            <ul>
+                <li>v2.6 定稿：琥珀光首次出现时一次性解释、刻印站定规则明示、HUD 计数内联——引导层的三次重工都源于"机制有但玩家不知道"；</li>
+                <li>核心教训：感知类机制必须有<b>可见性断言</b>——渲染层不常显的机制等于不存在。</li>
+            </ul>
+
+        </section>
+
+    </main>
+    <footer>
+        <p>胡凯迪 · 游戏策划作品集 · <a href="../index.html">返回作品集</a></p>
+    </footer>
+</body>
+</html>

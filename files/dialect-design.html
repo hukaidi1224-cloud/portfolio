@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>方言 - 设计策划案 | 胡凯迪</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.7;
+            color: #ffffff;
+            background-color: #000000;
+            padding: 3rem 1.5rem;
+        }
+        .doc {
+            max-width: 880px;
+            margin: 0 auto;
+        }
+        .back {
+            display: inline-block;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 2.5rem;
+            transition: color 0.3s;
+        }
+        .back:hover { color: #fff; }
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.6rem;
+        }
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 2.8rem;
+        }
+        .tag {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.85);
+            padding: 0.3rem 0.9rem;
+            border-radius: 20px;
+            font-size: 0.82rem;
+        }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 3rem 0 1.2rem;
+            padding-left: 0.9rem;
+            border-left: 3px solid #fff;
+        }
+        h3 {
+            font-size: 1.12rem;
+            font-weight: 600;
+            margin: 1.8rem 0 0.7rem;
+            color: rgba(255,255,255,0.95);
+        }
+        p {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 1rem;
+        }
+        ul, ol {
+            color: rgba(255,255,255,0.7);
+            margin: 0 0 1rem 1.4rem;
+        }
+        li { margin-bottom: 0.4rem; }
+        strong { color: rgba(255,255,255,0.92); font-weight: 600; }
+        .highlight {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            padding: 1.3rem 1.5rem;
+            margin: 1.4rem 0;
+        }
+        .highlight p { margin-bottom: 0.6rem; }
+        .highlight p:last-child { margin-bottom: 0; }
+        .quote {
+            font-size: 1.15rem;
+            color: rgba(255,255,255,0.9);
+            padding: 1.2rem 1.6rem;
+            border-left: 3px solid rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.04);
+            margin: 1.5rem 0;
+            line-height: 1.8;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.2rem 0 1.8rem;
+            font-size: 0.9rem;
+        }
+        th {
+            text-align: left;
+            color: rgba(255,255,255,0.9);
+            font-weight: 600;
+            padding: 0.65rem 0.8rem;
+            border-bottom: 2px solid rgba(255,255,255,0.25);
+        }
+        td {
+            color: rgba(255,255,255,0.65);
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            vertical-align: top;
+        }
+        td:first-child { color: rgba(255,255,255,0.85); font-weight: 500; white-space: nowrap; }
+        .btn-row { margin: 2.5rem 0 1rem; display: flex; gap: 0.8rem; flex-wrap: wrap; }
+        .btn {
+            display: inline-block;
+            padding: 0.7rem 1.4rem;
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s;
+        }
+        .btn:hover { background-color: rgba(255,255,255,0.18); }
+        .lesson {
+            background: rgba(255,255,255,0.04);
+            border-left: 3px solid rgba(255,255,255,0.35);
+            padding: 1rem 1.4rem;
+            margin: 1.2rem 0;
+            color: rgba(255,255,255,0.75);
+            font-size: 0.95rem;
+        }
+        .lesson strong { display: block; margin-bottom: 0.3rem; }
+        @media (max-width: 640px) {
+            h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>方言</h1>
+        <p class="subtitle">机制化文字冒险 · 审讯博弈 ｜ 粤语黑话 · 单文件网页 Demo</p>
+    </header>
+    <main>
+        <section>
+            <h2>一、立项：让"读文字"本身有风险</h2>
+            <p>传统文字冒险里，文本是免费的——读多少都不付代价，玩法退化成选项连连看。我想让"阅读深度"成为博弈轴：<b>供词里的方言黑话是「□」，读多深、译多少、信几分，都要付代价。</b></p>
+            <p>一句话对赌：把《心跳》的"感知即代价"翻译成文字版——追问即暴露，理解即污染。</p>
+
+        </section>
+
+        <section>
+            <h2>二、核心循环</h2>
+            <ul>
+                <li>嫌疑人供词中黑话以「□」遮蔽，点击破译入词典，但每次追问按词的敏感度上涨警觉值；</li>
+                <li>警觉过高，嫌疑人开始措辞修饰、翻供，甚至反设套（第三夜）；</li>
+                <li>破译后的词进入全局词典，后文同词自动显形——知识可复用，但污染也随之扩散；</li>
+                <li>错译不会报错，只会把错误理解钉上线索板，靠后文供词自己揭穿；</li>
+                <li>指证矛盾当面对质逼出真话，三夜三审（教学/修饰/反设套），三档结局（铁证/存疑/冤案）。</li>
+            </ul>
+
+        </section>
+
+        <section>
+            <h2>三、设计要点</h2>
+            <div class="lesson"><strong>定价式暴露</strong>PRICE 表 8/11/15 单调同源：越敏感的词越贵。追问的收益（信息）与代价（警觉）绑定在同一动作上，玩家"心疼警觉"的体感就是博弈本身。<strong>自断零评判</strong>玩家选择自己下结论时，系统不标注对错——判断权完全交还玩家，除非主动去审问验证。文字冒险最容易犯的错就是替玩家阅读。<strong>句旁一键收录</strong>线索零成本收录但有判断权：什么值得记本身就是玩法。记录永不涨警觉——警觉=对方看得见的一切，这是全套定价的公理。            </div>
+
+        </section>
+
+        <section>
+            <h2>四、迭代与教训</h2>
+            <ul>
+                <li>v2.1 重工指证流：去掉下拉框，指证冲突后新对话直接入流并高亮；</li>
+                <li>v2.2 重工：自断零评判 + 句旁一键收录；</li>
+                <li>核心教训：文字冒险的"玩法感"来自<b>让阅读有价格</b>，而不是堆选项数量。</li>
+            </ul>
+
+        </section>
+
+    </main>
+    <footer>
+        <p>胡凯迪 · 游戏策划作品集 · <a href="../index.html">返回作品集</a></p>
+    </footer>
+</body>
+</html>

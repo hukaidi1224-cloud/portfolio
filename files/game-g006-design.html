@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>声音回路 - 设计策划案 | 胡凯迪</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.7;
+            color: #ffffff;
+            background-color: #000000;
+            padding: 3rem 1.5rem;
+        }
+        .doc { max-width: 880px; margin: 0 auto; }
+        .back {
+            display: inline-block;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 2.5rem;
+            transition: color 0.3s;
+        }
+        .back:hover { color: #fff; }
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.6rem;
+        }
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 2.8rem;
+        }
+        .tag {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.85);
+            padding: 0.3rem 0.9rem;
+            border-radius: 20px;
+            font-size: 0.82rem;
+        }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 3rem 0 1.2rem;
+            padding-left: 0.9rem;
+            border-left: 3px solid #fff;
+        }
+        h3 {
+            font-size: 1.12rem;
+            font-weight: 600;
+            margin: 1.8rem 0 0.7rem;
+            color: rgba(255,255,255,0.95);
+        }
+        p {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 1rem;
+        }
+        ul, ol {
+            color: rgba(255,255,255,0.7);
+            margin: 0 0 1rem 1.4rem;
+        }
+        li { margin-bottom: 0.4rem; }
+        strong { color: rgba(255,255,255,0.92); font-weight: 600; }
+        .highlight {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            padding: 1.3rem 1.5rem;
+            margin: 1.4rem 0;
+        }
+        .highlight p { margin-bottom: 0.6rem; }
+        .highlight p:last-child { margin-bottom: 0; }
+        .quote {
+            font-size: 1.15rem;
+            color: rgba(255,255,255,0.9);
+            padding: 1.2rem 1.6rem;
+            border-left: 3px solid rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.04);
+            margin: 1.5rem 0;
+            line-height: 1.8;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.2rem 0 1.8rem;
+            font-size: 0.9rem;
+        }
+        th {
+            text-align: left;
+            color: rgba(255,255,255,0.9);
+            font-weight: 600;
+            padding: 0.65rem 0.8rem;
+            border-bottom: 2px solid rgba(255,255,255,0.25);
+        }
+        td {
+            color: rgba(255,255,255,0.65);
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            vertical-align: top;
+        }
+        td:first-child { color: rgba(255,255,255,0.85); font-weight: 500; white-space: nowrap; }
+        .btn-row { margin: 2.5rem 0 1rem; display: flex; gap: 0.8rem; flex-wrap: wrap; }
+        .btn {
+            display: inline-block;
+            padding: 0.7rem 1.4rem;
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s;
+        }
+        .btn:hover { background-color: rgba(255,255,255,0.18); }
+        .lesson {
+            background: rgba(255,255,255,0.04);
+            border-left: 3px solid rgba(255,255,255,0.35);
+            padding: 1rem 1.4rem;
+            margin: 1.2rem 0;
+            color: rgba(255,255,255,0.75);
+            font-size: 0.95rem;
+        }
+        .lesson strong { display: block; margin-bottom: 0.3rem; }
+        @media (max-width: 640px) {
+            h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="doc">
+        <a class="back" href="../index.html#demos">← 返回作品集</a>
+        <h1>声音回路</h1>
+        <div class="meta">
+            <span class="tag">声呐回波潜行解谜</span>
+            <span class="tag">玩法设计</span>
+            <span class="tag">中式怪谈</span>
+            <span class="tag">Codex 产线 G006</span>
+            <span class="tag">纯前端 · 零依赖单文件</span>
+        </div>
+
+        <div class="quote">发声即视之，发声即危之。<br>债从喉头借，也从脚底借。</div>
+
+        <h2>一、创作思路：从"看不见"到"听得见"</h2>
+        <p>立项时想回答一个问题：恐怖游戏里玩家最怕的到底是什么？《灯灭之后》给出的答案是"不知道怪物在哪"——信息剥夺。但光照遮罩方案仍有视觉锚点，玩家至少知道"光之外皆危险"。这次想走得更极端：<strong>把视觉整个没收，让声音成为唯一的感知通道</strong>。</p>
+        <p>核心机制由此自然生长：玩家的一切行动都会发声——叩击、长啸、脚步、投石——每个声音以回波点云的形式短暂照亮周围，形成"声呐绘地图"的玩法。但你不是院子里唯一会发声的东西：<strong>你借声音看见世界，鬼借声音看见你</strong>。感知与风险被拧成同一根绳，每一次"我想看"都是一次"我可能被看"。</p>
+        <p>叙事上延续中式怪谈调性，但这次不用"债"做结算系统，而是做世界观隐喻："声音即债"——你发出的每一声都是向黑暗借的，鬼是收债人。6 张字条用账目式冷叙述拼出灵堂的前史，集齐后解锁隐藏结局《收据》。</p>
+
+        <h2>二、核心机制</h2>
+        <h3>2.1 三种发声手段</h3>
+        <table>
+            <tr><th>手段</th><th>半径</th><th>冷却</th><th>设计意图</th></tr>
+            <tr><td>叩击（左键）</td><td>140px</td><td>0.8s</td><td>低频侦察，安全但看得近</td></tr>
+            <tr><td>长啸（右键）</td><td>340px</td><td>3s</td><td>大范围测绘，高风险高回报</td></tr>
+            <tr><td>投声石（空格）</td><td>140px</td><td>—</td><td>远程造声：探路、诱敌、砸墙声东击西</td></tr>
+        </table>
+        <p>移动超 1.2s 自动产生脚步声（60px）——"不动就安全"迫使玩家在"看清"与"隐蔽"之间持续取舍。声石不可穿墙、撞墙即发声并停在撞点，落地后留在原地可按 Q 拾回（上限 4 枚）：<strong>一个道具同时承担探测、诱饵、标记三种角色</strong>，且"扔不扔、扔哪、何时捡"全部留给玩家决策。</p>
+
+        <h3>2.2 听债鬼：追声音快照，不追人</h3>
+        <table>
+            <tr><th>状态</th><th>速度</th><th>行为</th></tr>
+            <tr><td>巡游</td><td>62px/s</td><td>沿固定路径巡逻，不杀敌；玩家 300px 内每 4s 一圈极弱"近闻"涟漪</td></tr>
+            <tr><td>察觉</td><td>—</td><td>听见声音后 1.2s 反应窗，是玩家最后的逃逸余量</td></tr>
+            <tr><td>追猎</td><td>149.5px/s（玩家的 1.15 倍）</td><td>冲向<strong>声源快照</strong>而非玩家实时位置——声东击西成立的结构性保障</td></tr>
+            <tr><td>迷惑</td><td>48px/s</td><td>在失效声源附近踱步 3s 后放弃归巡</td></tr>
+        </table>
+        <div class="highlight">
+            <p><strong>关键设计决策：鬼的追猎目标写入的是声音坐标快照，代码中不读取玩家实时位置。</strong>这条约束被写进任务书红线并逐行核查过——它保证"投石引开"永远是可靠策略，而不是碰运气的概率事件。</p>
+        </div>
+
+        <h3>2.3 三关三条声学规则</h3>
+        <p>关卡不是难度爬坡，而是<strong>三条物理规则的变奏</strong>：灵堂教基础语言（声音即视野）；水患长廊引入 1.5s 回波延迟——"你看到的永远是旧世界"，所有判断都要打提前量；走马灯阵的灯墙制造假回波——"它说谎时和说真话一个声调"，单次发声不可信，必须两声交叉验证。</p>
+
+        <h2>三、压迫感的三轮迭代（本项目最大的一课）</h2>
+        <p>首版试玩反馈一针见血：<strong>"怪物一直发红光，压迫感反而不如《灯灭之后》里不知道在哪的怪物。"</strong>这句话推翻了原始视觉方案——巡游态每 1.2s 一圈涟漪，等于给玩家开了实时小地图，鬼从"未知的威胁"降格成"可追踪的单位"。</p>
+        <p>重做把信息结构改为<strong>"常态静默 → 事件暴露 → 再度失位"</strong>：</p>
+        <ul>
+            <li><strong>巡游静默</strong>：删除周期涟漪，仅 <300px 时每 4s 一圈极弱"近闻"——你只知道"它就在附近"，不知道在哪</li>
+            <li><strong>事件涟漪</strong>：鬼停步、开始收债、扑空、离开四个状态转换各发一圈明显涟漪——恐惧来自"它动了"而不是"它在哪"</li>
+            <li><strong>心跳预警</strong>：<220px 时屏幕暗红渐晕 + 从玩家脚下扩散的心跳环，越近越快、不指方向——防贴脸暴毙，但位置依然盲</li>
+            <li><strong>追猎密集涟漪保留</strong>：逃跑时需要读位，追猎不怕信息多，怕的是巡游未知</li>
+        </ul>
+        <div class="lesson"><strong>教训：恐怖来自信息剥夺的"状态"，不来自信息的"稀缺"。</strong>首版不缺信息——恰恰是信息太连续。玩家怕的从来不是"看得少"，而是"上一秒知道、这一秒失去"。</div>
+
+        <h2>四、通关标记与结算</h2>
+        <p>三关通关进入结算屏「守灵毕」：金色印章「声债已清」+ 三关用时档案 + 纸钱收集数 + 结局名；通关记录持久化，主菜单显示「已通关 · 收据/灯下」印记。多周目动力来自 6 张字条的隐藏结局——账目式叙事的最后一页《收据》："今收守灵人声债六笔。哑者无声可还，故此债由听者代偿。"</p>
+
+        <h2>五、设计复盘：四条带得走的经验</h2>
+        <div class="lesson"><strong>1. 感知机制要同时是风险机制。</strong>声呐视野的精髓不在"用声音画地图"，而在"画地图的动作本身就是暴露"。感知与风险同源，取舍才有张力。</div>
+        <div class="lesson"><strong>2. AI 写死"追快照不追人"，涌现才可靠。</strong>声东击西不是调参调出来的手感，而是任务书红线条目逐行核查出来的结构保证——关键涌现机制必须下沉为代码约束。</div>
+        <div class="lesson"><strong>3. 纯玩法向游戏不需要 build 系统。</strong>承接 G005《香火》的教训反向验证：技巧深度的来源是机制组合与玩家技艺成长（投石三用、砸墙造声、假回波推理），不是数值成长。品类比原则先行。</div>
+        <div class="lesson"><strong>4. 恐怖的钟摆：给一点，再拿走。</strong>事件涟漪比持续涟漪更吓人——"它停了"之所以惊悚，是因为你刚刚才知道它在动，而下一秒又不知道了。未知不是没有信息，是信息的失去。</div>
+
+        <h2>六、技术实现</h2>
+        <p>零依赖单文件 HTML + Canvas 2D，28.6KB。回波点云用 additive 混合渲染；走马灯墙的假回波通过墙体端点采样生成 ≤2 段的虚假亮斑；Retina 屏 dpr=2 硬约束保证点云锐度；localStorage 持久化字条/最佳用时/通关记录。Codex 全自主开发，WorkBuddy 出任务书与验收，四轮迭代（首版 → 压迫感重做 → 声石与操作重做 → 通关标记）全部由工单驱动。</p>
+
+        <div class="btn-row">
+            <a href="sound-loop.html" class="btn">在线试玩</a>
+            <a href="../index.html#demos" class="btn">返回作品集</a>
+        </div>
+    </div>
+</body>
+</html>

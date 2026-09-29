@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>夜班电台 - 设计策划案 | 胡凯迪</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.7;
+            color: #ffffff;
+            background-color: #000000;
+            padding: 3rem 1.5rem;
+        }
+        .doc {
+            max-width: 880px;
+            margin: 0 auto;
+        }
+        .back {
+            display: inline-block;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 2.5rem;
+            transition: color 0.3s;
+        }
+        .back:hover { color: #fff; }
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.6rem;
+        }
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 2.8rem;
+        }
+        .tag {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.85);
+            padding: 0.3rem 0.9rem;
+            border-radius: 20px;
+            font-size: 0.82rem;
+        }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 3rem 0 1.2rem;
+            padding-left: 0.9rem;
+            border-left: 3px solid #fff;
+        }
+        h3 {
+            font-size: 1.12rem;
+            font-weight: 600;
+            margin: 1.8rem 0 0.7rem;
+            color: rgba(255,255,255,0.95);
+        }
+        p {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 1rem;
+        }
+        ul, ol {
+            color: rgba(255,255,255,0.7);
+            margin: 0 0 1rem 1.4rem;
+        }
+        li { margin-bottom: 0.4rem; }
+        strong { color: rgba(255,255,255,0.92); font-weight: 600; }
+        .highlight {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            padding: 1.3rem 1.5rem;
+            margin: 1.4rem 0;
+        }
+        .highlight p { margin-bottom: 0.6rem; }
+        .highlight p:last-child { margin-bottom: 0; }
+        .quote {
+            font-size: 1.15rem;
+            color: rgba(255,255,255,0.9);
+            padding: 1.2rem 1.6rem;
+            border-left: 3px solid rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.04);
+            margin: 1.5rem 0;
+            line-height: 1.8;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.2rem 0 1.8rem;
+            font-size: 0.9rem;
+        }
+        th {
+            text-align: left;
+            color: rgba(255,255,255,0.9);
+            font-weight: 600;
+            padding: 0.65rem 0.8rem;
+            border-bottom: 2px solid rgba(255,255,255,0.25);
+        }
+        td {
+            color: rgba(255,255,255,0.65);
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            vertical-align: top;
+        }
+        td:first-child { color: rgba(255,255,255,0.85); font-weight: 500; white-space: nowrap; }
+        .btn-row { margin: 2.5rem 0 1rem; display: flex; gap: 0.8rem; flex-wrap: wrap; }
+        .btn {
+            display: inline-block;
+            padding: 0.7rem 1.4rem;
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s;
+        }
+        .btn:hover { background-color: rgba(255,255,255,0.18); }
+        .lesson {
+            background: rgba(255,255,255,0.04);
+            border-left: 3px solid rgba(255,255,255,0.35);
+            padding: 1rem 1.4rem;
+            margin: 1.2rem 0;
+            color: rgba(255,255,255,0.75);
+            font-size: 0.95rem;
+        }
+        .lesson strong { display: block; margin-bottom: 0.3rem; }
+        @media (max-width: 640px) {
+            h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>夜班电台</h1>
+        <p class="subtitle">文字冒险 · 接线员博弈 ｜ 1938 美国电台黄金时代 · 单文件网页 Demo</p>
+    </header>
+    <main>
+        <section>
+            <h2>一、世界观与怪物</h2>
+            <p>1938 年深秋，「火星人入侵」广播恐慌刚过的美国东岸小城。你替不辞而别的老接线员埃尔莫斯顶三个夜班。电话线里有个无形之物在学人说话——它没有形体，只有声音；它不懂回答，只懂<b>归还</b>你说过的每一句话。</p>
+            <p>选这个时代是因为电台热线天然成立：接线员的工作就是"用声音安抚陌生人的恐惧"，而这个动作恰好会喂饱一个以声音为食的东西。职业伦理与生存本能直接冲突，不需要任何额外设定。</p>
+
+        </section>
+
+        <section>
+            <h2>二、核心循环：镜像定价</h2>
+            <ul>
+                <li>每通来电先接起、听半截线路杂音（呼吸声=活人，过分安静=它）——判断真假本身就是玩法；</li>
+                <li>先开口报台名：真人安抚起手更高，但每句话都在喂它（侵蚀）；</li>
+                <li>应答/真话：对真人是最好的安抚，对它是最贵的投喂——<b>同一句话，双向定价</b>；</li>
+                <li>质问可疑措辞：它会用你的原话敷衍回来——破绽，也是它学得够多的证明；</li>
+                <li>沉默可以饿它（侵蚀降），但会把真人推向崩溃；</li>
+                <li>侵蚀 40/70/100 全局贯穿：它开始复述你的话、顶替不存在的频率、直到总机里"另一个你"先吸气。</li>
+            </ul>
+
+        </section>
+
+        <section>
+            <h2>三、结局结构</h2>
+            <p>五种结局全部由你三天里的行为累积决定，终局选择只是"收束"而非"抽奖"：</p>
+            <ul>
+                <li><b>交班</b>：低侵蚀 + 保住 4 个关键真人——趁它没成形拔线走人；</li>
+                <li><b>接班</b>（隐藏）：集齐六页交班记录 + 问破埃尔莫斯——让行规"如果声音是我，先问我为什么离开"成为武器；</li>
+                <li><b>哑火</b>：低侵蚀时选择应答——它学得不全，模仿失败；</li>
+                <li><b>揭露</b>：哑火 + 破绽 + 全记录——用它的破绽反杀；</li>
+                <li><b>换班</b>：高侵蚀时应答——它终于拼齐了"你"。</li>
+            </ul>
+
+        </section>
+
+        <section>
+            <h2>四、设计要点与教训</h2>
+            <div class="lesson"><strong>容错原则</strong>最初设计"应答必坏"，试玩后推翻：零容错的陷阱选项惩罚的是没读攻略的玩家，不是玩得差的玩家。坏结局应该来自"喂多了"（过程累积），而不是"选错选项"（瞬时暗牌）。<strong>氛围演出</strong>参照《遗忘者手记》演出体系做电台化：静电噪点、信号波条（侵蚀超标转红加速）、伪声姓名幽灵渐显、"它"的复述文字带渗字红晕——文字冒险的氛围不靠图，靠字的动静。<strong>教学即世界观</strong>行规（凌晨后让对方先开口/别说名字/呼吸不会演戏）既是新手引导也是叙事文本，第四条行规是隐藏结局的钥匙——规则即剧情。            </div>
+
+        </section>
+
+    </main>
+    <footer>
+        <p>胡凯迪 · 游戏策划作品集 · <a href="../index.html">返回作品集</a></p>
+    </footer>
+</body>
+</html>
