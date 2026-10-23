@@ -1,0 +1,2288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>余埠</title>
+<style>
+:root{
+  --paper:#f0ece3;
+  --ink:#14120f;
+  --dim:#8f887c;
+  --serif:"Songti SC","Source Han Serif SC","Noto Serif CJK SC",STSong,SimSun,serif;
+  --sans:"PingFang SC","Source Han Sans SC","Noto Sans CJK SC",-apple-system,system-ui,sans-serif;
+  --mono:"SF Mono",Menlo,Consolas,"Courier New",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#0a0908;overflow:hidden;-webkit-font-smoothing:antialiased}
+#stage{position:fixed;inset:0;display:flex;flex-direction:column;cursor:default;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+
+/* 美术区高度由 1200/560 定宽高比与 68vh 上限决定，SVG 是 meet 模式（不足就留黑边），
+   所以不能压 #art 换空间；面板上限改由 fitPanel() 按「视口高 − 美术实际高」设。 */
+#art{flex:0 0 auto;position:relative;overflow:hidden;background:var(--ink);
+  aspect-ratio:1200/560;width:100%;max-height:68vh}
+#art svg{display:block;width:100%;height:100%}
+/* 悬停：两套印次同时写进画面，只切显示。
+   硬切、无过渡——§九 全片只有三样东西会动；悬停不算第四样，它不是画面在动，
+   是指针在问话。所以这里不许 transition，不许 scale，不许改外沿。 */
+#art .hvB{display:none}
+#art.hotOn .hvA{display:none}
+#art.hotOn .hvB{display:inline}
+#art .hot{cursor:pointer}
+#art .grain{position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:radial-gradient(circle at 12% 22%,rgba(20,18,15,.10) 0 1px,transparent 1px),
+  radial-gradient(circle at 68% 71%,rgba(20,18,15,.09) 0 1px,transparent 1px),
+  radial-gradient(circle at 41% 88%,rgba(20,18,15,.08) 0 1px,transparent 1px);
+  background-size:37px 41px,53px 47px,29px 61px}
+#art .vignette{position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset 0 0 clamp(40px,9vmin,140px) rgba(20,18,15,.30)}
+
+#text{flex:0 0 auto;background:var(--ink);color:var(--paper);position:relative;
+  cursor:pointer;
+  padding:clamp(14px,2.4vmin,30px) clamp(18px,7vw,150px) clamp(14px,2.2vmin,26px);overflow:hidden;
+  display:flex;flex-direction:column;min-height:clamp(150px,26vh,250px);max-height:46vh}
+#text::before{content:"";position:absolute;left:0;right:0;top:0;height:clamp(3px,.5vmin,6px);background:var(--paper)}
+
+#cue{font-family:var(--mono);font-size:clamp(9px,1.15vmin,12px);letter-spacing:.32em;color:var(--dim);
+  margin-bottom:clamp(6px,1.2vmin,16px);flex:0 0 auto;text-transform:uppercase}
+#cue b{color:var(--paper);font-weight:400;letter-spacing:.32em}
+
+/* 居中而非贴底：贴底时行少则整块压在面板下缘，上方空一大片，看着既靠下又不完整。 */
+#lines{flex:1 1 auto;min-height:0;overflow:hidden;position:relative;display:flex;flex-direction:column;
+  justify-content:center;padding-bottom:clamp(6px,1.2vmin,14px)}
+.ln{font-family:var(--sans);font-weight:300;line-height:1.95;
+  font-size:clamp(13px,1.72vmin,19px);letter-spacing:.045em;
+  margin-bottom:clamp(3px,.7vmin,9px);opacity:0;transform:translateY(6px);
+  animation:fi .36s cubic-bezier(.22,.61,.36,1) forwards}
+@keyframes fi{to{opacity:1;transform:translateY(0)}}
+.ln.n{color:#c8c2b4}
+.ln.n.strong{color:var(--paper)}
+.ln.sp{margin-top:clamp(6px,1.1vmin,14px)}
+.ln .who{font-family:var(--sans);font-weight:500;font-size:.86em;letter-spacing:.22em;
+  color:var(--paper);margin-right:.7em;padding-bottom:2px;border-bottom:1px solid #4a453c}
+.ln.d{color:var(--paper);font-size:clamp(14px,1.86vmin,21px);line-height:1.85}
+.ln.big{font-size:clamp(20px,3.4vmin,38px);line-height:1.5;letter-spacing:.2em;color:var(--paper);
+  font-family:var(--serif);font-weight:400}
+
+#choices{flex:0 0 auto;display:flex;flex-direction:column;gap:clamp(3px,.7vmin,8px);
+  margin-top:clamp(6px,1.2vmin,16px);min-height:0}
+.ch{display:flex;align-items:center;gap:clamp(8px,1.4vmin,18px);
+  font-family:var(--sans);font-weight:300;font-size:clamp(13px,1.7vmin,18px);
+  letter-spacing:.05em;color:#b8b2a4;padding:clamp(4px,.7vmin,8px) clamp(6px,1vmin,12px);
+  border:1px solid transparent;transition:background .12s,color .12s}
+.ch i{display:block;width:clamp(14px,2.2vmin,26px);height:3px;background:#5a5449;transition:background .12s;flex:0 0 auto}
+.ch.gone{visibility:hidden}
+.ch.on{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+.ch.on i{background:var(--ink)}
+
+#adv{position:absolute;right:clamp(18px,7vw,150px);bottom:clamp(12px,2vmin,24px);
+  width:2px;height:1.05em;background:var(--paper);opacity:0}
+#adv.on{animation:bl 1s steps(1,end) infinite}
+@keyframes bl{0%,49%{opacity:.9}50%,100%{opacity:0}}
+
+#veil{position:fixed;inset:0;background:#000;z-index:60;pointer-events:none;
+  opacity:0;transition:opacity .55s ease}
+#veil.on{opacity:1;pointer-events:all}
+
+#gate{position:fixed;inset:0;z-index:80;background:var(--ink);color:var(--paper);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:clamp(16px,3vmin,40px);text-align:center;transition:opacity .6s ease}
+#gate.off{opacity:0;pointer-events:none}
+#gate h1{font-family:var(--serif);font-weight:400;font-size:clamp(34px,7vmin,86px);letter-spacing:.42em;
+  text-indent:.42em;line-height:1}
+#gate .sub{font-family:var(--mono);font-size:clamp(9px,1.2vmin,13px);letter-spacing:.4em;color:var(--dim);text-indent:.4em}
+#gate p{font-family:var(--sans);font-weight:300;font-size:clamp(11px,1.5vmin,15px);
+  line-height:2.1;letter-spacing:.08em;color:#a9a294;max-width:34em}
+#gate .btn{font-family:var(--sans);font-size:clamp(12px,1.6vmin,16px);letter-spacing:.4em;
+  color:var(--ink);background:var(--paper);padding:clamp(9px,1.4vmin,15px) clamp(26px,4vmin,54px);
+  border:none;cursor:pointer;text-indent:.4em;transition:opacity .15s}
+#gate .btn:hover{opacity:.78}
+#gate .tip{font-family:var(--mono);font-size:clamp(8px,1.05vmin,11px);letter-spacing:.24em;color:#6b655a}
+
+#end{position:fixed;inset:0;z-index:70;background:var(--ink);color:var(--paper);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:clamp(14px,2.6vmin,34px);text-align:center;padding:8vh 8vw}
+#end.on{display:flex}
+#end h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,4vmin,44px);letter-spacing:.3em;text-indent:.3em}
+#end .meta{font-family:var(--mono);font-size:clamp(9px,1.15vmin,12px);letter-spacing:.24em;color:var(--dim);line-height:2.4}
+#end .btn{font-family:var(--sans);font-size:clamp(11px,1.4vmin,14px);letter-spacing:.34em;
+  color:var(--paper);background:transparent;border:1px solid #4a453c;padding:clamp(8px,1.2vmin,13px) clamp(22px,3.4vmin,44px);
+  cursor:pointer;text-indent:.34em;transition:background .15s,color .15s}
+#end .btn:hover{background:var(--paper);color:var(--ink)}
+@media (max-aspect-ratio:3/4){
+  #art{flex:0 0 52%}
+  #text{padding-left:6vw;padding-right:6vw}
+  #adv{right:6vw}
+}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="art">
+    <svg id="sc" viewBox="0 0 1200 560" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="grain"></div>
+    <div class="vignette"></div>
+  </div>
+  <div id="text">
+    <div id="cue"></div>
+    <div id="lines"></div>
+    <div id="choices"></div>
+    <div id="adv"></div>
+  </div>
+</div>
+
+<div id="veil"></div>
+
+<div id="gate">
+  <div class="sub">A town called YUBU</div>
+  <h1>余埠</h1>
+  <p>这是一座已经停产二十年的工业城。城里有一套考试制度，判定每年一次的出厂资格。不合格的人可以回炉，再考一次。</p>
+  <p>你是第二十三名。去年是第十七。</p>
+  <button class="btn" id="go">开始</button>
+  <div class="tip">建议戴耳机 &nbsp;·&nbsp; 点击或按空格继续</div>
+</div>
+
+<div id="end">
+  <h2>完</h2>
+  <div class="meta" id="endmeta"></div>
+  <button class="btn" id="again">再走一次</button>
+</div>
+
+<script>
+"use strict";
+const PAPER="#f0ece3", INK="#14120f";
+const $=s=>document.querySelector(s);
+
+/* ============ 墨阶：七级 + 纸纹 ============ */
+const DEFS=`<defs>
+<pattern id="k1" width="11" height="11" patternUnits="userSpaceOnUse"><rect width="11" height="11" fill="${PAPER}"/><line x1="0" y1="-1" x2="0" y2="12" stroke="${INK}" stroke-width="1"/></pattern>
+<pattern id="k2" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="${PAPER}"/><line x1="0" y1="-1" x2="0" y2="9" stroke="${INK}" stroke-width="1.6"/></pattern>
+<pattern id="k3" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="${PAPER}"/><line x1="0" y1="-1" x2="0" y2="7" stroke="${INK}" stroke-width="1.9"/></pattern>
+<pattern id="k4" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="${PAPER}"/><line x1="-1" y1="0" x2="9" y2="0" stroke="${INK}" stroke-width="1.9"/></pattern>
+<pattern id="k5" width="7" height="7" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="${PAPER}"/><path d="M0,0L7,7M7,0L0,7" stroke="${INK}" stroke-width="1.2"/></pattern>
+<pattern id="k6" width="4.2" height="4.2" patternUnits="userSpaceOnUse"><rect width="4.2" height="4.2" fill="${PAPER}"/><path d="M0,0L4.2,4.2M4.2,0L0,4.2" stroke="${INK}" stroke-width="1.5"/></pattern>
+<pattern id="k7" width="3" height="3" patternUnits="userSpaceOnUse"><rect width="3" height="3" fill="${INK}"/></pattern>
+<pattern id="kd" width="46" height="46" patternUnits="userSpaceOnUse">
+  <circle cx="7" cy="11" r=".9" fill="${INK}" opacity=".20"/><circle cx="29" cy="6" r=".7" fill="${INK}" opacity=".16"/>
+  <circle cx="17" cy="33" r="1" fill="${INK}" opacity=".18"/><circle cx="39" cy="27" r=".8" fill="${INK}" opacity=".14"/>
+  <circle cx="4" cy="41" r=".7" fill="${INK}" opacity=".12"/><circle cx="44" cy="45" r=".6" fill="${INK}" opacity=".10"/>
+</pattern>
+<pattern id="kw" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M0,0L15,15" stroke="${PAPER}" stroke-width="1.6"/></pattern>
+<pattern id="kw2" width="9" height="9" patternUnits="userSpaceOnUse"><path d="M0,0L9,9M9,0L0,9" stroke="${PAPER}" stroke-width="1.3"/></pattern>
+</defs>`;
+
+/* 画布与舞台辅助 */
+const W=1200,H=560;
+/* ── 热点层 ──
+   规范里没有一种静态手法能标出「这里可以点」：反白在选项行上成立，是因为那一行
+   本来就是墨字压纸底；阀轮是纸压墨底，反白过去等于把它倒进背景。所以换一条路：
+   不问不动，问才回答。悬停是有时效的状态，不占画面，也不跟旁白抢注意力。
+   热点用 SVG 圆形承载（pointer-events:all + fill:none，不画任何东西），
+   坐标直接落在场景坐标系里，不用为 preserveAspectRatio 的留边做换算。
+   悬停只切 class，不重绘——重绘会换掉指针底下的元素，进出事件互相触发就闪。 */
+let HOT=[];
+/* 阀轮当前转角与圆心。转角是场景状态，换场即归零——每一屏是同一台机器，
+   但「你刚才拧过它」不是可以跨屏带走的东西。 */
+let WHEELP=null;
+let WHEEL_A=0;
+let HOVSTYLE=1;      /* 悬停应答的款式：1 反白 / 2 转一格。?hov= 可改，见文件末尾 */
+function paintHot(){
+  const sc=$("#sc");
+  $("#art").classList.remove("hotOn");
+  if(!sc||!HOT.length) return;
+  const NS="http://www.w3.org/2000/svg";
+  const g=document.createElementNS(NS,"g");
+  g.setAttribute("class","hotlayer");
+  HOT.forEach(function(h){
+    const c=document.createElementNS(NS,"circle");
+    c.setAttribute("cx",h.cx); c.setAttribute("cy",h.cy); c.setAttribute("r",h.r);
+    c.setAttribute("fill","none"); c.setAttribute("pointer-events","all");
+    c.setAttribute("class","hot");
+    c.addEventListener("mouseenter",function(){ $("#art").classList.add("hotOn"); });
+    c.addEventListener("mouseleave",function(){ $("#art").classList.remove("hotOn"); });
+    g.appendChild(c);
+  });
+  sc.appendChild(g);
+}
+function svg(inner){ $("#sc").innerHTML=DEFS+inner; paintHot(); }
+function R(x,y,w,h,f,o){ return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}"${o||""}/>`; }
+function P(d,f,o){ return `<path d="${d}" fill="${f}"${o||""}/>`; }
+function L(x1,y1,x2,y2,s,w,o){ return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${s}" stroke-width="${w}"${o||""}/>`; }
+function C(cx,cy,r,s,w,o){ return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s}" stroke-width="${w}"${o||""}/>`; }
+function T(x,y,t,size,fill,o){ return `<text x="${x}" y="${y}" font-family="var(--mono),monospace" font-size="${size}" fill="${fill}"${o||""}>${t}</text>`; }
+/* 错版：同一张板再印一遍，偏 1.6 / 1.1。墨叠墨更黑，纸叠纸还是纸。
+   规范 §二 律四：只在汽笛响那一秒与最后一屏用，偏移 1–2px，不许超过 3px。 */
+function misfit(inner){ return `<g>${inner}</g><g data-mis="1" transform="translate(1.6,1.1)">${inner}</g>`; }
+
+/* 手刻矩形：四角不齐、边上有起伏。
+   木刻里没有真正的直角——矢量式的精确矩形是「机器味」的头号来源。
+   amp 默认 2.6px，小件（门缝、灯管）传给 1.2–1.6。 */
+function hR(x,y,w,h,fill,seed,amp){
+  let r=seed||7;
+  const a=amp===undefined?2.6:amp;
+  const rnd=()=>{ r=(r*9301+49297)%233280; return r/233280; };
+  const N=Math.max(3,Math.round(w/64)), M=Math.max(3,Math.round(h/64));
+  const p=[];
+  for(let i=0;i<N;i++) p.push([x+w*i/N, y+(rnd()-.5)*a*2]);
+  for(let i=0;i<M;i++) p.push([x+w+(rnd()-.5)*a*2, y+h*i/M]);
+  for(let i=0;i<N;i++) p.push([x+w-w*i/N, y+h+(rnd()-.5)*a*2]);
+  for(let i=0;i<M;i++) p.push([x+(rnd()-.5)*a*2, y+h-h*i/M]);
+  return P("M"+p.map(q=>q[0].toFixed(1)+" "+q[1].toFixed(1)).join("L")+"Z",fill);
+}
+
+/* 木纹／手刻竖排线：一片纸底上的墨竖线，间距、粗细、断口全都不规则。
+   为什么不用 pattern：分子级的均匀重复一定被读成网点贴图。木刻的「刀味」
+   来自媒材阻力造成的走走停停——所以每条线都要有起伏和断处。 */
+/* 手刻水平排线：gap 是平均行距、sw 平均笔宽。
+   每条线的起止、粗细、断口都不一样——pattern 是规则平铺的，
+   整片铺满一定被读成条形码/网点噪点（实测两轮）。 */
+function hatch(x,y,w,h,gap,sw,seed){
+  let r=seed||3;
+  const rnd=()=>{ r=(r*9301+49297)%233280; return r/233280; };
+  let s="", Y=y+1;
+  while(Y<y+h-0.5){
+    const seg=1+Math.floor(rnd()*3);
+    let d="", x0=x+(rnd()-.5)*7;
+    for(let i=0;i<seg;i++){
+      const xe=x0+(w/seg)*(0.82+0.3*rnd());
+      const yy=Y+(rnd()-.5)*1.6;
+      d+="M"+x0.toFixed(1)+" "+yy.toFixed(1)+"L"+Math.min(x+w,xe).toFixed(1)+" "+(yy+(rnd()-.5)*1.1).toFixed(1);
+      x0=xe+(2+rnd()*11);
+      if(x0>x+w-4) break;
+    }
+    if(d) s+=`<path d="${d}" fill="none" stroke="${INK}" stroke-width="${(sw*(0.6+0.9*rnd())).toFixed(2)}" stroke-linecap="butt"/>`;
+    Y+=gap*(0.72+0.62*rnd());
+  }
+  return s;
+}
+
+/* 渐变排线：行距从 gap0 收到 gap1，一路画到底。
+   分三段拼出来的天空，三段之间必然是三条横贯全宽的直线接缝——实测读成"图层剪裁穿帮"。 */
+function hatchFade(x,y,w,h,gap0,gap1,sw0,sw1,seed){
+  let r=seed||11;
+  const rnd=()=>{ r=(r*9301+49297)%233280; return r/233280; };
+  let s="", Y=y+1.5;
+  while(Y<y+h-1){
+    const t=Math.min(1,(Y-y)/h);
+    const gap=gap0+(gap1-gap0)*t, sw=sw0+(sw1-sw0)*t;
+    const seg=1+Math.floor(rnd()*3);
+    let d="", x0=x+(rnd()-.5)*9;
+    for(let i=0;i<seg;i++){
+      const xe=x0+(w/seg)*(0.86+0.26*rnd());
+      const yy=Y+(rnd()-.5)*1.7;
+      d+="M"+x0.toFixed(1)+" "+yy.toFixed(1)+"L"+Math.min(x+w,xe).toFixed(1)+" "+(yy+(rnd()-.5)*1.2).toFixed(1);
+      x0=xe+(2+rnd()*12);
+      if(x0>x+w-5) break;
+    }
+    if(d) s+=`<path d="${d}" fill="none" stroke="${INK}" stroke-width="${(sw*(0.6+0.9*rnd())).toFixed(2)}" stroke-linecap="butt"/>`;
+    Y+=gap*(0.74+0.6*rnd());
+  }
+  return s;
+}
+
+function wood(x,y,w,h,seed,step,sw){
+  let r=seed||5;
+  const rnd=()=>{ r=(r*9301+49297)%233280; return r/233280; };
+  step=step||7; sw=sw||1.9;
+  let s=hR(x,y,w,h,PAPER,seed,3);
+  for(let X=x+2; X<x+w-1; X+=step*(0.34+1.62*rnd())){
+    const seg=3+Math.floor(rnd()*3), hh=h/seg;
+    let d="";
+    for(let i=0;i<seg;i++){
+      if(rnd()<0.13) continue;                    // 这一刀没刻到
+      const y0=y+2+i*hh*(0.94+0.12*rnd());
+      const y1=Math.min(y+h-2, y0+hh*0.92);
+      const x0=X+(rnd()-.5)*2.4, x1=X+(rnd()-.5)*2.4;
+      d+="M"+x0.toFixed(1)+" "+y0.toFixed(1)+"L"+x1.toFixed(1)+" "+y1.toFixed(1);
+    }
+    if(!d) continue;
+    /* 两成的线粗一倍：木刻的板缝不是平均分配的，等粗等距就是条形码 */
+    const k=(rnd()<0.2)?1.45+0.7*rnd():0.6+0.7*rnd();
+    s+=`<path d="${d}" fill="none" stroke="${INK}" stroke-width="${(sw*k).toFixed(2)}" stroke-linecap="butt"/>`;
+  }
+  return s;
+}
+
+/* 一只垂着的手：腕在上，四指朝下，指缝是背景透出来的四道竖缝。
+   不画指甲、不画指节——木刻里这几个指头的长短差就是全部的信息。 */
+function handPath(x,y,w,h){
+  const hw=w/2, palm=h*0.52, fin=h-palm, fw=w*0.15;
+  let d=`M${(x-hw*0.76).toFixed(1)},${y}`;
+  d+=`L${(x-hw*0.9).toFixed(1)},${(y+palm*0.3).toFixed(1)}`;
+  d+=`L${x-hw},${(y+palm*0.62).toFixed(1)}`;
+  d+=`L${(x-hw+5).toFixed(1)},${(y+palm).toFixed(1)}`;
+  for(let i=0;i<4;i++){
+    const fx=x-hw+8+i*(w-12)/4;
+    const fl=fin*[0.86,1,0.94,0.76][i];
+    d+=`L${fx.toFixed(1)},${(y+palm+fl).toFixed(1)}`;
+    d+=`L${(fx+fw).toFixed(1)},${(y+palm+fl*0.96).toFixed(1)}`;
+    d+=`L${(fx+fw).toFixed(1)},${(y+palm).toFixed(1)}`;
+  }
+  d+=`L${x+hw},${(y+palm*0.62).toFixed(1)}`;
+  d+=`L${(x+hw*0.9).toFixed(1)},${(y+palm*0.3).toFixed(1)}`;
+  d+=`L${(x+hw*0.76).toFixed(1)},${y}Z`;
+  return d;
+}
+
+/* 毛边：在一条线上开几个白口，模拟刻崩 */
+function ragged(x1,y1,x2,y2,sw,seed){
+  let s=L(x1,y1,x2,y2,INK,sw);
+  const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy),ux=dx/len,uy=dy/len;
+  let r=seed||1;
+  for(let i=0;i<3;i++){
+    r=(r*9301+49297)%233280;
+    const p=.14+ .72*(r/233280);
+    const mx=x1+dx*p, my=y1+dy*p;
+    s+=L(mx,my,mx+ux*5,my+uy*5,PAPER,sw*1.7);
+  }
+  return s;
+}
+
+/* ============ 人物：剪影。比例准，细节零 ============ */
+/* 7.3 头身。y = 脚底，h = 全身高。
+   坐标 = 「距中线 x / 距脚底 y」，单位是全身高的 %，向上为正 —— 只此一种约定。
+
+   靶值（% 全身高）：头顶100 下巴86.3 肩79.6 肘63.2 腕48.6 裆47.0 膝26.8 踝4.2
+     肩宽27.0  腰宽15.9  髋宽19.8  大腿8.5  膝4.4  踝3.8（都是总宽度）
+
+   一条闭合路径画完整个身体，顺时针：
+     头顶 → 右头侧 → 颏 → 颈 → 斜方肌 → 肩峰 → 上臂外 → 肘 → 前臂外 → 腕 →
+     手背 → 指尖 → 腕内 → 前臂内 → 肘内 → 腋（与躯干之间留一道缝）→ 肋 → 腰 →
+     髋 → 大腿外 → 膝外 → 小腿外 → 踝外 → 脚 → 脚底 → 踝内 → 小腿内 → 膝内 →
+     大腿内 → 裆 → （镜像左侧回到头顶）
+   手臂并进整块躯干：衣服本来就一整片，不是几节零件拼的。
+   pose: stand / stoop(塌肩缩颈) / turn(背过身，肩收到一半) */
+
+/* 右半侧，自上而下 */
+const F_HEAD=[
+  [0,100.0],[2.20,99.7],[3.60,98.7],[4.50,97.0],[4.90,94.6],[4.90,91.8],
+  [4.60,89.2],[4.00,87.3],[3.30,86.5],[2.85,86.3]
+];
+const F_NECK=[
+  [2.70,85.6],[2.90,83.4],[3.10,82.2]
+];
+const F_SHO=[
+  [5.80,81.4],[9.20,80.4],[12.30,79.6],[13.50,78.2]
+];
+const F_ARM_OUT=[
+  [13.60,75.0],[13.25,70.0],[13.00,65.0],[12.85,63.2],
+  [12.70,58.0],[12.55,53.0],[12.45,49.4],[12.40,48.6]
+];
+const F_HAND=[
+  [12.20,47.2],[11.80,45.6],[10.55,45.6]
+];
+const F_ARM_IN=[
+  [10.00,47.4],[10.00,50.0],[10.05,55.0],[10.10,60.0],
+  [10.20,65.0],[10.25,70.0],[10.30,72.2]
+];
+const F_TORSO=[
+  [9.00,71.0],[8.60,67.0],[8.20,63.0],[7.95,61.5],
+  [8.70,58.5],[9.40,56.5],[9.90,55.5],[9.85,52.0],[9.60,49.0],[9.30,47.6]
+];
+const F_LEG_OUT=[
+  [9.20,44.0],[8.90,40.0],[8.50,35.0],[7.90,31.0],[7.50,26.8],
+  [7.20,24.0],[6.95,20.0],[6.80,15.0],[6.65,9.0],[6.60,4.2],
+  [7.00,1.6],[7.15,0.4],[6.40,0.0]
+];
+/* 右脚底 → 右腿内侧上行 → 裆 */
+const F_LEG_IN=[
+  [3.20,0.0],[2.85,1.2],[2.80,4.2],[2.85,9.0],[3.00,15.0],[3.15,20.0],
+  [3.30,24.0],[3.10,26.8],[2.40,31.0],[1.70,35.0],[1.20,40.0],[0.90,44.0],[0.75,47.0]
+];
+
+function figure(x,y,h,pose,flip){
+  const u=h/100, f=flip?-1:1;
+  const mir=a=>a.map(p=>[-p[0],p[1]]);
+  const rev=a=>a.slice().reverse();
+
+  const R=F_HEAD.concat(F_NECK,F_SHO,F_ARM_OUT,F_HAND,F_ARM_IN,F_TORSO,F_LEG_OUT,F_LEG_IN);
+  let ring=R.concat([[0,46.6]],rev(mir(R)).slice(1,-1));
+
+  const LEAN={stand:0.0035,stoop:0.042,turn:0.0035}[pose]||0.0035;
+
+  ring=ring.filter((p,i)=>{
+    if(i===0) return true;
+    const q=ring[i-1];
+    return Math.abs(p[0]-q[0])>1e-6 || Math.abs(p[1]-q[1])>1e-6;
+  });
+
+  /* 姿态：全部用平滑函数混合，绝不按高度硬分档——硬分档会在接缝处鼓一个包 */
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  const clamp=(t)=>t<0?0:t>1?1:t;
+  const smooth=(t)=>{t=clamp(t);return t*t*(3-2*t);};
+
+  ring=ring.map((p,i)=>{
+    let px=p[0], py=p[1];
+    if(pose==="stoop"){
+      /* 塌肩缩颈：腰以上整段往下沉，头肩自然靠近；
+         头略往前探，上身收薄，肩线抬高变圆 */
+      const t=smooth((py-58)/(90-58));       /* 0@腰 1@头 */
+      py -= 3.4*t;                           /* 上身整体下沉 */
+      if(py>60) px = px*(1-0.05*t);          /* 上身收薄 */
+      px += 1.3*t;                           /* 前探 */
+      if(py>74 && py<86.4) py += 0.9*t;      /* 肩顶上去一点 */
+    } else if(pose==="turn"){
+      /* 背过身：上身收到一半，腿只收一点，中间用 smooth 过渡 */
+      const t=smooth((py-58)/(84-58));
+      px = px*lerp(0.86,0.50,t);
+    }
+    /* 重心偏移：越往高处越朝一侧压，破掉左右对称——张力在这个角度里 */
+    px += LEAN*Math.max(0,py-47);
+    /* 边要毛：每点给极小的不齐，免得像 CAD 描的线 */
+    const j=0.18*Math.sin(i*12.9898)*Math.cos(i*4.1414);
+    return [x+(px+j)*u*f, y-(py+j*0.5)*u];
+  });
+
+  /* Catmull-Rom 闭环 → 三次贝塞尔。一个 d，一个 fill。 */
+  const n=ring.length, A=i=>ring[((i%n)+n)%n];
+  let d=`M${A(0)[0].toFixed(1)},${A(0)[1].toFixed(1)}`;
+  for(let i=0;i<n;i++){
+    const p0=A(i-1),p1=A(i),p2=A(i+1),p3=A(i+2), k=1/3;
+    d+=`C${(p1[0]+(p2[0]-p0[0])*k).toFixed(1)},${(p1[1]+(p2[1]-p0[1])*k).toFixed(1)} `
+      +`${(p2[0]-(p3[0]-p1[0])*k).toFixed(1)},${(p2[1]-(p3[1]-p1[1])*k).toFixed(1)} `
+      +`${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  }
+  d+="Z";
+
+  /* 纸色刻边：先把同一条轮廓印大一圈的纸色，再压墨。
+     黑剪影靠纸色才有边——贴在暗底上也不至于消失。偏移是错版。 */
+  const e=Math.max(1.3,h*0.0058);
+  return `<g data-mis="1" transform="translate(1.1,-0.9)"><path d="${d}" fill="${PAPER}"
+    stroke="${PAPER}" stroke-width="${e.toFixed(1)}" stroke-linejoin="round"/></g>`
+       + `<path d="${d}" fill="${INK}"/>`;
+}
+/* ============ 场景库 ============ */
+const SC={};
+
+/* 塔内 · 阀轮。o:{oil:0..1, frost, hand:'none'|'screw'|'press', two, hat} */
+SC.valve=o=>{
+  o=o||{};
+  const oil=o.oil==null?1:o.oil;
+  const pe=(o.pe==null?oil:o.pe);
+  const shk=o.shake||0;
+  const cx=620, cy=252, rr=176;
+  let s=R(0,0,W,H,INK);
+  s+=R(0,0,W,H,"url(#k6)");
+  /* 塔壁与地面。
+     这里原来是一条 4px 的白线横贯全宽——那是地平线，§六 明令不画。
+     改成一片断口不齐的墙脚：高低错一点、长短差一点，眼睛读到的是
+     墙和地的交界，不是一条被拉直的水平基准线。 */
+  s+=R(0,436,W,124,INK);
+  /* 地面：什么都不画。
+     先是一条 4px 白线横贯全宽——那是地平线，§六 明令不画；
+     再改成断口，眼睛读"虚线"；再改成台沿，把左下角的壶压成"托着平台的基座"。
+     三次都错在同一个地方：地面不是一条线，是"这里没有东西"。
+     塔内底板本来就是实墨，让它实着。 */
+  s+=R(0,436,W,124,INK);
+
+  /* ── 阀体（tilt 时才画得出来）。
+     原来这屏只有一块圆盘悬在暗墙前：正圆意味着轴线垂直画面，机身必然被轮
+     完全挡住，一件都露不出来。于是读者看到的是「立在地上的圆盘标志」，不是
+     「一台可以拧的机器」。压成侧视椭圆之后，机身、法兰、螺栓、注油口、
+     通往压力表的接管才有位置站——这几样每一样都在剧本里被叫过名字
+     （s29「螺口。指针。注油口。阀体下面父亲按过的那个位置。」），
+     原来是文本认得、画面认不得。 ── */
+  const tilt=!!o.tilt, worn=!!o.worn;
+  const RX=176, RY=tilt?148:176;
+  if(tilt){
+    const bT=34, bB=52;                       /* 上身窄、下身宽 */
+    s+=P(`M${cx-bT},${cy+26} L${cx+bT},${cy+26} L${cx+bB},398 L${cx+bB},436 L${cx-bB},436 L${cx-bB},398 Z`,PAPER);
+    s+=L(cx-bT-7,cy+26,cx+bT+7,cy+26,INK,4.2);   /* 上盖接缝 */
+    s+=L(cx-bB-12,398,cx+bB+12,398,INK,5);       /* 底座接缝 */
+    s+=R(cx-bB-14,404,(bB+14)*2,32,PAPER);       /* 法兰 */
+    for(let i=0;i<4;i++) s+=`<circle cx="${(cx-bB+2+i*((bB*2-4)/3)).toFixed(1)}" cy="420" r="5.2" fill="${INK}"/>`;
+    /* 铸件立筋：三道墨竖线，把机身的纸面压下去一档。
+       不压的话机身为 85% 纸、轮缘 86%，两者一样亮，会粘成一块白。
+       注油口这轮不画——它的坐标会压在左下轮缘纸环后面，只会露出一截残肢。 */
+    s+=L(cx-24,312,cx-24,394,INK,3.2);
+    s+=L(cx,312,cx,394,INK,3.6);
+    s+=L(cx+24,312,cx+24,394,INK,3.2);
+    /* 通往压力表的接管：先横后竖。横段大半被轮挡住，只从轮缘右侧露出一截——
+       这一截就是「表是这台机器的一部分」的全部证据。 */
+    s+=R(cx+bB-4,266,946-(cx+bB-4),15,PAPER);
+  }
+
+  /* ── 阀轮：手轮。轮缘 + 辐 + 毂。
+     辐条之间必须透出背景——一旦填成实心圆盘，就立刻变成靶心。
+     所以这里不铺任何底，只画轮缘、辐条、毂这三样。
+
+     悬停态要做成「同一块版的另一个印次」，所以整段抽成 ship()：
+     常态和悬停态两套图形同时写进画面，靠 #art 上一个 class 硬切。
+     为什么不重绘：重绘会替换掉指针底下那个元素，mouseenter 与 mouseleave
+     互相触发，画面变成闪烁。 ── */
+  const KS=tilt?RY/RX:1;             /* 压扁系数：偏移量的 y 分量跟着走 */
+  /* inv=true 时亮暗对调：轮缘、辐条、毂环变墨，内部那个「不画的空」填成纸。
+     这就是反白在这张图上的唯一可行形式——单把纸轮换成墨轮，轮子会直接
+     倒进墨底里消失；必须整块反相才有东西可看。 */
+  const ship=(rimW,spOff,ringW,inv,rot)=>{
+    const c1=inv?INK:PAPER, c2=inv?PAPER:INK;   /* c1=轮体色，c2=毂心与痕迹色 */
+    const crx=(RX-20)-((rimW-40)/2), cry=(RY-20)-((rimW-40)/2);  /* 轮缘中线：外沿固定不动 */
+    let w="";
+    if(inv) w+=tilt
+      ? `<ellipse cx="${cx}" cy="${cy}" rx="${RX-2}" ry="${RY-2}" fill="${PAPER}"/>`
+      : `<circle cx="${cx}" cy="${cy}" r="${rr-2}" fill="${PAPER}"/>`;
+    w+=tilt
+      ? `<ellipse cx="${cx}" cy="${cy}" rx="${crx}" ry="${cry}" fill="none" stroke="${c1}" stroke-width="${rimW}"/>`
+      : `<circle cx="${cx}" cy="${cy}" r="${crx}" fill="none" stroke="${c1}" stroke-width="${rimW}"/>`;
+    /* 六根，且整体偏 15°：四根正交的辐条加上中心，读者一定读成瞄准镜十字。
+       辐条由外向内收窄（轮缘端宽 30、毂边宽 13），木刻的刀是一头重一头轻的。 */
+    const ro=132-((rimW-40)/2);                 /* 辐条外端：贴着轮缘内沿 */
+    for(let i=0;i<6;i++){
+      const a=(15+(rot||0)+i*60)*Math.PI/180;
+      const ux=Math.cos(a), uy=Math.sin(a), nx=-uy, ny=ux;
+      const pt=(r,off,sg)=>{
+        const x=cx+ux*r+nx*off*sg, y=cy+(uy*r+ny*off*sg)*KS;
+        return x.toFixed(1)+","+y.toFixed(1);
+      };
+      w+=P("M"+pt(ro,spOff,1)+" L"+pt(58,6.5,1)+" L"+pt(58,6.5,-1)+" L"+pt(ro,spOff,-1)+" Z",c1);
+    }
+    /* 毂：实心 + 反色环。中心不留亮点——亮点 + 十字辐条 = 靶心，试过两次。 */
+    const hr1=tilt?56:56, hr2=tilt?47:56;
+    w+=(tilt
+      ? `<ellipse cx="${cx}" cy="${cy}" rx="${hr1}" ry="${hr2}" fill="${c2}"/>`
+        +`<ellipse cx="${cx}" cy="${cy}" rx="${hr1}" ry="${hr2}" fill="none" stroke="${c1}" stroke-width="${ringW}"/>`
+      : `<circle cx="${cx}" cy="${cy}" r="${hr1}" fill="${c2}"/>`
+        +`<circle cx="${cx}" cy="${cy}" r="${hr1}" fill="none" stroke="${c1}" stroke-width="${ringW}"/>`);
+    /* ── 握痕（worn）：轮缘右下一小段的油污。
+       剧本 s24「四圈半。很顺。手不用找，就在那儿。」——「就在那儿」就是这一小片。
+       不是提示符号：是这台机器被同一只手抓了十年留下的位置。 ── */
+    if(worn){
+      let wr=worn*17;
+      const wrnd=()=>{ wr=(wr*9301+49297)%233280; return wr/233280; };
+      for(let t=-8;t<=40;t+=3.0){
+        const a=t*Math.PI/180;
+        /* 起点在内侧、终点不碰外沿：轮缘的剪影不许断。
+           剪影一断，轮子就读成「缺了一块的圆」，比没有痕迹更糟。 */
+        const rA=RX-(32+wrnd()*5), rB=RX-(14+wrnd()*6);
+        const x1=cx+Math.cos(a)*rA, y1=cy+Math.sin(a)*rA*KS;
+        const x2=cx+Math.cos(a)*rB, y2=cy+Math.sin(a)*rB*KS;
+        w+=L(x1.toFixed(1),y1.toFixed(1),x2.toFixed(1),y2.toFixed(1),c2,(2.0+wrnd()*1.4).toFixed(1));
+      }
+    }
+    return w;
+  };
+  const HSV=o.hov|0 || HOVSTYLE;
+  const NORM=ship(40,15,6,false,0);
+  /* 1 = 反白：整块反相（规范 §八「反白就是唯一的高亮」的整块形式）
+     2 = 转一格：辐条转 30°，其余不动。亮的量一点没变，变的只有「它会转」这件事 */
+  const SHIP_H = HSV===1 ? ship(40,15,6,true,0)
+               : HSV===2 ? ship(40,15,6,false,30) : "";
+  /* 轮子单独包一层：拧动只改这一层的 transform，不重绘整个场景。
+     重绘会换掉指针底下那个元素，mouseleave 跟着触发，悬停态当场掉掉。 */
+  s+=`<g id="wheel" transform="rotate(${WHEEL_A} ${cx} ${cy})">`
+    + (SHIP_H ? `<g class="hvA">${NORM}</g><g class="hvB">${SHIP_H}</g>` : NORM)
+    + `</g>`;
+  if(o.hot!==0){
+    HOT=[{cx:cx, cy:cy, r:rr+16}];
+    WHEELP={cx:cx, cy:cy};
+  }
+
+  /* ── 压力表：这是「指针往上走」的那一个。小，不抢阀轮。 ── */
+  const sx=946, sy=170, sr=62;
+  const pt=(-150+pe*120 + (shk?(Math.random()*2-1)*shk:0))*Math.PI/180;
+  s+=`<circle cx="${sx}" cy="${sy}" r="${sr}" fill="${INK}"/>`;
+  s+=`<circle cx="${sx}" cy="${sy}" r="${sr}" fill="none" stroke="${PAPER}" stroke-width="5"/>`;
+  for(let i=0;i<=12;i++){
+    const ang=(-150+i*10)*Math.PI/180;
+    const r1=sr-11, r2=sr-(i%3===0?24:17);
+    s+=L(sx+Math.cos(ang)*r1,sy+Math.sin(ang)*r1,sx+Math.cos(ang)*r2,sy+Math.sin(ang)*r2,PAPER,i%3===0?3.4:1.8);
+  }
+  s+=L(sx,sy,sx+Math.cos(pt)*(sr-20),sy+Math.sin(pt)*(sr-20),PAPER,4.6);
+  s+=`<circle cx="${sx}" cy="${sy}" r="7" fill="${PAPER}"/>`;
+  /* 表与塔壁之间的接管：一道纸，让表不是浮着的 */
+  s+=R(sx-8,sy+sr,16,44,PAPER);
+
+  /* 霜 */
+  if(o.frost){
+    for(let i=0;i<58;i++){
+      const g=(i*137.5)%360, rad=rr*Math.sqrt(((i*79)%100)/100);
+      const px=cx+Math.cos(g*Math.PI/180)*rad, py=cy+Math.sin(g*Math.PI/180)*rad;
+      s+=L(px,py,px+Math.cos(g*Math.PI/180)*12,py+Math.sin(g*Math.PI/180)*12,PAPER,2);
+    }
+  }
+  /* 壶 + 手：块面。壶是受光的白铜壶（纸色），手扣在毂上。
+     不用线框——线框在木刻里读成图标，不读成物体。 */
+  if(o.hand!=="none"){
+    /* 壶：身 + 颈 + 口 + 提梁。原来只有梯形身加一条斜口，读成"打开的箱子"，
+       缺的就是颈——壶的辨识特征全在"细颈 + 张口"这处粗细对比上。 */
+    /* 铁皮油壶：高、窄、肩上伸一根细嘴，没有提梁。
+       提梁一出，任何容器都读成"带把手的杯子"；壶的身份全在那根细嘴上。 */
+    s+=`<path d="M196,466 L272,466 L264,540 L204,540 Z" fill="${PAPER}"/>`;
+    s+=`<path d="M216,466 L252,466 L250,438 L218,438 Z" fill="${PAPER}"/>`;
+    s+=`<path d="M250,442 L306,398 L316,412 L256,456 Z" fill="${PAPER}"/>`;  /* 长嘴 */
+    s+=`<path d="M222,440 L246,440 L246,432 L222,432 Z" fill="${PAPER}"/>`;  /* 口 */
+    s+=L(198,476,270,476,INK,3.2);    /* 肩 */
+    s+=L(204,512,262,512,INK,2.2);    /* 腹 */
+    /* 拧阀的手：一条从肩上抬起来的臂，末端是拳头。
+       用张开五指的手掌扣在毂上会被读成"巨大的多指黑手"——那只手比画里的人还大。
+       握东西的手只有一团，指头靠刀切出来的纸缝数。 */
+    let hd=`<path d="M402,344 L556,274 L570,306 L414,376 Z" fill="${INK}"/>`
+      +`<path d="M552,212 Q604,192 646,220 Q666,252 646,286 Q604,312 552,294 Q534,252 552,212 Z" fill="${INK}"/>`
+      +L(556,228,636,224,PAPER,3.2)
+      +L(558,254,640,252,PAPER,3.2)
+      +L(556,280,636,282,PAPER,3.2);
+    /* 侧视时手跟着轮一起压扁——不压，手就比毂大一圈，又变成那只「怪手」。 */
+    if(tilt) hd=`<g transform="translate(0,${cy}) scale(1,${KS.toFixed(3)}) translate(0,${-cy})">${hd}</g>`;
+    s+=hd;
+  }
+  /* 两个人：§六 附则——同框不许都是全身。
+     顾行给全身（正在拧阀）；父亲只给一只垂着的手，从画面右缘入画。
+     那条台词「两只手垂着。没有扶任何东西」在画面上就是这一只手。 */
+  if(o.two){
+    s+=figure(392,436,132,"stand");
+    /* 前臂从画面上缘垂下来，然后是手。整条手臂略微倾斜，才不像挂牌。 */
+    /* 前臂：上宽下窄、向左压 14°。原来是一根等宽竖条，
+       底下再垂一只手，整体就读成"画面右缘又站了一个瘦长的人"。 */
+    const arm=`M1122,-16 L1214,-16 L1196,84 L1146,84 Z`;
+    s+=`<g data-mis="1" transform="translate(1.4,-1.2)"><path d="${arm}" fill="${PAPER}" stroke="${PAPER}" stroke-width="3.2"/></g>`;
+    s+=`<path d="${arm}" fill="${INK}"/>`;
+    /* 手：掌 / 指 的分界要有一刀（纸缝），再加一根拇指、整体斜 10°。
+       缺这三样，四根等长的平行指缝就是一条裤腿——实测被读成"悬空的半截裤子"。 */
+    const hp=handPath(1168,72,112,198);
+    /* 错版必须单独成组：审计只认显式 data-mis 的 translate，
+       摆位用的 translate(1142,86) 不该被当成套印误差。 */
+    s+=`<g transform="translate(1142,86) rotate(-6) translate(-1150,-80)">`
+      +`<g data-mis="1" transform="translate(1.4,-1.2)">`
+      +`<path d="${hp}" fill="${PAPER}" stroke="${PAPER}" stroke-width="3.2"/>`
+      +`<path d="M${1160},${148} L${1134},${196} L${1154},${206} L${1178},${168} Z" fill="${PAPER}" stroke="${PAPER}" stroke-width="3.2"/>`
+      +`</g>`
+      +`<path d="${hp}" fill="${INK}"/>`
+      +`<path d="M${1160},${148} L${1134},${196} L${1154},${206} L${1178},${168} Z" fill="${INK}"/>`
+      +`<path d="M${1122},${176} L${1218},${166}" fill="none" stroke="${PAPER}" stroke-width="3"/>`
+      +`</g>`;
+  }
+  /* 门框 */
+  s+=R(1136,0,64,H,"url(#k3)");
+  s+=L(1130,0,1130,H,INK,7);
+  return s;
+};
+
+/* 上塔 · 铁梯（垂直位移）o:{n:剩余级数} */
+SC.climb=o=>{
+  let s=R(0,0,W,H,"url(#k2)");
+  s+=R(0,0,W,H,"url(#kd)");
+  /* 塔壁：中央一条暗竖带 */
+  s+=R(430,0,340,H,"url(#k5)");
+  s+=L(430,0,430,H,INK,9)+L(770,0,770,H,INK,9);
+  /* 梯梁 */
+  s+=R(536,0,22,H,INK)+R(642,0,22,H,INK);
+  s+=L(547,0,547,H,PAPER,3)+L(653,0,653,H,PAPER,3);
+  /* 梯级：由下往上变密（透视） */
+  let y=H-10, gap=62;
+  let i=0;
+  while(y>0){
+    s+=R(528,y,144,10,INK);
+    s+=L(536,y+3,664,y+3,PAPER,2.4);
+    y-=gap; gap*=0.90; i++;
+    if(gap<14) gap=14;
+  }
+  /* 侧壁上的数 */
+  s+=T(830,120,"47",104,PAPER);
+  s+=T(230,470,"47",46,PAPER,'letter-spacing="2"');
+  /* 一块松板（四十七级那块） */
+  s+=R(528,392,144,10,INK)+L(536,395,664,395,PAPER,2.4);
+  s+=`<circle cx="646" cy="397" r="4" fill="${PAPER}"/>`;
+  s+=R(0,0,W,6,INK)+R(0,H-6,W,6,INK);
+  return s;
+};
+
+/* 走廊 · 表。o:{sb:true} */
+SC.board=o=>{
+  let s=R(0,0,W,H,"url(#k2)");
+  s+=R(0,0,W,H,"url(#kd)");
+  /* 墙的砖缝 */
+  for(let y=40;y<H;y+=46){ s+=L(0,y,W,y,INK,1.2,'stroke-dasharray="52 9 31 14"'); }
+  /* 斜贴的纸 */
+  s+=`<g transform="rotate(-2.2 600 260)">`;
+  s+=R(348,96,506,376,PAPER);
+  s+=R(348,96,506,376,"url(#kd)");
+  s+=R(348,96,506,376,"none",` stroke="${INK}" stroke-width="3"`);
+  /* 表头 */
+  s+=L(370,168,832,168,INK,3);
+  s+=L(370,132,832,132,INK,3);
+  /* 五栏竖线 */
+  [370+318,370+372,370+434,370+486].forEach(function(x){ s+=L(x,132,x,462,INK,2); });
+  /* 二十三行 */
+  for(let r=0;r<23;r++){
+    const y=168+ r*12.6;
+    s+=L(370,y,832,y,INK,1);
+    /* 名字：白/黑短横暗示，不写字 */
+    if(r<22){
+      const wv=18+((r*37)%30);
+      s+=L(378,y-9,378+wv,y-9,INK,2);
+    }
+  }
+  /* 服装栏的二十三道横 */
+  for(let r=0;r<23;r++){
+    const y=168+r*12.6-9;
+    s+=L(748,y,786,y,INK,2.2);
+  }
+  /* 备注：第十九行有字 */
+  s+=L(806,168+18*12.6-9,818,168+18*12.6-9,INK,2.4);
+  s+=L(806,168+18*12.6-4,822,168+18*12.6-4,INK,2.4);
+  /* 最后一行：铅笔写的（略不匀） */
+  s+=ragged(378,168+22*12.6-9,398,168+22*12.6-9,2.4,11);
+  s+=ragged(378+66,168+22*12.6-9,402+66,168+22*12.6-9,2.4,13);
+  /* 表下小字 */
+  s+=L(370,478,470,478,INK,2)+L(370,486,500,486,INK,2);
+  s+=`</g>`;
+  /* 铅笔：一根细线垂下来 */
+  s+=L(828,466,830,520,INK,2.4);
+  s+=R(824,520,11,26,INK);
+  s+=L(0,0,W,7,INK)+R(0,H-7,W,7,INK)+R(0,0,8,H,INK);
+  return s;
+};
+
+/* 教室。o:{empty:true} 白天。斜俯视，桌椅成透视 */
+SC.classroom=o=>{
+  let s=R(0,0,W,H,PAPER);
+  /* 天花板压黑 */
+  s+=R(0,0,W,46,"url(#k5)");
+  s+=R(0,0,W,46,"url(#kd)");
+  s+=L(0,46,W,46,INK,7,'stroke-dasharray="238 10 316 13 172 9"');
+  /* 后墙：疏排线 */
+  s+=R(0,52,W,150,"url(#k1)");
+  /* 窗：唯一的大面积亮，左下透视 */
+  s+=`<polygon points="46,72 366,88 366,214 46,244" fill="${PAPER}"/>`;
+  s+=`<polygon points="46,72 366,88 366,214 46,244" fill="none" stroke="${INK}" stroke-width="9"/>`;
+  s+=L(206,80,206,229,INK,7);
+  /* 窗外废料堆：乱线，斜插 */
+  for(let i=0;i<18;i++){
+    const x1=60+((i*61)%290), y1=90+((i*83)%52), x2=60+((i*127)%290), y2=140+((i*43)%64);
+    s+=L(x1,y1,x2,y2,INK,1.8);
+  }
+  [[104,176,15],[168,158,11],[248,182,12],[316,150,10]].forEach(function(c){
+    s+=C(c[0],c[1],c[2],INK,3.4);
+  });
+  /* 黑板：最重的一块墨，右侧，略透视 */
+  s+=`<polygon points="424,64 1112,52 1112,196 424,210" fill="${INK}"/>`;
+  s+=`<polygon points="424,64 1112,52 1112,196 424,210" fill="none" stroke="${INK}" stroke-width="5"/>`;
+  s+=T(486,140,"第一章",44,PAPER,'letter-spacing="9"');
+  s+=T(488,184,"第二遍",22,PAPER,'letter-spacing="4"');
+  /* 课桌：四排，斜俯视；每排桌子退远变小，间距不等 */
+  const rows=[
+    {y:262,h:9,xs:[300,452,604,756,908],w:104,dh:0},
+    {y:318,h:13,xs:[236,412,588,764,940],w:124,dh:1},
+    {y:396,h:19,xs:[150,358,566,774,982],w:152,dh:2},
+    {y:500,h:28,xs:[40,296,552,808,1064],w:190,dh:3}
+  ];
+  rows.forEach(function(rw,ri){
+    rw.xs.forEach(function(x,ci){
+      /* 空位：第三排第二个没人（那人的桌子） */
+      const blank = (o&&o.empty && ri===2 && ci===1);
+      const hw=rw.w/2;
+      /* 桌板：一块梯形，前宽后窄 */
+      s+=`<polygon points="${x-hw},${rw.y} ${x+hw},${rw.y} ${x+hw+5},${rw.y+rw.h} ${x-hw-5},${rw.y+rw.h}" fill="${INK}"/>`;
+      /* 桌下的一道短影：不画横贯全宽的地面线（那是地平线） */
+      s+=L(x-hw-2,rw.y+rw.h+7,x+hw+2,rw.y+rw.h+7,INK,2);
+      if(blank){
+        /* 空桌：只留桌板，没有头肩 */
+        return;
+      }
+      /* 头肩：不是圆+方，是不对称的一块墨；每排大小不同 */
+      const hr = 12+ri*5.5;
+      const sx = x + (ci%2?1:-1)*(2+ri);
+      s+=`<path d="M${sx-hr*1.2},${rw.y-2} Q${sx-hr*1.3},${rw.y-hr*2.9} ${sx-hr*0.2},${rw.y-hr*2.85}
+          Q${sx+hr*1.15},${rw.y-hr*2.8} ${sx+hr*1.15},${rw.y-hr*1.2}
+          L${sx+hr*1.5},${rw.y-2} Z" fill="${INK}"/>`;
+    });
+  });
+  s+=R(0,H-10,W,10,INK)+R(0,0,8,H,INK)+R(W-8,0,8,H,INK);
+  return s;
+};
+
+/* 走廊 · 傍晚，只有东头一间亮。
+   一点透视：天花板与地面的边线一起收到消失点，尽头一扇窗。
+   别的全部让开 —— 这一屏只有一个大东西（那扇窗）。 */
+/* 走廊 · 灯一层层灭 o:{}
+   规范 §三：光不是加上去的，是墨没有到达的地方。
+   规范 §六 律一：一个画面只有一个大东西 —— 这一屏只有那扇门。
+   不做走廊全景（全景必然水平延展，撞律四）。黑里只浮出一扇门：
+   门板用排线（灰）从墨里浮出来，不靠白线勾轮廓（那会读成线框图）。
+   白的只有两处：门上的观察窗、门缝漏到地上的一片。 */
+SC.corridor=o=>{
+  let s=R(0,0,W,H,INK);
+  /* 门板：木纹。不是交叉网格——网格一定被读成铁网/贴图。 */
+  s+=wood(336,56,528,414,11,7.6,2.1);
+  /* 左门框：门要嵌在墙里，两侧都得收边，否则是一张贴在墙上的板 */
+  s+=wood(302,56,46,414,19,5.6,2.2);
+  s+=L(344,58,344,470,INK,5);
+  /* 右门框的进深：一条被教室的灯照到的窄面，门因此不是一片贴纸 */
+  /* 门上的观察窗：窗里是那间还亮着的教室 */
+  const gx=390, gy=100, gw=420, gh=150;
+  s+=hR(gx-13,gy-13,gw+26,gh+26,INK,41,2.8);
+  s+=hR(gx,gy,gw,gh,PAPER,47,2.4);                  // 窗里就是纸：灯亮着，不许再有排线
+  /* 原来这里画了一根"坏掉的灯管"，是一串等粗等距的虚线——被读成悬浮的杂线。
+     窗里就该只是亮的纸。 */
+  /* 把手：一整条横杆。学校门就是这样，不用曲线 */
+  s+=hR(756,300,86,13,INK,71,1.6);
+  s+=hR(760,302,74,4,PAPER,73,0.9);
+  /* 门底那道缝 */
+  s+=hR(346,456,508,10,PAPER,61,1.4);
+  /* 门缝漏到地上的光：底部这一片纸，就是 §六 律二 要留的那条边 */
+  /* 漏到地上的光：一个梯形的边读成「搭起来的展台」，所以左右两条斜边
+     都做成断口——光落在地上没有直边。 */
+  (function(){
+    let d="M346,468";
+    for(let i=1;i<=7;i++){ const t=i/7; d+=" L"+(346+(854-346)*t+((i*17)%6)-2.5).toFixed(1)+","+(466+((i*13)%7)-3).toFixed(1); }
+    for(let i=0;i<=6;i++){ const t=i/6; d+=" L"+(854+(972-854)*t+((i*19)%7)-3).toFixed(1)+","+(466+(540-466)*t+((i*11)%5)-2).toFixed(1); }
+    d+=` L966,544 L860,540 L742,546 L612,542 L486,547 L368,543 L250,540 L244,528`;
+    for(let i=6;i>=0;i--){ const t=i/6; d+=" L"+(346-(346-244)*t+((i*13)%7)-3).toFixed(1)+","+(466+(528-466)*t+((i*7)%5)-2).toFixed(1); }
+    d+=" Z";
+    s+=P(d,PAPER);
+    s+=P(d,"url(#kd)");
+  })();
+  /* 印张边：四边不等宽，压在光斑上才看得见 */
+  s+=R(0,0,W,11,INK)+R(0,H-14,W,14,INK)+R(0,0,9,H,INK)+R(W-11,0,11,H,INK);
+  return s;
+};
+
+/* 厂门口 · 层积的纸墙 o:{layer:掀到第几层(1..7), rain:true} */
+SC.wall=o=>{
+  o=o||{};
+  const lay=o.layer||0;
+  let s=R(0,0,W,H,PAPER);
+  /* 墙：砖与水泥。底色不铺排线——砖缝自己就是质感，
+     铺一层 k2 会把这一屏推到第 5 级，超 §十二-15。 */
+  s+=R(0,0,W,H,"url(#kd)");
+  for(let y=30;y<H;y+=38){ s+=L(0,y,W,y,INK,1.2,'stroke-dasharray="44 12 26 17"'); }
+  /* 层积：每层只露一条，下缘有厚度，左右边不齐 */
+  /* i=0 是最底(最老)，i=6 是最上(今年) */
+  /* 七层纸只用四个墨阶：k1 / k3 / k5 / k7（§十二-15 一屏最多四级）。
+     「越老越疏」靠层厚、名字短横的疏密去分，不靠再加一级灰。 */
+  const bands=[
+    {y:470,h:44,d:"k1",jL:14,jR:-9},
+    {y:428,h:42,d:"k1",jL:-8,jR:11},
+    {y:388,h:40,d:"k3",jL:9,jR:-13},
+    {y:350,h:38,d:"k3",jL:-11,jR:7},
+    {y:314,h:36,d:"k5",jL:12,jR:-6},
+    {y:280,h:34,d:"k5",jL:-6,jR:13},
+    {y:248,h:32,d:"k7",jL:8,jR:-10}
+  ];
+  bands.forEach(function(b,i){
+    const x0=112+b.jL, x1=1088+b.jR, wdt=x1-x0;
+    /* 这一层是否已被掀开：lay 大 = 掀得多，从上往下数 */
+    const up = lay>0 && (lay >= (7-i));
+    if(up){
+      /* 掀开后：露出的下层纸背 + 撕口 */
+      s+=R(x0,b.y,wdt,b.h,PAPER);
+      s+=R(x0,b.y,wdt,b.h,"url(#kd)");
+      /* 撕口：一小片还粘着的纸，垂下来 */
+      s+=P(`M${x0},${b.y} L${x0+26},${b.y+7} L${x0+16},${b.y+b.h-3} L${x0},${b.y+b.h} Z`,INK);
+      s+=P(`M${x1},${b.y} L${x1-22},${b.y+9} L${x1-34},${b.y+b.h-5} L${x1},${b.y+b.h} Z`,INK);
+      return;
+    }
+    /* 纸面 */
+    s+=R(x0,b.y,wdt,b.h,"url(#"+b.d+")");
+    /* 下缘厚度：深色一条，宽度不均 */
+    s+=R(x0,b.y+b.h-6,wdt,6,INK);
+    /* 上缘：一道墨线，中间略弯 */
+    s+=`<path d="M${x0},${b.y} Q${(x0+x1)/2},${b.y-2.5} ${x1},${b.y}" fill="none" stroke="${INK}" stroke-width="2.6"/>`;
+    /* 名字：短横暗示。行数 2，长度与间距不等 */
+    const onDark = (b.d==="k5"||b.d==="k7");
+    let x=x0+22;
+    while(x<x1-40){
+      const wv=14+((x*7+b.y)%30);
+      s+=L(x,b.y+b.h*0.42,x+wv,b.y+b.h*0.42,onDark?PAPER:INK,2.2);
+      if(b.h>36) s+=L(x,b.y+b.h*0.72,x+wv*0.7,b.y+b.h*0.72,onDark?PAPER:INK,2);
+      x+=wv+30+((x*13)%22);
+    }
+  });
+  /* 最底：墙翻修时纸被砌进去，露出新水泥 */
+  s+=R(112,514,470,46,PAPER);
+  s+=R(112,514,470,46,"url(#kd)");
+  s+=L(582,510,582,H,INK,3.2);
+  s+=L(112,512,700,512,INK,3.2);
+  /* 雨：只落在墨与纸上，不落在纸上（白线） */
+  if(o.rain){
+    for(let i=0;i<46;i++){
+      const x=(i*103)%W, y=(i*157)%H;
+      s+=L(x,y,x-8,y+42,PAPER,1.5);
+    }
+  }
+  s+=R(0,0,W,7,INK)+R(0,H-8,W,8,INK)+R(0,0,8,H,INK)+R(W-8,0,8,H,INK);
+  return s;
+};
+
+/* 锅炉房 o:{turn:true} */
+SC.boiler=o=>{
+  /* 全片最黑的一场。屋子整体压到 k6，只留一块由炉口斜向下的亮区。
+     母亲是压在亮区上的纯黑剪影 —— 版画的本体：黑块贴在白块上。 */
+  let s=R(0,0,W,H,"url(#k6)");
+  s+=R(0,0,W,H,"url(#kd)");
+  /* 亮区：从炉口向画面左下铺开的一个大梯形（地脚的光） */
+  s+=`<path d="M636,300 L906,300 L1010,560 L210,560 Z" fill="${PAPER}"/>`;
+  /* 亮区上不得有线，但要有从炉口方向来的排线做过渡 */
+  s+=`<path d="M636,300 L906,300 L946,398 L470,398 Z" fill="url(#k1)"/>`;
+  /* 炉体上方的墙，略亮（k3），表示被炉口照到 —— 母亲的头部要靠它才看得见 */
+  s+=`<path d="M418,92 L978,92 L978,300 L418,300 Z" fill="url(#k3)"/>`;
+  /* 炉体：实黑，砖缝用白线 */
+  s+=`<path d="M592,150 L946,150 L962,486 L578,486 Z" fill="${INK}"/>`;
+  for(let i=1;i<9;i+=2){
+    const y=150+i*37;
+    s+=L(586,y,952,y,PAPER,1.2);
+  }
+  /* 炉门：整块纸白，铁框四条 */
+  s+=`<path d="M662,212 L884,212 L892,424 L654,424 Z" fill="${PAPER}"/>`;
+  s+=`<path d="M662,212 L884,212 L892,424 L654,424 Z" fill="none" stroke="${INK}" stroke-width="11"/>`;
+  /* 火：白上的黑齿 */
+  s+=P("M654,424 L686,364 L716,404 L750,348 L786,398 L820,342 L854,392 L878,356 L892,424 Z",INK);
+  s+=P("M654,396 L680,348 L718,388 L754,336 L790,384 L826,332 L862,378 L892,344 L892,396 Z",INK);
+  /* 火星：白点往上，出到黑里 */
+  for(let i=0;i<13;i++){
+    const fx=674+i*18, fy=330-((i*61)%84);
+    s+=`<circle cx="${fx}" cy="${fy}" r="${1.5+(i%3)}" fill="${PAPER}"/>`;
+    if(i%2===0) s+=L(fx,fy,fx+2,fy-19,PAPER,1.2);
+  }
+  /* 母亲：纯黑剪影，站在亮区上（所以看得见）。转身时给侧影 */
+  s+=figure(o&&o.turn?470:440,532,398,o&&o.turn?"turn":"stoop");
+  /* 铲柄：从她的手伸向炉门，横过亮区 */
+  s+=`<path d="M436,330 L648,310 L654,336 L442,356 Z" fill="${INK}"/>`;
+  /* 铲头：进到炉口里，一段白线表示它进了火 */
+  s+=`<path d="M638,302 L706,288 L722,332 L654,346 Z" fill="${INK}"/>`;
+  /* 墙上的工装：挂在右侧黑里，只在被照亮处给白边 */
+  s+=`<path d="M1022,178 L1090,178 L1102,290 L1078,292 L1072,232 L1072,432 L1030,432 L1030,232 L1024,290 L1000,290 Z" fill="${INK}"/>`;
+  s+=L(1030,256,1072,256,PAPER,1.4);
+  s+=`<path d="M1022,178 L1030,178 L1030,290 L1022,290 Z" fill="url(#kw)"/>`;
+  /* 左下：十二级台阶，越往下越暗 */
+  s+=P("M0,470 L168,470 L132,562 L0,562 Z","url(#kw2)");
+  s+=L(0,470,168,470,PAPER,2.6)+L(0,508,150,508,PAPER,2.2);
+  s+=R(0,0,W,7,INK)+R(0,H-8,W,8,INK)+R(0,0,8,H,INK)+R(W-8,0,8,H,INK);
+  return s;
+};
+
+/* 塔顶 · 全城 o:{lit:0..1, dark:true}
+   画法：楼是实心墨块，亮着的窗是没刻到的纸。
+   三条纪律：
+     1. 楼与楼前后压着，没有一条共同的底边——一有共同底边就成了天际线剪影。
+     2. 窗按排布，密到数不清，因为这一屏要的是灯海。
+     3. 远处不是窗变小就完事，是整片再加一层密线——远＝密。 */
+SC.city=o=>{
+  o=o||{};
+  const lit=o.lit==null?1:o.lit;
+  let s=R(0,0,W,H,PAPER);
+
+  /* 夜空/夜城。白天只铺天空——楼缝里露出纸，那是天。
+     夜里同一处露出纸就是一道一道亮缝，被读成"画错的竖白线"（实测）。
+     所以夜是整帧一层连续渐变排线，楼再压上去。 */
+  if(o.dark) s+=hatchFade(0,0,W,H,5.8,3.8,2.6,3.4,7);
+  else       s+=hatchFade(0,2,W,246,11.4,5.2,1.5,3.0,19);
+
+  /* 二号车间：整片没刻到的纸。上缘是拆剩的参差。
+     它是这块板上被凿掉最多的地方，也是画面里唯一的"空"。 */
+  /* 这块"没刻到的纸"是白天的空。夜里它就不是空，是洞——
+     一整块纸压在一片排线上，实测读成"图层漏了/图没画完"。
+     夜场不画它。 */
+  if(!o.dark) (function(){
+    /* 屋檐：一段段错开的残墙，不是一条直线。直线在夜空里就是一块裁切的纸。 */
+    let d="M712,198";
+    for(let x=712;x<1200;x+=44){ d+=" L"+x+","+(196+((x*13)%11)-5)+" L"+(x+44)+","+(196+((x*7)%9)-4); }
+    d+=" L1200,340 L1176,340 L1160,320 L1048,320 L1032,340 L712,340 Z";
+    s+=P(d,PAPER);
+    /* 空厂房里得有东西：四根柱、一道梁。没有这些，那块纸就是"图层漏了"。 */
+    [762,880,998,1120].forEach(function(x,i){
+      s+=R(x,214+(i%2)*3,13-(i%2)*3,128,INK);
+      s+=L(x+4,218,x+4,336,PAPER,1.6);
+    });
+    s+=L(712,246,1200,244,INK,3.4);
+  })();
+  [[736,26,3.4],[812,44,2.6],[902,19,3.8],[978,38,2.4],[1088,29,3.2],[1150,50,2.8]].forEach(function(p){
+    s+=L(p[0],340,p[0]+((p[0]*7)%5)-2,340-p[1],INK,p[2]);
+  });
+
+  /* 一栋楼：矩形墨块 + 窗阵。
+     楼顶不能是一条平线——平顶排一排就是柱状图。每栋随机带一块水箱/楼梯间。
+     窗也不许等大等距：真楼的窗有节奏，但不会均匀到每个格子都一个样。 */
+  function bld(x,y,w,h,cols,rows,cw,ch,seed,edge){
+    s+=R(x,y,w,h,INK);
+    s+=R(x,y,w,h,"url(#kd)");
+    const q0=((seed*37.7)%1+1)%1;
+    if(q0>0.42){
+      const bt=10+((seed*53)%15), bx=x+w*(0.18+0.54*q0), bw=Math.min(30,w*0.32);
+      s+=R(bx,y-bt,bw,bt+3,INK);
+      if(q0>0.74) s+=R(bx+bw*0.2,y-bt-7,bw*0.45,8,INK);
+    }
+    const gx=w/cols, gy=h/rows;
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+      const q=Math.abs(Math.sin((r*7.3+c*13.7+seed)*12.9898)*43758.5453)%1;
+      if(q>lit) continue;
+      const jx=Math.sin((r*3.1+c*17.3+seed)*78.233)*2.4;
+      const jy=Math.cos((r*5.7+c*11.9+seed)*37.719)*2.2;
+      const cw2=cw*(0.74+0.52*((q*7)%1)), ch2=ch*(0.74+0.46*((q*13)%1));
+      s+=R(x+gx*(c+0.5)-cw2/2+jx, y+gy*(r+0.62)-ch2/2+jy, cw2, ch2, PAPER);
+    }
+    if(edge) s+=L(x+2,y+1.5,x+w-2,y+1.5,PAPER,1.6);
+  }
+
+  /* ---- 最后排：k6 密线，窗只剩针尖 ---- */
+  s+=R(756,352,444,208,"url(#k6)");
+  for(let i=0;i<240;i++){
+    const x=762+((i*29)%432), y=360+((i*43)%192);
+    const q=Math.abs(Math.sin(i*12.9898+5.5)*43758.5453)%1;
+    if(q>lit*0.60) continue;
+    s+=R(x,y,2.4,1.9,PAPER);
+  }
+  /* 再叠几块实墨的远处楼体，压住那片密线的上缘，别让它像山脊 */
+  bld(880,300,74,264,4,7,7,5,11.3);
+  bld(962,282,58,282,3,8,6,5,4.1);
+  bld(1026,318,66,246,3,6,6,5,7.7);
+  bld(1098,306,86,258,4,7,6,5,2.9);
+  bld(1190,292,60,272,3,7,6,5,9.4);
+
+  /* ---- 中排 ---- */
+  bld(760,340,80,220,4,6,9,7,3.3);
+  bld(836,326,64,234,3,7,8,6,8.1);
+  bld(660,300,86,260,4,7,11,8,5.7);
+  bld(572,326,76,234,4,6,10,8,1.9);
+  bld(492,298,68,262,3,7,10,7,6.5);
+
+  /* ---- 前排：窗大，出画的直接切一半 ---- */
+  bld(-70,224,168,336,4,7,26,19,2.2,1);
+  bld(88,254,132,306,4,7,20,15,7.4,1);
+  bld(210,206,116,354,4,9,18,13,4.8);
+  bld(318,268,98,292,3,7,17,12,9.2,1);
+  bld(408,304,88,256,3,6,15,11,3.6);
+  bld(490,344,80,216,3,5,13,10,8.8);
+
+  /* 烟囱：竖切，出画。只有竖线才显得高。 */
+  [[36,0,13,248],[136,20,9,252],[240,0,11,212],[346,48,8,210]].forEach(function(c,i){
+    s+=R(c[0],c[1],c[2],c[3],INK);
+    s+=L(c[0]+c[2]*0.28,c[1]+16,c[0]+c[2]*0.28,c[1]+c[3]*0.42,PAPER,1.4);
+  });
+
+  /* 冷却塔：全片唯一允许的曲线。 */
+  s+=P("M528,372 L574,226 L620,226 L666,372 Z",INK);
+  s+=`<ellipse cx="597" cy="226" rx="20" ry="4.6" fill="${PAPER}"/>`;
+
+  /* 二号车间那片纸：夜里它是唯一还亮着的方块，所以留纸，不盖网。 */
+
+  s+=R(0,0,W,6,INK)+R(0,H-10,W,10,INK)+R(0,0,7,H,INK)+R(W-6,0,6,H,INK);
+  return s;
+};
+
+/* 房间 · 晨。汽笛响的那一屏 —— 全片允许「错版」的两处之一。
+   屋里还没亮，所以是满版墨；光是纸。
+   一扇窗（矩形+十字棂＝制度形状）、一条向下铺开的光、一根切过画面的床柱。
+   床柱是黑里的一根黑 —— 靠纸色刻边才看得见（§二 律二）。 */
+SC.ceiling=o=>{
+  let s=R(0,0,W,H,INK);
+
+  /* 窗光：从窗台往右下铺开。光是纸，边界就是刻刀的边界 ——
+     斜边做成一条抖动的折线（每段偏 2–7px），不拿半透明做过渡。 */
+  const wx=104,wy=96,ww=296,wh=206;
+  const ex0=wx+ww, ey0=wy+wh, ex1=wx+ww+430, ey1=H;
+  const vl=Math.hypot(ex1-ex0,ey1-ey0), nx=(ey1-ey0)/vl, ny=-(ex1-ex0)/vl;
+  let light=`M${wx},${wy+wh} L${ex0},${ey0}`;
+  for(let i=1;i<=14;i++){
+    const t=i/14, j=((i%2)?1:-1)*(1.4+((i*23)%5)*1.1);
+    const wob=Math.sin(i*2.3)*1.2;   /* 叠加一点低频起伏，免得成锯齿 */
+    light+=" L"+((ex0+(ex1-ex0)*t)+nx*(j+wob)).toFixed(1)+","+((ey0+(ey1-ey0)*t)+ny*(j+wob)).toFixed(1);
+  }
+  light+=` L${wx},${H} Z`;
+  s+=P(light,PAPER);
+  /* 窗：只留纸，棂是没被刻掉的墨 */
+  s+=R(wx,wy,ww,wh,PAPER);
+  s+=R(wx,wy,ww,wh,"url(#kd)");
+  s+=R(wx+ww/2-5,wy,10,wh,INK);
+  s+=R(wx,wy+wh/2-4,ww,8,INK);
+  /* 窗台：一道纸的厚度，下缘带毛。
+     给窗子补过"上槛 + 左框"三面窗套，结果那两道多出来 14px 的纸被读成
+     "顶部和窗台有多余的悬空横线"——补框不如不补。窗本身就是墙上的一个洞，
+     洞的边由墨与纸的边界给出，不需要再描。 */
+  s+=R(wx-14,wy+wh+8,ww+28,7,PAPER);
+  s+=L(wx-14,wy+wh+15,wx+ww+14,wy+wh+15,INK,2.2);
+
+  /* 铁架床：整套收在光里，成一个闭合的东西 —— 床头柱、床尾柱、两道横档。
+     黑块直接压在白块上，不勾边；床腿在画面下沿外，不必交代。 */
+  s+=P("M138,392 L178,392 L186,560 L146,560 Z",INK);      /* 床头柱 */
+  s+=P("M572,432 L610,432 L614,560 L576,560 Z",INK);      /* 床尾柱 */
+  s+=P("M172,428 L594,438 L592,458 L170,448 Z",INK);      /* 上横档 */
+  s+=P("M176,516 L598,524 L596,544 L174,536 Z",INK);      /* 下横档 */
+  /* 床档上原来开了两道白口防"塑料条"，但那两道同样被读成浮面白线。删。 */
+  /* 枕头 */
+  s+=P("M186,398 L280,392 L286,444 L190,450 Z",PAPER);
+  /* 后脑勺：只给一个圆，不给脸——规范 §十二-5 不画五官。
+     纸色刻边让它和被子分开，否则两颗黑块会粘成一片。 */
+  s+=`<g data-mis="1" transform="translate(1.1,-0.9)"><circle cx="264" cy="416" r="21" fill="${PAPER}" stroke="${PAPER}" stroke-width="2.8"/></g>`;
+  s+=`<circle cx="264" cy="416" r="21" fill="${INK}"/>`;
+  /* 被子：从肩盖到脚。上缘按身体走——肩低、胸高、膝起、脚落。
+     不是一串鼓包：鼓包读不出人，只能读出石头。 */
+  s+=P("M272,404 Q302,392 342,396 Q382,384 422,392 Q462,398 502,394 L566,420 L566,460 L276,456 Z",INK);
+  /* 被子就是一整块墨，不加褶。
+     褶只能用"刻掉的纸缝"表达，而那在 2400px 的截图里会被读成
+     "横切人体的浮面白线"——两轮核对都是这个结论。布感让位给干净。 */
+  /* 右半张：黑就黑着。
+     为了让那里"不是死墨"，先后加过 ① 一排门框斜排线 ② 墙角线 ③ 四道短竖口 ④ 门底一线亮。
+     四种都被读成"未完成的图/图层穿帮/误触的一笔"——因为在一片纯黑里，
+     任何孤立的纸色线条都不构成物体，只构成脏点。
+     这一屏只有一个东西：窗光里的一张床。右边留着黑，那是房间的深度。 */
+  /* 印张边：四边不等宽 */
+  s+=R(0,0,W,9,INK)+R(0,H-11,W,11,INK)+R(0,0,7,H,INK)+R(W-13,0,13,H,INK);
+  /* 错版：整张再印一遍，偏 1.6 / 1.1 —— 只在这一秒允许 */
+  return misfit(s);
+};
+
+/* 公告栏（支线 B） */
+SC.notice=o=>{
+  let s=R(0,0,W,H,"url(#k3)");
+  s+=R(0,0,W,H,"url(#kd)");
+  s+=R(180,60,840,400,INK);
+  s+=R(200,78,800,364,PAPER);
+  s+=R(200,78,800,364,"url(#kd)");
+  /* 钉着的几张纸 */
+  s+=`<g transform="rotate(-1.6 400 240)">`+R(246,120,290,180,PAPER)+R(246,120,290,180,"none",` stroke="${INK}" stroke-width="3"`)+`</g>`;
+  s+=`<g transform="rotate(1.4 760 260)">`+R(600,140,300,200,PAPER)+R(600,140,300,200,"none",` stroke="${INK}" stroke-width="3"`)+`</g>`;
+  /* 手写的字：短横 + 一个长竖（湿了） */
+  let yy=160;
+  for(let i=0;i<9;i++){
+    const wv=90+((i*53)%120);
+    s+=L(262,yy,262+wv,yy,INK,2.8);
+    yy+=19;
+  }
+  /* 「我等你到八点四十」——以更长的横线暗示，只有一行特别长 */
+  s+=L(262,yy+6,520,yy+6,INK,3.4);
+  /* 图钉 */
+  [[300,132],[500,132],[640,152],[880,152]].forEach(function(p){
+    s+=C(p[0],p[1],7,INK,3.4)+`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="${INK}"/>`;
+  });
+  s+=R(0,0,W,7,INK)+R(0,H-8,W,8,INK)+R(0,0,8,H,INK)+R(W-8,0,8,H,INK);
+  return s;
+};
+
+/* 澡堂（支线 E） */
+SC.bath=o=>{
+  let s=R(0,0,W,H,"url(#k6)");
+  s+=R(0,0,W,H,"url(#kd)");
+  /* 后墙被蒸汽打亮一层：这层排线就是「热」 */
+  s+=R(0,96,W,304,"url(#k3)");
+  /* 蒸汽：往上的白排线，上缘留下几处刻崩的缺口 */
+  s+=R(0,40,W,150,"url(#kw)");
+  [[120,96,220],[420,72,300],[760,104,260],[980,64,200]].forEach(function(w){
+    s+=R(w[0],w[1],w[2],3.4,PAPER);
+  });
+  /* 柜子：一排更衣柜，门缝是纸 */
+  for(let i=0;i<6;i++){
+    const x=8+i*52;
+    s+=R(x,120,44,286,INK);
+    s+=L(x+2,140,x+42,140,PAPER,2.2);
+    s+=C(x+34,300,3.4,PAPER,2.2);
+  }
+  /* 长条凳：横过来的一条墨，两条腿 */
+  s+=R(120,404,1074,17,INK);
+  s+=R(210,421,15,96,INK)+R(1040,421,15,96,INK);
+  /* 地上：水，横排线，越靠镜头越密 */
+  s+=R(0,517,W,43,"url(#k4)");
+  /* 水面的远边：原来是一条贯穿全宽的横带（480–520），就是地平线。
+     水的地平线也不是直线——一段段错开。 */
+  (function(){
+    let d="M0,486";
+    for(let x=0;x<=W;x+=52){ d+=" L"+x+","+(482+((x*13)%9)-4); }
+    d+=" L"+W+",520 L0,520 Z";
+    s+=P(d,"url(#k5)");
+  })();
+  /* 三个人：坐在凳上，只给头与肩。块面 + 纸色刻边，否则贴在暗墙上就没了。 */
+  [[268,404,118],[562,404,112],[852,404,124]].forEach(function(p){
+    const x=p[0], y=p[1], u=p[2]/100;
+    const d=`M${(x-31*u).toFixed(1)},${y} L${(x-27*u).toFixed(1)},${(y-24*u).toFixed(1)}
+      L${(x-13*u).toFixed(1)},${(y-32*u).toFixed(1)} L${(x-12*u).toFixed(1)},${(y-48*u).toFixed(1)}
+      L${(x-7*u).toFixed(1)},${(y-58*u).toFixed(1)} L${(x+7*u).toFixed(1)},${(y-58*u).toFixed(1)}
+      L${(x+12*u).toFixed(1)},${(y-48*u).toFixed(1)} L${(x+13*u).toFixed(1)},${(y-32*u).toFixed(1)}
+      L${(x+27*u).toFixed(1)},${(y-24*u).toFixed(1)} L${(x+31*u).toFixed(1)},${y} Z`;
+    s+=`<path d="${d}" fill="${PAPER}" stroke="${PAPER}" stroke-width="2.6" stroke-linejoin="round"/>`;
+    s+=`<path d="${d}" fill="${INK}"/>`;
+    /* 肩上那一圈洗不掉的印：一道白线 */
+    s+=L(x-16*u,y-27*u,x+16*u,y-27*u,PAPER,1.8);
+  });
+  /* 墙角的水管：竖管 + 接口，白线只刻一条 */
+  s+=R(1092,110,16,300,INK)+R(1092,116,92,14,INK);
+  /* 印张边 */
+  s+=R(0,0,W,8,INK)+R(0,H-10,W,10,INK)+R(0,0,7,H,INK)+R(W-11,0,11,H,INK);
+  return s;
+};
+
+/* 二号车间废墟（支线 F） */
+SC.ruin=o=>{
+  let s=R(0,0,W,H,PAPER);
+  s+=R(0,0,W,H,"url(#kd)");
+  /* 断墙：画面里唯一的大东西，实心墨，顶边是塌下来的豁口 */
+  s+=P("M40,560 L40,120 L96,96 L132,128 L188,84 L236,132 L286,108 L318,150 L318,560 Z",INK);
+  /* 墙上刷的字：从墨里刻出来，所以是纸色 */
+  s+=T(84,214,"安全",46,PAPER,'letter-spacing="12"');
+  s+=T(84,268,"生产",46,PAPER,'letter-spacing="12"');
+  /* 地坪：水泥板，边缘是塌的，不是一条通到底的横线 */
+  s+=P("M0,340 L1200,316 L1200,560 L0,560 Z","url(#k2)");
+  s+=P("M0,340 L1200,316 L1200,326 L0,352 Z",INK);
+  /* 伸缩缝：一排一排，缝里长草 */
+  for(let i=0;i<13;i++){
+    const x=70+i*86, y0=332-i*1.6;
+    s+=L(x,y0,x-6,556,INK,1.8,'stroke-dasharray="66 11 40 9"');
+    for(let j=0;j<9;j++){
+      const gy=y0+40+j*24;
+      s+=L(x-6,gy,x-13,gy-13,INK,1.8)+L(x-6,gy,x+3,gy-16,INK,1.4);
+    }
+  }
+  /* 机器底座：铁座压在地上，四个螺孔是凿空的纸 */
+  [[250,398,178,62],[560,430,166,58],[830,384,180,64]].forEach(function(b){
+    s+=R(b[0],b[1],b[2],b[3],"url(#k6)");
+    [[22,14],[b[2]-22,14],[22,b[3]-14],[b[2]-22,b[3]-14]].forEach(function(h){
+      s+=`<circle cx="${b[0]+h[0]}" cy="${b[1]+h[1]}" r="8" fill="none" stroke="${PAPER}" stroke-width="4"/>`;
+    });
+  });
+  /* 车间柱：两根立柱出画，柱上有一圈圈浇注的痕 */
+  s+=R(1058,0,34,560,INK)+R(1146,0,26,560,INK);
+  for(let i=0;i<7;i++){
+    s+=L(1058,40+i*76,1092,40+i*76,PAPER,2.2);
+    s+=L(1146,64+i*76,1172,64+i*76,PAPER,1.8);
+  }
+  /* 印张边 */
+  s+=R(0,0,W,8,INK)+R(0,H-10,W,10,INK)+R(0,0,7,H,INK)+R(W-9,0,9,H,INK);
+  return s;
+};
+
+/* 纯黑 / 纯白 */
+SC.black=()=>R(0,0,W,H,INK)+R(0,0,W,H,"url(#kd)");
+SC.white=()=>R(0,0,W,H,PAPER)+R(0,0,W,H,"url(#kd)");
+
+/* 一格一笔的铅笔（结尾用） */
+SC.pencil=()=>{
+  let s=R(0,0,W,H,PAPER);
+  s+=R(0,0,W,H,"url(#kd)");
+  /* 表格的一格，只有一条铅笔道 */
+  s+=L(300,180,900,180,INK,2.6);
+  s+=L(300,380,900,380,INK,2.6);
+  s+=L(300,180,300,380,INK,2.6);
+  s+=L(900,180,900,380,INK,2.6);
+  /* 一道铅笔横：略微不匀 */
+  s+=ragged(420,288,700,284,3.6,23);
+  s+=ragged(424,292,696,288,2.4,29);
+  return s;
+};
+
+/* ============ 音频：全部实时合成，无外部文件 ============ */
+const AU={
+  ctx:null, snow:null, snowG:null, ok:false,
+  init(){
+    if(this.ctx) return;
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC) return;
+    this.ctx=new AC();
+    this.ok=true;
+    this.snowStart();
+  },
+  /* 雪花屏底噪：带通的白噪 + 极轻的 60Hz 哼 + 缓慢起伏。刻意做软。 */
+  snowStart(){
+    const c=this.ctx;
+    const len=c.sampleRate*4;
+    const buf=c.createBuffer(1,len,c.sampleRate);
+    const d=buf.getChannelData(0);
+    let last=0;
+    for(let i=0;i<len;i++){
+      const w=Math.random()*2-1;
+      last=(last*0.86+w*0.14);          /* 低通，去掉刺耳的高频 */
+      d[i]=last*0.9+w*0.10;
+    }
+    const src=c.createBufferSource();
+    src.buffer=buf; src.loop=true;
+    const bp=c.createBiquadFilter();
+    bp.type="bandpass"; bp.frequency.value=1750; bp.Q.value=0.42;
+    const hp=c.createBiquadFilter();
+    hp.type="highpass"; hp.frequency.value=320;
+    const lp=c.createBiquadFilter();
+    lp.type="lowpass"; lp.frequency.value=4200;
+    const g=c.createGain(); g.gain.value=0.0;
+    src.connect(bp); bp.connect(hp); hp.connect(lp); lp.connect(g); g.connect(c.destination);
+    src.start();
+    /* 缓慢的音量起伏，让它像远处的电视 */
+    const lfo=c.createOscillator(); lfo.frequency.value=0.055;
+    const lg=c.createGain(); lg.gain.value=0.006;
+    lfo.connect(lg); lg.connect(g.gain); lfo.start();
+    g.gain.linearRampToValueAtTime(0.052,c.currentTime+3.2);
+    this.snow=src; this.snowG=g;
+  },
+  setSnow(v){ if(this.snowG) this.snowG.gain.setTargetAtTime(v,this.ctx.currentTime,0.5); },
+  /* 点击：极短的木头声（带通噪声 + 快速衰减） */
+  click(){
+    if(!this.ok) return; const c=this.ctx,t=c.currentTime;
+    const len=Math.floor(c.sampleRate*0.035);
+    const buf=c.createBuffer(1,len,c.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<len;i++){ d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3.4); }
+    const s=c.createBufferSource(); s.buffer=buf;
+    const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=1350; bp.Q.value=2.2;
+    const g=c.createGain(); g.gain.setValueAtTime(0.16,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.055);
+    s.connect(bp); bp.connect(g); g.connect(c.destination); s.start(t);
+  },
+  /* 翻纸：更钝，更散 */
+  page(){
+    if(!this.ok) return; const c=this.ctx,t=c.currentTime;
+    const len=Math.floor(c.sampleRate*0.14);
+    const buf=c.createBuffer(1,len,c.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<len;i++){
+      const e=Math.sin(Math.PI*i/len);
+      d[i]=(Math.random()*2-1)*e*e*0.8;
+    }
+    const s=c.createBufferSource(); s.buffer=buf;
+    const hp=c.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=1200;
+    const g=c.createGain(); g.gain.value=0.10;
+    s.connect(hp); hp.connect(g); g.connect(c.destination); s.start(t);
+  },
+  /* 汽笛：两个略失谐的低频正弦 + 起音的气声 */
+  horn(vol,dur){
+    if(!this.ok) return; const c=this.ctx,t=c.currentTime;
+    const D=dur||3.0, V=vol==null?0.5:vol;
+    const master=c.createGain(); master.gain.value=0; master.connect(c.destination);
+    master.gain.setValueAtTime(0,t);
+    master.gain.linearRampToValueAtTime(V,t+0.18);
+    master.gain.setValueAtTime(V,t+D*0.72);
+    master.gain.exponentialRampToValueAtTime(0.0008,t+D);
+    [116,174,232].forEach(function(f,i){
+      const o=c.createOscillator(); o.type="sine"; o.frequency.value=f*(1+(i*0.0016));
+      const g=c.createGain(); g.gain.value=[0.5,0.26,0.12][i];
+      const v=c.createOscillator(); v.frequency.value=4.4+i;   /* 轻微颤动 */
+      const vg=c.createGain(); vg.gain.value=1.6;
+      v.connect(vg); vg.connect(o.frequency); v.start(t); v.stop(t+D);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t+D);
+    });
+    /* 起音的气：一小段噪声 */
+    const len=Math.floor(c.sampleRate*0.3);
+    const b=c.createBuffer(1,len,c.sampleRate); const d=b.getChannelData(0);
+    for(let i=0;i<len;i++){ d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2)*0.5; }
+    const s=c.createBufferSource(); s.buffer=b;
+    const lp=c.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=900;
+    const g2=c.createGain(); g2.gain.value=V*0.35;
+    s.connect(lp); lp.connect(g2); g2.connect(c.destination); s.start(t);
+  },
+  /* 敲铁：手指点在机壳上的一声闷响。
+     这是「这里没有东西可以点」的回答：有声，但不推进。
+     必须跟点击声（木头、高、脆）分得开，否则玩家会以为是自己的点击没生效。 */
+  knock(){
+    if(!this.ok) return; const c=this.ctx,t=c.currentTime;
+    const o=c.createOscillator(); o.type="sine";
+    o.frequency.setValueAtTime(198,t);
+    o.frequency.exponentialRampToValueAtTime(103,t+0.07);
+    const g=c.createGain();
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.052,t+0.006);
+    g.gain.exponentialRampToValueAtTime(0.0005,t+0.105);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+0.12);
+  },
+  /* 金属涩响：拧不动时的摩擦 */
+  grit(){
+    if(!this.ok) return; const c=this.ctx,t=c.currentTime;
+    const len=Math.floor(c.sampleRate*0.5);
+    const b=c.createBuffer(1,len,c.sampleRate); const d=b.getChannelData(0);
+    for(let i=0;i<len;i++){
+      const e=Math.sin(Math.PI*i/len);
+      d[i]=(Math.random()*2-1)*e*(0.5+0.5*Math.sin(i*0.002))*0.5;
+    }
+    const s=c.createBufferSource(); s.buffer=b;
+    const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=760; bp.Q.value=1.4;
+    const g=c.createGain(); g.gain.value=0.09;
+    s.connect(bp); bp.connect(g); g.connect(c.destination); s.start(t);
+  }
+};
+
+/* ============ 剧本 ============ */
+/* 指令：t=画面 t2=换场 c=旁白 d=对白(带 who) b=大字 ch=选择 f=函数 */
+const SCRIPT={
+  /* --- 序 --- */
+  s01:{ sc:"black", cue:"塔内 · 夜", lines:[
+    {n:"黑。"},
+    {n:"风。"},
+    {n:"（一直有风。不是吹过的那种，是一直在。）"},
+    {n:"四十七。"},
+    {n:"（手。一只铝壶。往上的铁梯。）"},
+    {n:"（不是每一步都响。隔几步响一下。响的那几步，是松的。）"},
+    {n:"（壶里有东西晃。晃得很慢。）"}
+  ], next:"s02" },
+
+  s02:{ sc:["climb",{}], cue:"塔内 · 铁梯", lines:[
+    {n:"（到顶了。一个平台。上面是阀门。）"},
+    {n:"（铜的。包着一层油垢。）"},
+    {n:"（旁边墙上贴着一张纸。被油浸透了。）"},
+    {b:"二 三 · 四"},
+    {n:"（中间那个数，看不清。）"}
+  ], next:"s03" },
+
+  s03:{ sc:["valve",{oil:1,hand:"screw"}], cue:"塔内 · 阀门", lines:[
+    {n:"（壶嘴对准。抬一点。不然会洒。）"},
+    {n:"（拧四圈半。前四圈很顺，最后一圈涩。）"},
+    {n:"（按住。指针往上走。到三分之二抖了一下。到顶。）"},
+    {n:"（等。十一秒。）"},
+    {f:"horn", a:[0.62,3.4]},
+    {n:"（汽笛响。）"},
+    {n:"（响的时候，整座塔在动。不是晃，是里面有什么东西在往上走。）"}
+  ], next:"s04" },
+
+  s04:{ sc:["city",{lit:1}], cue:"塔顶 · 全城", lines:[
+    {f:"lightsOn"},
+    {n:"（全城的灯，一盏一盏亮。从近到远。最远那几盏慢一点，亮起来还会闪。）"},
+    {n:"（塔下站着一个人。提着另一只壶。抬头。）"}
+  ], next:"s05" },
+
+  s05:{ sc:["valve",{oil:1,hand:"none"}], cue:"塔内 · 阀门", lines:[
+    {n:"（老人下来。背有点驼。把壶递过去。）"},
+    {n:"（两个人没说话。）"},
+    {n:"（老人往家走。走了几步，回头。）"},
+    {d:"四十七那块板子，踩的时候轻一点。",who:"父亲"},
+    {n:"（黑。）"},
+    {b:"余埠"}
+  ], next:"s06" },
+
+  /* --- 一 · 九月 --- */
+  s06:{ sc:["board",{}], cue:"走廊 · 晨", lines:[
+    {n:"（教学楼东头的墙，钉着一张表。）"},
+    {n:"（A3 的纸。四条边都卷了。）"},
+    {n:"（铅笔写的。二十三行。前二十二行有名字。最后一行空着。）"},
+    {n:"（五栏：序位。姓名。去年序位。服装。备注。）"},
+    {n:"（「服装」那一栏，从上到下，二十三道横杠。）"},
+    {n:"（「备注」栏只有四五个人有字。第十九行写着：复。）"},
+    {n:"（表下面一行小字，不是同一个人写的。）"},
+    {b:"无届别，不配发。"},
+    {n:"（他把铅笔取下来。线很短。）"},
+    {n:"（最后一行，序位写：二十三。姓名写：顾行。去年序位写：十七。）"},
+    {n:"（服装栏，画了一道横。）"},
+    {n:"（备注栏，空的。）"},
+    {n:"（挂回去。）"},
+    {n:"（铅笔垂下来，在墙上撞了一下。）"}
+  ], next:"s07" },
+
+  s07:{ sc:["classroom",{}], cue:"教室 · 晨", lines:[
+    {n:"（最后一排，靠门。）"},
+    {n:"（二十三个人。没有一个人穿校服。）"},
+    {n:"（有一个穿厂里发的蓝工作服，袖子卷到胳膊肘。）"},
+    {n:"（有一个穿校服——洗得发白，袖口磨破了，至少是三年前的样式。）"},
+    {n:"（前面的人回头。）"},
+    {d:"二十三。",who:"前座"},
+    {d:"嗯。",who:"顾行"},
+    {d:"你去年是十七。",who:"前座"},
+    {d:"嗯。",who:"顾行"},
+    {d:"今年怎么到二十三了。",who:"前座"},
+    {d:"掉下来了。",who:"顾行"},
+    {d:"掉得不少。",who:"前座"},
+    {d:"六格。",who:"顾行"},
+    {n:"（前座转了半圈笔。）"},
+    {d:"我去年二十一。今年十九。",who:"前座"},
+    {d:"上去了。",who:"顾行"},
+    {d:"上去两格。两格没用。",who:"前座"},
+    {n:"（说完他笑了一下。不是高兴，是说完一句话之后脸上的一个动作。）"},
+    {d:"去年我也以为有用。",who:"前座"},
+    {n:"（转回去。）"},
+    {n:"（桌面上刻着一行字。刻得很深。刀口是斜的，刻的人手不稳。）"},
+    {b:"我会记住这里。"},
+    {n:"（他用指甲去抠那个「记」字。）"},
+    {n:"（抠不动。指甲从刀口上滑过去。）"},
+    {n:"（他又抠了一下，用了点劲。）"},
+    {n:"（还是抠不动。指甲缝里进了一点木屑。）"},
+    {n:"（他把手放在膝盖上，搓了搓。）"},
+    {n:"（左边隔两个位置，有一个人一直没抬头。桌上什么都没有。十指交叉。）"}
+  ], next:"s08" },
+
+  s08:{ sc:["classroom",{empty:1}], cue:"教室 · 窗外", lines:[
+    {n:"（窗外是废料堆。不是垃圾，是切下来的边角料。铁皮，管头，圆片，卷起来的钢带。）"},
+    {n:"（堆了二十年。堆到跟二楼窗台一样高。上面长了草。）"},
+    {n:"（底下有人在翻。抽出一根管子，看了看，扔回去。又抽出一块。拿走了。）"},
+    {n:"（黑板上写着：第一章。第二遍。）"},
+    {n:"（「第二遍」三个字，写在旁边，字小一点。）"}
+  ], next:"s09" },
+
+  s09:{ sc:["corridor",{}], cue:"走廊 · 傍晚", lines:[
+    {n:"（下课。一层一层的灯灭。三楼，二楼，一楼。）"},
+    {n:"（只有东头那一间还亮。灯管有一根是坏的，亮一下，暗一下。）"},
+    {n:"（值周的老师从楼下过。抬头看了一眼表。走了。）"}
+  ], next:"s10" },
+
+  s10:{ sc:["valve",{oil:1,two:1,hand:"screw"}], cue:"塔内 · 傍晚", lines:[
+    {n:"（父亲站在阀门旁边。两只手垂着。没有扶任何东西。）"},
+    {n:"（顾行把壶放下，提起来。对嘴。）"},
+    {n:"（拧四圈半。手放偏了，往左了一点。）"},
+    {d:"往下。",who:"父亲"},
+    {n:"（顾行停了。）"},
+    {d:"往下一点。那儿有个扣。摸一下。",who:"父亲"},
+    {n:"（他摸。摸到一个小凸起。手移过去。）"},
+    {d:"行了。",who:"父亲"},
+    {n:"（按住。指针上去。今天上得慢。到三分之二抖了两下，不是一下。）"},
+    {n:"（他的手紧了一点。）"},
+    {d:"别推。",who:"父亲"},
+    {n:"（他松了一点。指针上去了。）"},
+    {f:"horn", a:[0.55,2.8]},
+    {n:"（汽笛响。）"},
+    {n:"（两个人的影子在墙上。汽笛响的时候，影子没动。）"},
+    {n:"（父亲点头。下塔。）"},
+    {n:"（顾行没跟下去。他听。）"},
+    {n:"（声音在铁里走。走到厂区，走到家属院，走到更远的地方。越来越薄。）"},
+    {n:"（然后没有了。）"}
+  ], next:"s11" },
+
+  /* --- 二 · 十一月 --- */
+  s11:{ sc:["wall",{layer:0,rain:1}], cue:"厂门口 · 雨", lines:[
+    {n:"（不是大雨。是下不停的雨。落在地上没有声音，落在铁皮上有声音。）"},
+    {n:"（红纸一年一层。旧的不撕，新的直接贴上去。叠了有二指厚。）"},
+    {n:"（最上面那层是空的。今年还没贴。）"},
+    {n:"（他站在那儿。伞没撑开，夹在腋下。）"}
+  ], next:"s12" },
+
+  s12:{ sc:["wall",{layer:1,rain:1}], cue:"厂门口 · 雨", lines:[
+    {f:"page"},
+    {n:"（掀第一层。空的。浆糊硬了，纸是脆的，掀的时候裂了一个口。）"}
+  ], next:"s13" },
+
+  s13:{ sc:["wall",{layer:2,rain:1}], cue:"厂门口 · 雨", lines:[
+    {f:"page"},
+    {n:"（掀第二层。去年。三十一个名字。钢笔，字很大很用力，纸被压出了印。）"},
+    {n:"（名字下面有一行「去向」。大部分写着同一个地方，两个字。）"},
+    {n:"（看到第十一个。停了。）"},
+    {n:"（那个名字旁边没有写去向。写的是另外两个字，比别的都小。）"},
+    {n:"（他用手指碰了一下那两个字。）"}
+  ], next:"s14" },
+
+  s14:{ sc:["wall",{layer:3,rain:1}], cue:"厂门口 · 雨", lines:[
+    {f:"page"},
+    {n:"（掀第三层。前年。二十八个。有两个名字被划掉了。）"},
+    {n:"（划得很轻。一道横线。笔提得很高，像是怕把纸划破。）"}
+  ], next:"s15" },
+
+  s15:{ sc:["wall",{layer:4,rain:1}], cue:"厂门口 · 雨", lines:[
+    {f:"page"},
+    {n:"（掀第四层。三年前。四十二个。有几个的去向写了很远的地方。）"}
+  ], next:"s16" },
+
+  s16:{ sc:["wall",{layer:5,rain:1}], cue:"厂门口 · 雨", lines:[
+    {f:"page"},
+    {n:"（掀第五层。更早。毛笔。纸已经发粉，红退成了肉色。）"},
+    {n:"（墨在纸里洇开，每个名字都长着一圈毛边。）"}
+  ], next:"s17" },
+
+  s17:{ sc:["wall",{layer:6,rain:1}], cue:"厂门口 · 雨", lines:[
+    {f:"page"},
+    {n:"（掀第六层。）"},
+    {n:"（纸是白的。不是白纸，是红纸被雨泡了二十几年，泡白了。）"},
+    {n:"（字看不清。只剩凹痕。）"},
+    {n:"（他把脸凑近。侧着看，能看见一条一条的浅沟。）"},
+    {n:"（看出几个。）"},
+    {n:"（数。数到一半忘了，重数。）"},
+    {n:"（四十七个。比任何一年都多。）"},
+    {n:"（他伸手。指腹从凹痕上过去。一横。一竖。一个弯。）"},
+    {n:"（摸到某个名字，画面停了半秒。）"},
+    {n:"（那个名字有三个字。中间那个字有一笔很长的竖，一直拉到最底下。）"},
+    {n:"（他摸到那一竖，停住了。压了一下。松开。又压了一下。）"},
+    {n:"（然后继续往下摸。全都摸完。）"}
+  ], next:"s18" },
+
+  s18:{ sc:["wall",{layer:7,rain:1}], cue:"厂门口 · 雨", lines:[
+    {f:"page"},
+    {n:"（掀第七层。最底。）"},
+    {n:"（只剩一个角。其余被墙吃掉了——墙翻修的时候，纸被砌进去了。）"},
+    {n:"（角上有半个字。认不出。）"},
+    {n:"（底下的墙是新的。水泥颜色比别人浅。有一条整齐的接缝，从上到下。）"}
+  ], next:"s19" },
+
+  s19:{ sc:["wall",{layer:3,rain:1}], cue:"榜前 · 雨", lines:[
+    {n:"（他往回掀。一层一层。掀得很小心，湿纸容易破。）"},
+    {n:"（到第三层。二十八个名字。他找。）"},
+    {n:"（从上往下。一个一个。）"},
+    {n:"（找到第十七个。）"},
+    {b:"周小满。"},
+    {n:"（名字上有一道横线。划得很轻。）"},
+    {n:"（他抬手。）"},
+    {n:"（手停在半空。）"},
+    {n:"（雨落在手背上。落在纸上。纸上洇开一小块。横线的一端被水泡了，颜色往外走。）"},
+    {n:"（手没动。）"},
+    {n:"（很久。）"},
+    {n:"（手背上的雨水积起来，顺着指缝往下淌。）"},
+    {n:"（他把手指并了一下。）"},
+    {n:"（手收回来。）"},
+    {n:"（他把纸按回原位。从上往下，一点一点按。按到被水泡的那一块，停了一下，用袖子吸了吸水。）"},
+    {n:"（走的时候回头看了一眼。看不出被人掀过。只有一小块颜色比周围深。）"}
+  ], next:"s20" },
+
+  s20:{ sc:["boiler",{}], cue:"锅炉房 · 夜", lines:[
+    {n:"（澡堂后面有一道门。门上原本有字，被刮掉了，剩一点点红。）"},
+    {n:"（十二级台阶。比塔上的窄，比塔上的陡。走到第五级就有热气，走到第十级脸就烫。）"},
+    {n:"（锅炉房里。砖砌的炉子，三个人宽。炉门开着，里面是暗红，一直在动，又好像不动。）"},
+    {n:"（母亲背对着门，站在炉前。手里一把铲子。）"},
+    {n:"（墙上挂着一件工装。蓝的。胸前两个口袋。口袋上面本来有字，被洗掉了。）"},
+    {n:"（他把壶放在最上面一级台阶上。放得很正。）"},
+    {n:"（站在门口，没进去。）"},
+    {d:"回来啦。饭在锅里。",who:"母亲"},
+    {n:"（铲子没停。）"},
+    {d:"把门带上。热气跑了。",who:"母亲"},
+    {n:"（他下去，把门带上。）"},
+    {n:"（火的声音变得很清楚。一阵一阵。）"},
+    {n:"（她铲了一铲。铲子插进料堆「嚓」一声，抬起来，送进去。火花往上飘了一点，灭了。）"},
+    {n:"（不是煤。是碎木料，旧报纸，还有拆下来的窗框。窗框上还有漆，绿的，被火烧就起泡，然后黑。）"},
+    {n:"（纸烧起来边上是蓝的。蓝得很干净，跟里面的红不是一种东西。）"},
+    {d:"别考了。",who:"母亲"},
+    {n:"（顾行没说话。）"},
+    {d:"我不是跟你商量。",who:"母亲"},
+    {n:"（送进去。）"},
+    {d:"一样的表。一样的管子。一样的汽笛。",who:"母亲"},
+    {d:"你考第三次，跟考第一次，是同一件事。",who:"母亲"},
+    {d:"不一样。",who:"顾行"},
+    {d:"哪儿不一样。",who:"母亲"},
+    {n:"（他没答上来。）"},
+    {n:"（她也没等他答。）"},
+    {d:"你去年这个时候，站在这个门口，跟我说一样的话。",who:"母亲"},
+    {d:"去年我没说。",who:"顾行"},
+    {d:"你说了。你说「再一年」。",who:"母亲"},
+    {n:"（她送了一铲。）"},
+    {d:"我数着的。",who:"母亲"},
+    {d:"你多待一年，我多烧一年。",who:"母亲"},
+    {n:"（铲子停在半空。）"},
+    {d:"我今年五十二。我烧得动。明年也烧得动。",who:"母亲"},
+    {d:"我就是想让你知道这个数。",who:"母亲"},
+    {n:"（送进去。）"},
+    {d:"这个数我算得清。",who:"母亲"}
+  ], choice:{
+    prompt:"",
+    opts:[
+      {label:"「去年你也这么说。」",go:"c1a"},
+      {label:"「等开工了，我就不考了。」",go:"c1b"},
+      {label:"「今天水热。」",go:"c1c"}
+    ]
+  }},
+
+  c1a:{ sc:["boiler",{}], cue:"锅炉房 · 夜", lines:[
+    {n:"（她停了一下。铲子插在料堆里。三秒。）"},
+    {n:"（然后继续铲。）"},
+    {d:"去年我说的是二十二次。今年是第二十三次。",who:"母亲"},
+    {d:"你记得挺清楚。",who:"母亲"},
+    {d:"我记性好。",who:"顾行"},
+    {d:"记性好的，在这儿不管用。",who:"母亲"},
+    {n:"（她把铲子插回料堆。）"},
+    {n:"（很久没说话。）"}
+  ], next:"s21" },
+
+  c1b:{ sc:["boiler",{turn:1}], cue:"锅炉房 · 夜", lines:[
+    {n:"（铲子停了。她把铲子抽出来。抽得很慢。）"},
+    {n:"（她转过身。第一次转过身。）"},
+    {n:"（她笑了一声。很短。像咳。）"},
+    {f:"grit"},
+    {d:"你爸说了二十年。",who:"母亲"},
+    {n:"（她站在那儿，看着他。）"},
+    {d:"你去问他。开工了没有。",who:"母亲"},
+    {n:"（他没说话。）"},
+    {d:"你去问。",who:"母亲"},
+    {d:"……不用问。",who:"顾行"},
+    {d:"为什么不用问。",who:"母亲"},
+    {d:"我知道。",who:"顾行"},
+    {d:"你知道。",who:"母亲"},
+    {n:"（她点头。点了两下。）"},
+    {d:"你知道，你还说。",who:"母亲"},
+    {n:"（她转回去。送了一铲。这一铲很重，料撞在炉膛上，溅出一片火星。）"}
+  ], next:"s21" },
+
+  c1c:{ sc:["boiler",{}], cue:"锅炉房 · 夜", lines:[
+    {n:"（她没接。铲子继续。）"},
+    {n:"（过了几秒。）"},
+    {d:"热。今天多烧了两铲。",who:"母亲"},
+    {d:"木料湿了，不好烧。我加了纸。",who:"母亲"},
+    {d:"洗个澡。别浪费。",who:"母亲"},
+    {n:"（他「嗯」了一声。往台阶走。走了一步，停下。）"},
+    {n:"（三个人都不说话。只有火的声音。）"},
+    {n:"（过了一会儿。）"},
+    {d:"那爸呢。",who:"顾行"},
+    {n:"（她没答。）"},
+    {n:"（她弯腰。从料堆最边上翻出一块东西。是一块煤。真的煤，黑的，有光。）"},
+    {n:"（她拿着看了一会儿。送进去。）"},
+    {n:"（火起来了。亮了一下。这一下的颜色跟刚才不一样，更黄。）"},
+    {n:"（墙上那件工装被照亮。口袋那里的字，其实还能看出一点。是一个「三」。）"},
+    {n:"（墙角有一个桶。铁皮，红色，掉漆掉得只剩几块。桶底在漏。地上有一小滩水。）"},
+    {n:"（桶底下垫着一块塑料布。布上有字。）"},
+    {n:"（是红纸，反着铺的。上面印着表格的线。半张名录。）"},
+    {n:"（顾行看了一眼。）"},
+    {d:"接水的。别动。",who:"母亲"},
+    {d:"没动。",who:"顾行"},
+    {d:"那布是我从墙上撕的。撕的是最底下那层。",who:"母亲"},
+    {n:"（送进去。）"},
+    {d:"反正也没人看。",who:"母亲"}
+  ], next:"s21" },
+
+  s21:{ sc:["valve",{oil:0.86,frost:1,hand:"screw"}], cue:"塔内 · 深夜", lines:[
+    {n:"（最冷的一天。）"},
+    {n:"（阀门上有一层白。不是雪，是霜。针一样的，一根一根往外。）"},
+    {n:"（他戴手套拧。不动。两只手一起，还是不动。）"},
+    {n:"（他把手套摘了。）"},
+    {n:"（手在空气里马上疼。指尖先疼。）"},
+    {n:"（把掌心贴在阀体上。）"},
+    {n:"（等。）"},
+    {n:"（风从墙上的缝里进来。窄缝，有声音，很低。）"},
+    {n:"（十二秒。掌心下面化了一圈。铁是深色的，湿的。）"},
+    {n:"（换位置。再十二秒。再换。第三处。）"},
+    {n:"（拧。动了。很涩，像里面有沙子。）"},
+    {f:"grit"},
+    {n:"（四圈半。最后一圈用尽力气，肩膀顶上去。）"},
+    {n:"（按住。指针一格一格上。上到一半，停住。）"},
+    {n:"（他没松手。手在抖。）"},
+    {n:"（指针又往上走了一点。）"},
+    {f:"horn", a:[0.42,2.2]},
+    {n:"（汽笛响。闷的，像隔着一层布。短的，一下就没了。）"},
+    {n:"（他站着，手还按着。掌心疼。）"}
+  ], next:"s22" },
+
+  /* --- 三 · 一月 --- */
+  s22:{ sc:["ceiling",{}], cue:"房间 · 晨", lines:[
+    {n:"（汽笛响了。）"},
+    {n:"（他睁开眼。躺着。）"},
+    {n:"（窗外有人在走路。皮鞋。一步，一步。走过去了。）"},
+    {n:"（又有人。两个人。）"},
+    {d:"今天考几门。",who:"路人"},
+    {n:"（另一个说了句什么。听不清。）"},
+    {n:"（声音远了。）"},
+    {n:"（他翻了个身。床板响。是铁架子的，会响两下。）"},
+    {n:"（天在亮。从灰变成白。先亮窗口那一块，然后慢慢铺满。）"},
+    {n:"（他还躺着。）"},
+    {n:"（楼下有人喊：收废品——）"},
+    {n:"（喊了一声。不喊了。）"},
+    {n:"（他闭上眼。）"},
+    {n:"（屋子里越来越亮。）"},
+    {n:"（他没有再睁开。）"}
+  ], next:"s23" },
+
+  s23:{ sc:["classroom",{empty:1}], cue:"教室 · 上午", lines:[
+    {n:"（走掉的那一半，椅子空着。桌上有东西没拿走：一个水杯，一本书，一支笔。）"},
+    {n:"（有一张椅子上搭着一件外套。校服，很新。）"},
+    {n:"（黑板上写着：试压。下面一行小字：九点。二考场。）"},
+    {n:"（老师站在讲台上。一个硬皮本子摊开，格子一格一格，一格一个序位。）"},
+    {n:"（他拿铅笔，从上往下。）"},
+    {n:"（空的，画一道。空的，画一道。）"},
+    {n:"（画了很多道。中间有几格有字，他没画，往下走。）"},
+    {n:"（走到第十九格。画一道。写：缺考。）"},
+    {n:"（走到第二十三格。）"},
+    {n:"（停了一下。）"},
+    {n:"（抬头，看了一眼最后一排靠门的那个位置。）"},
+    {n:"（顾行坐在那儿。看着他。）"},
+    {n:"（两个人对视。）"},
+    {n:"（老师低下头。）"},
+    {n:"（画了一道。写：缺考。）"},
+    {n:"（翻页。）"},
+    {f:"page"},
+    {n:"（铅笔划过纸的声音。翻页的声音。）"},
+    {n:"（静两秒。）"},
+    {n:"（没有一个学生抬头。）"},
+    {n:"（老师也没有抬头。）"},
+    {n:"（他开始讲下一段：试压的评分标准。一条一条。）"},
+    {n:"（顾行听着。听到第四条，把书翻开。）"},
+    {n:"（翻到中间。看了一会儿。又合上。）"},
+    {n:"（左边隔两个位置，那个十指交叉的人今天不在。他的桌子空着，比别的桌子都干净。）"}
+  ], next:"s24" },
+
+  s24:{ sc:["valve",{oil:0.55,hand:"screw"}], cue:"塔内 · 夜", lines:[
+    {n:"（父亲不在。）"},
+    {n:"（他一个人上来的。第一次。）"},
+    {n:"（上塔时在第三层平台停了一下。以前没停过。）"},
+    {n:"（塔里没有别人的呼吸声，显得空。自己的脚步声响得有点大。）"},
+    {n:"（对嘴。拧四圈半。很顺。手不用找，就在那儿。）"},
+    {n:"（最后一圈也不涩。）"},
+    {n:"（按住。指针很稳。一路上到顶，没有抖。）"},
+    {n:"（一次。）"},
+    {f:"horn", a:[0.88,4.2]},
+    {n:"（汽笛响。很响。比前几天都响。）"},
+    {n:"（他自己愣了一下。手停在阀门上。）"},
+    {n:"（响完了。尾音很长。）"},
+    {n:"（他把手拿开。壶收起来。布系好。系了两道。）"},
+    {n:"（站着。没有立刻走。）"}
+  ], next:"s25" },
+
+  s25:{ sc:["city",{lit:0.26,dark:1}], cue:"塔顶 · 夜", lines:[
+    {n:"（他走到窗口。）"},
+    {n:"（很近的一块玻璃，边上有铁框。玻璃上有一道划痕。）"},
+    {n:"（全城都在这儿了。）"},
+    {n:"（近处家属院，一排一排。有的窗户拉上了窗帘，是黄的；有的没拉，能看见里面有人走动。）"},
+    {n:"（再远是厂区。黑的。只有两三个点：门房，配电室，还有一个不知道是什么。）"},
+    {n:"（再远，有一片什么都没有。）"},
+    {n:"（那里以前是二号车间。地基还在。水泥的方形，长着草。草从伸缩缝里长出来，一排一排。）"},
+    {n:"（最远的地方没有灯。）"},
+    {n:"（那一片是黑的。跟天接不上，也跟地接不上。）"},
+    {n:"（他看了一会儿。）"},
+    {n:"（汽笛的尾音已经没有了。）"},
+    {n:"（下面有人在关窗。一扇，一扇。）"},
+    {n:"（他下去了。）"}
+  ], next:"s26" },
+
+  /* --- 四 · 六月前夜 --- */
+  s26:{ sc:["climb",{}], cue:"塔内 · 夜", lines:[
+    {n:"（壶很轻。）"},
+    {n:"（不是空。空壶会响。这个不响。）"},
+    {n:"（晃一下。里面的东西走得很慢。走一半就停。）"},
+    {n:"（上塔。一级。一级。）"},
+    {n:"（上到四十七级。）"},
+    {n:"（他停了一下。低头看那块板子。）"},
+    {n:"（板子比旁边的低一点。低大概半指。边上有一颗铆钉，是松的。）"},
+    {n:"（他把脚放轻。）"},
+    {n:"（踩上去。）"},
+    {n:"（没响。）"},
+    {n:"（他把重心移过去。整个人的重量在那块板子上。）"},
+    {n:"（还是没响。）"},
+    {n:"（他站了一会儿。继续上。）"}
+  ], next:"s27" },
+
+  s27:{ sc:["valve",{oil:0.3,two:1,hand:"screw"}], cue:"塔内 · 夜", lines:[
+    {n:"（父亲背对着门，站在窗口。就是刚才他站过的那个位置。）"},
+    {n:"（两个人都不说话。）"},
+    {n:"（他把壶放下。壶底碰到水泥，很轻的一声。）"},
+    {n:"（父亲没动。）"},
+    {n:"（他看了一眼父亲的后颈。）"},
+    {n:"（晒黑的部分有一条分明的边。上面白，下面黑。白的那块是三角形，尖朝上。）"},
+    {n:"（帽檐的形状。）"},
+    {n:"（帽子不在他头上。挂在门后的钉子上。）"},
+    {n:"（他开始拧。）"},
+    {n:"（四圈半。慢。）"},
+    {n:"（按住。指针上去。到一半，抖。掉下来。）"},
+    {n:"（他松手。等了两秒。再按。）"},
+    {n:"（上去。这次快一点。到三分之二。掉。一下就到零。）"},
+    {n:"（他松手。喘。）"},
+    {n:"（第三次。上到一半，停住。他加力。）"},
+    {n:"（掉了。）"},
+    {n:"（他靠在阀门上。额头贴着手背。）"},
+    {n:"（父亲转过身。走过来。走得不快。）"},
+    {n:"（伸出手，按在阀门下面的一个位置。那里什么都没有，就是一块铁。）"},
+    {d:"这儿。",who:"父亲"},
+    {d:"别跟它较劲。",who:"父亲"},
+    {n:"（父亲的另一只手，把阀门往回带了半圈。）"},
+    {d:"你越使劲，它越回去。",who:"父亲"},
+    {d:"顺着它走。",who:"父亲"},
+    {n:"（手拿开。）"},
+    {d:"按。",who:"父亲"},
+    {n:"（顾行按住。指针上去。到三分之二，抖了一下。）"},
+    {n:"（他没加力。）"},
+    {n:"（指针过去了。上到顶。）"},
+    {n:"（父亲退后一步。）"},
+    {f:"horn", a:[0.72,3.6]},
+    {n:"（汽笛响。）"},
+    {n:"（两个人站在那儿。）"},
+    {n:"（很久。汽笛响完了。）"},
+    {n:"（外面有狗叫。叫了几声，停了。）"},
+    {d:"壶给你。",who:"父亲"},
+    {n:"（顾行没动。手还按在阀门上。）"},
+    {d:"听见没有。",who:"父亲"},
+    {d:"听见了。",who:"顾行"},
+    {d:"那你说。",who:"父亲"},
+    {n:"（顾行抬头。）"},
+    {n:"（父亲看着他。第一次正对着看。）"},
+    {d:"行。",who:"父亲"},
+    {n:"（顾行开口。声音有点哑。）"},
+    {d:"行。",who:"顾行"},
+    {n:"（父亲点头。转身。走到门后，把帽子取下来，戴上。帽檐压得很低。）"},
+    {n:"（下塔。）"},
+    {n:"（脚步声一级一级往下。越来越轻。）"},
+    {n:"（走到四十几级的时候，脚步慢了一下。就是那块板子的位置。）"},
+    {n:"（然后继续。）"},
+    {n:"（最后听不见了。）"}
+  ], next:"s28" },
+
+  /* hot:0 —— 这一屏不设热点，画面照常可推进，剧情完全由选项决定。
+     理由是「有选择的地方不该有第二种输入」：这一幕的题目已经是「拧完 / 松手」，
+     再让玩家的手去拧一遍轮子，就是两套手互不知情——转了几格跟去 c2a 还是 c2b
+     毫无关系，油位不会跟着动，换场后角度还会归零。与其做个假动作，
+     不如承认这一幕只有一样东西可动：那两个选项。
+     s24 不关：那屏只有旁白没有选项，拧是氛围件（「手不用找，就在那儿」），不构成竞争。 */
+  s28:{ sc:["valve",{oil:0.16,hand:"screw",hot:0}], cue:"塔内 · 夜", lines:[
+    {n:"（壶里还剩一点。）"},
+    {n:"（他知道还剩一点。晃一下就知道。）"},
+    {n:"（壶嘴对准。抬一点。）"}
+  ], choice:{
+    opts:[
+      {label:"拧完。",go:"c2a"},
+      {label:"松手。",go:"c2b"}
+    ]
+  }},
+
+  c2a:{ sc:["valve",{oil:0.02,hand:"screw"}], cue:"塔内 · 夜", lines:[
+    {n:"（他拧。四圈。最后一圈。涩。）"},
+    {n:"（他把手压下去。压到底。）"},
+    {f:"grit"},
+    {n:"（听见油进去了。闷响。一声。）"},
+    {n:"（明天早上，会响。）"},
+    {n:"（他把壶收起来。壶已经空了。提在手里，晃了一下。没有声音。）"}
+  ], next:"s29", flag:"ate" },
+
+  c2b:{ sc:["valve",{oil:0.16,hand:"screw"}], cue:"塔内 · 夜", lines:[
+    {n:"（他拧。四圈。拧到那个位置，手停住。）"},
+    {n:"（再拧半圈，今晚就够了。明天也够。）"},
+    {n:"（他的手在那里。）"},
+    {n:"（没有动。）"},
+    {n:"（三秒。四秒。）"},
+    {n:"（风。）"},
+    {n:"（他把手拿开。）"},
+    {n:"（壶嘴离开注油口。油没进去。壶嘴上挂着一滴。）"},
+    {n:"（那滴油晃了一下。掉回壶里。）"},
+    {n:"（手在空气里停了一下。）"},
+    {n:"（才放下。）"},
+    {n:"（他把壶收起来。晃了一下。里面还有东西。走一半，停。）"}
+  ], next:"s29" },
+
+  /* --- 尾声 · 六月 --- */
+  s29:{ sc:["valve",{oil:0.1,hand:"none"}], cue:"塔内 · 晨", lines:[
+    {n:"（五点四十。）"},
+    {n:"（他站在塔里。没有事做。）"},
+    {n:"（把阀门看了一遍。螺口。指针。注油口。阀体下面父亲按过的那个位置。）"},
+    {n:"（看窗外。天从黑变成深蓝，再变成灰。灰的时候，能看见远处的烟囱。）"},
+    {n:"（看自己的手。）"},
+    {n:"（手上有油。指甲缝里是黑的。他抠了一下，抠出来一点，抹在裤子上。）"},
+    {n:"（五点五十。楼下有人开了水龙头。一会儿就关了。管子响了一下。）"},
+    {n:"（五点五十五。有一只鸟叫。叫了两声。）"},
+    {n:"（五点五十九。静。）"},
+    {n:"（六点。）"}
+  ], next:function(f){ return f.ate ? "s30" : "s30b"; } },
+
+  s30:{ sc:["city",{lit:0.55}], cue:"塔顶 · 六点", branch:true, lines:[
+    {n:"（汽笛响。完整。长。）"},
+    {f:"horn", a:[1.0,5.2]},
+    {f:"lightsFull"},
+    {n:"（它响的时候，全城动了一下。不是声音的动，是人的动。）"},
+    {n:"（楼下有人咳了一声。卖早点的把凳子往里挪。木头在地上刮。）"},
+    {n:"（有人在喊一个名字。喊了两声。应了。）"},
+    {n:"（从塔上看，考场门口排着队。）"},
+    {n:"（队伍很长。一直排到街上，拐了个弯，看不见尾。）"},
+    {n:"（七点。队伍开始动。）"},
+    {n:"（八点半。队伍没了。）"},
+    {n:"（卷子发了。人进去了。门关了。）"},
+    {n:"（哨声响了一下。）"},
+    {n:"（然后就很安静。）"},
+    {n:"（安静里有翻纸的声音。很多张纸一起翻。）"}
+  ], next:"s31" },
+
+  s30b:{ sc:["city",{lit:0.1,dark:1}], cue:"塔顶 · 六点", lines:[
+    {n:"（六点。没有声音。）"},
+    {n:"（他把阀门又看了一遍。指针在零。）"},
+    {n:"（他把耳朵贴在阀体上。听。）"},
+    {n:"（没有。）"},
+    {n:"（六点十分。还是没有。）"},
+    {n:"（楼下有人在开门。开了一半，停住。门就那么开着。）"},
+    {n:"（六点二十。有人在喊。喊了一句，没听清。）"},
+    {n:"（又有一个人喊。两个人一起喊。）"},
+    {n:"（有人在往楼下跑。拖鞋在楼梯上响。）"},
+    {n:"（从塔上看，考场门口排着队，但队伍很稀。）"},
+    {n:"（前面几个人站着，回头看。后面没有人。）"},
+    {n:"（有人十点才到。跑着来的，在门口停下，扶着膝盖。）"},
+    {n:"（门口的老师在打电话。打了很久。放下。又拿起来。）"},
+    {n:"（八点半。卷子发了。人进去了。门关了。）"},
+    {n:"（哨声响了一下。）"},
+    {n:"（然后就很安静。）"},
+    {n:"（安静里有翻纸的声音。不多。）"}
+  ], next:"s31" },
+
+  s31:{ sc:["wall",{layer:0,rain:0}], cue:"厂门口 · 午后", lines:[
+    {n:"（新的红纸贴上去了。昨天夜里贴的。浆糊还没干透，纸上一块一块深色的印。）"},
+    {n:"（最上面那一层，字是新的。墨很黑。）"},
+    {n:"（他站在那儿看。看了很久。伞夹在腋下，今天没下雨。）"},
+    {n:"（从口袋里拿出一支笔。）"},
+    {n:"（钢笔。笔杆上有一道裂纹，用胶布缠了两圈。）"},
+    {n:"（笔帽拔了。）"},
+    {n:"（笔尖对着纸。）"},
+    {n:"（名录下面，有一个位置是空的。）"},
+    {n:"（纸是新的，线是齐的，就那一格什么都没有。）"}
+  ], choice:{
+    opts:[
+      {label:"写。",go:"c3a"},
+      {label:"不写。",go:"c3b"}
+    ]
+  }},
+
+  c3a:{ sc:["wall",{layer:0,rain:0}], cue:"厂门口 · 午后", lines:[
+    {n:"（他写下三个字。）"},
+    {b:"周小满。"},
+    {n:"（写得很慢。中间那个字，那一笔很长的竖，一直拉到最底下。）"},
+    {n:"（字迹是他的。跟旁边那些字不一样。）"},
+    {n:"（他把笔帽盖上，按了一下，按到底。）"},
+    {n:"（退后一步，看了一遍。）"},
+    {n:"（那个名字跟其他名字排在一起了。行距是对的。字的大小跟旁边差不多。）"},
+    {n:"（看起来像本来就在那儿。）"},
+    {n:"（风把纸的一角吹起来。他伸手按下去。）"}
+  ], next:"s32", flag:"wrote" },
+
+  c3b:{ sc:["wall",{layer:0,rain:0}], cue:"厂门口 · 午后", lines:[
+    {n:"（他把笔收起来。）"},
+    {n:"（笔帽没盖。笔尖朝下，在手里握了一会儿。）"},
+    {n:"（握得有点紧。手背上有一条筋。）"},
+    {n:"（然后盖上。按到底。）"},
+    {n:"（退后一步。看了一遍。）"},
+    {n:"（那一格还是空的。）"},
+    {n:"（风把纸的一角吹起来。他伸手按下去。）"},
+    {n:"（按完手没有立刻拿开。）"}
+  ], next:"s32" },
+
+  s32:{ sc:"white", cue:"", lines:[
+    {n:"（第二天。）"},
+    {n:"（老师在待定栏里，他那一格，画了一道。）"}
+  ], next:"s33" },
+
+  s33:{ sc:["pencil",{}], cue:"", lines:[
+    {n:"（写的是：静置。）"},
+    {n:"（铅笔。）"},
+    {b:"完。"}
+  ], end:true }
+};
+
+/* ============ 引擎 ============ */
+const G={
+  cur:null, i:0, typing:false, flags:{}, waits:0, scene:null, history:[],
+  start(){
+    this.flags={}; this.cur="s01"; this.play("s01");
+  },
+  play(id){
+    const node=SCRIPT[id];
+    if(!node){ this.finish(); return; }
+    this.cur=id; this.i=0;
+    this.setScene(node.sc);
+    $("#cue").innerHTML = node.cue ? `<b>${node.cue}</b>` : "";
+    $("#lines").innerHTML="";
+    $("#choices").innerHTML="";
+    $("#adv").classList.remove("on");
+    this.curNode=node;
+    this.fitPanel();
+    this.step();
+  },
+  setScene(sc){
+    if(!sc) return;
+    let key,opt;
+    if(typeof sc==="string"){ key=sc; opt={}; }
+    else { key=sc[0]; opt=sc[1]||{}; }
+    this.sceneKey=key; this.sceneOpt=opt;
+    HOT=[];                       /* 热点不跨场景继承：没报的地方就不该有手形 */
+    WHEELP=null; WHEEL_A=0;       /* 转角也不跨场 */
+    const fn=SC[key];
+    if(fn) svg(fn(opt));
+  },
+  /* 重新渲染当前场景（用于动画重绘） */
+  redraw(patch){
+    const fn=SC[this.sceneKey];
+    if(!fn) return;
+    this.sceneOpt=Object.assign({},this.sceneOpt,patch||{});
+    HOT=[];
+    WHEELP=null; WHEEL_A=0;
+    svg(fn(this.sceneOpt));
+  },
+  step(){
+    const node=this.curNode;
+    if(this.i>=node.lines.length){
+      if(node.choice){ this.showChoice(node.choice); return; }
+      let nx=node.next;
+      if(typeof nx==="function") nx=nx(this.flags);
+      /* 分支节点的 flag 必须在这里落账：节点播完才算真的做了这件事。
+         漏掉这一行，c2a/c3a 的 ate/wrote 就永远是 undefined，
+         玩家在两处做的选择对结局毫无影响。 */
+      if(node.flag) this.flags[node.flag]=true;
+      if(nx){ this.play(nx); return; }
+      if(node.end){ this.finish(); return; }
+      this.finish(); return;
+    }
+    const L=node.lines[this.i++];
+    /* 指令行 */
+    if(L.f){ this.doFn(L); return this.step(); }
+    this.renderLine(L);
+  },
+  doFn(L){
+    const f=L.f, a=L.a||[];
+    if(f==="horn") AU.horn(a[0],a[1]);
+    else if(f==="page") AU.page();
+    else if(f==="grit") AU.grit();
+    else if(f==="lightsOn"){
+      let k=0;
+      const t=setInterval(function(){
+        k++; G.redraw({lit:Math.min(1,k/6)});
+        if(k>=6) clearInterval(t);
+      },260);
+    }
+    else if(f==="lightsFull"){ G.redraw({lit:1}); }
+  },
+  renderLine(L){
+    const el=document.createElement("div");
+    el.className="ln";
+    if(L.d){
+      el.classList.add("d");
+      const w=document.createElement("span");
+      w.className="who"; w.textContent=L.who||"";
+      el.appendChild(w);
+      el.appendChild(document.createTextNode(L.d));
+    }else{
+      el.classList.add("n");
+      if(L.b){ el.classList.add("big"); }
+      if(L.n===1){ el.classList.add("strong"); }
+      /* n 既是正文也是强调标记（n:1）。数字不能当文字渲染，
+         否则 {n:1} 会在屏幕上打出一个「1」。 */
+      el.textContent = L.b || (typeof L.n==="string" ? L.n : "");
+    }
+    const box=$("#lines");
+    box.appendChild(el);
+    this.fitLines();
+    $("#adv").classList.add("on");
+    /* 最后一行落定即出选项：否则玩家要白点一次才看得见选项。 */
+    const node=this.curNode;
+    if(node && node.choice && this.i>=node.lines.length) this.showChoice(node.choice);
+  },
+  /* 面板高度上限 = 视口高 − 美术区实际高度。
+     原来写死 max-height:46vh，而美术区上限是 68vh，两者相加超过 100vh，
+     长节点把面板撑满时，面板底部（含选项）会掉到屏幕外：
+     玩家点得到、看不见，就会出现「点好几次才有下一行」的错觉。
+     美术区按 1200/560 定比、SVG 是 meet 模式，压它会出黑边，所以压面板。 */
+  fitPanel(){
+    const art=$("#art"), tx=$("#text");
+    if(!art||!tx) return;
+    const room=Math.max(132, innerHeight-art.getBoundingClientRect().height);
+    tx.style.maxHeight=Math.round(room)+"px";
+    this.fitLines();
+  },
+  /* 把 #lines 的内容收进可用高度：超出的旧行整行从顶上删掉，
+     不留半截被裁的字。
+     不能用 scrollHeight 判断——居中/贴底时顶部溢出不计入 scrollHeight，
+     它恒等于 clientHeight，旧行永远删不掉。
+     也不能只测一次：面板高度随内容长，append 的那一刻可用高度还是大的，
+     等选项占位把面板顶到上限，可用高度才变小；所以每次高度变化后都要再收一遍。
+     删行会让面板变矮、可用高度跟着变小，靠 #text 的 min-height 兜底收敛。 */
+  fitLines(){
+    const box=$("#lines");
+    if(!box) return;
+    let guard=0;
+    while(box.children.length>1 && guard++<400){
+      const cs=getComputedStyle(box);
+      const avail=box.clientHeight-parseFloat(cs.paddingTop||0)-parseFloat(cs.paddingBottom||0);
+      const list=box.children;
+      const first=list[0], last=list[list.length-1];
+      if(last.offsetTop+last.offsetHeight-first.offsetTop<=avail+2) break;
+      box.removeChild(first);
+    }
+  },
+  advance(){
+    const node=this.curNode;
+    if(node.choice && this.i>=node.lines.length && !$("#choices").children.length){
+      this.showChoice(node.choice);
+      return;
+    }
+    if(this.i>=node.lines.length){
+      if(node.choice){ this.showChoice(node.choice); return; }
+      let nx=node.next;
+      if(typeof nx==="function") nx=nx(this.flags);
+      if(node.flag) this.flags[node.flag]=true;
+      if(nx){ AU.click(); this.play(nx); return; }
+      if(node.end){ this.finish(); return; }
+      this.finish(); return;
+    }
+    AU.click();
+    this.step();
+  },
+  /* 拧一格：只改 #wheel 这一层的 transform，不重绘整个场景。
+     不重绘的理由是硬的：重绘会把指针底下的元素换掉，mouseleave 立刻触发，
+     悬停反白当场掉掉，指针再挪回来又要重新进一次——看起来就是「闪」。
+     90° 而不是 60°：六根辐条每 60° 自重合，转 60° 等于什么都没转。 */
+  turn(){
+    const w=document.getElementById("wheel");
+    if(!w || !WHEELP) return false;
+    WHEEL_A=(WHEEL_A+90)%360;
+    w.setAttribute("transform","rotate("+WHEEL_A+" "+WHEELP.cx+" "+WHEELP.cy+")");
+    AU.grit();
+    return true;
+  },
+  showChoice(ch){
+    $("#adv").classList.remove("on");
+    const box=$("#choices");
+    box.innerHTML="";
+    const seen=this.flags.__seen||(this.flags.__seen={});
+    ch.opts.forEach(function(o,idx){
+      const d=document.createElement("div");
+      d.className="ch";
+      /* 已选过的：消失（不置灰，留空位） */
+      if(seen[o.label]) d.classList.add("gone");
+      d.innerHTML=`<i></i><span>${o.label}</span>`;
+      d.onclick=function(ev){
+        ev.stopPropagation();
+        if(seen[o.label]) return;
+        seen[o.label]=1;
+        AU.click();
+        G.play(o.go);
+      };
+      box.appendChild(d);
+    });
+    /* 选项占位后可用高度变小，行要再收一次 */
+    this.fitLines();
+  },
+  finish(){
+    AU.setSnow(0.028);
+    AU.horn(0.5,4.5);
+    const f=this.flags;
+    const bits=[];
+    bits.push("完成");
+    if(f.wrote) bits.push("你在名录上补了一个名字");
+    else bits.push("你没有补那个名字");
+    if(f.ate) bits.push("最后一壶油倒完了");
+    bits.push("判定照常进行");
+    $("#endmeta").innerHTML=bits.join("<br>");
+    $("#end").classList.add("on");
+  }
+};
+
+/* ============ 交互 ============ */
+/* 调试直达（纯前端参数，不带参数时零影响）：
+     ?jump=<节点id>           点「开始」后直接播该节点
+     ?jump=<节点id>&at=choice 快进到该节点的选项
+   例：yubu.html?jump=s20&at=choice   三处选择里的第一处
+       yubu.html?jump=s28&at=choice   第二处（拧阀 / 松手）
+       yubu.html?jump=c1a            直接看某个分支的结果
+   节点 id 写错就照常从头开始，不会白屏。 */
+const QB=new URLSearchParams(location.search);
+/* 悬停应答款式：不带参数就按默认。只认 1/2，别的值一律回落 1。 */
+HOVSTYLE = (function(){ const v=+(QB.get("hov")||1); return (v===2)?2:1; })();
+const JUMP=QB.get("jump")||null;
+function jumpTo(){
+  if(!JUMP || !SCRIPT[JUMP]) return false;
+  G.play(JUMP);
+  if(QB.get("at")==="choice"){
+    /* 快进到本节点最后一行：最后一行落定时 renderLine 会自动摆出选项，
+       这样屏幕上是「最后几行 + 选项」，和真人玩到那里看到的一样。 */
+    const n=G.curNode;
+    let guard=0;
+    while(n.choice && G.i<n.lines.length && guard++<400) G.step();
+  }
+  return true;
+}
+$("#stage").addEventListener("click",function(e){
+  if(e.target.closest("#choices")) return;
+  /* 一路：文字面板。读文字的路永远通——堵死它，长段旁白就没法读了。 */
+  if(e.target.closest("#text")){ G.advance(); return; }
+  /* 二路：画面上的热点。碰机器只动机器，不动文字。
+     文字归文字，画面归画面，这条界线是这次改动的全部内容。 */
+  if(e.target.closest(".hot")){ G.turn(); return; }
+  /* 三路：有热点的场景里，画面别处不再等于「下一句」。
+     要改的从来不是「提示得不够」，而是「点哪都推进」——可点本身没有信息量，
+     任何提示都在跟这个模糊竞争。所以在这里，点空处就真的什么都不发生，
+     只留一声闷响，让它明确地落空。键盘空格仍然直接推进，卡不住人。 */
+  if(HOT.length){ AU.knock(); return; }
+  G.advance();
+});
+/* 窗口尺寸变了，美术区与可用高度都跟着变，面板与行都要重算 */
+window.addEventListener("resize",function(){ G.fitPanel(); });
+document.addEventListener("keydown",function(e){
+  if(e.code==="Space"||e.code==="Enter"||e.code==="ArrowRight"){
+    e.preventDefault();
+    if(!$("#gate").classList.contains("off")){ return; }
+    if($("#end").classList.contains("on")){ return; }
+    G.advance();
+  }
+});
+$("#go").addEventListener("click",function(e){
+  e.stopPropagation();
+  AU.init();
+  AU.click();
+  AU.setSnow(0.052);
+  $("#gate").classList.add("off");
+  setTimeout(function(){ if(!jumpTo()) G.start(); },420);
+});
+$("#again").addEventListener("click",function(e){
+  e.stopPropagation();
+  AU.click();
+  $("#end").classList.remove("on");
+  /* 用黑幕过渡 */
+  const v=$("#veil"); v.classList.add("on");
+  setTimeout(function(){
+    G.flags={};
+    /* 带 jump 参数时「再来一遍」回到跳转点，方便反复试同一个分支 */
+    if(!(JUMP && jumpTo())) G.play("s01");
+    v.classList.remove("on");
+    AU.setSnow(0.052);
+  },620);
+});
+</script>
+</body>
+</html>
