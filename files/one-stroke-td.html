@@ -1,0 +1,3497 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="v31XMZfHGg7cbXgVESyrgI">
+<head data-page-node-id="TICxlmizY3Qpza7Pga8J07">
+<meta charset="UTF-8" data-page-node-id="EFvNCfi129Bx2MQaCgZwUA">
+<meta name="robots" content="noindex,nofollow">
+<title>一笔画塔防</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#1a1a2e; color:#eee;
+    display:flex; flex-direction:column; align-items:center;
+    min-height:100vh; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  #game-container { position:relative; margin:16px; }
+  canvas { border:2px solid #16213e; border-radius:8px; background:#0f0f1a; cursor:crosshair; display:block; }
+  #ui { position:absolute; top:10px; left:12px; right:12px; display:flex; justify-content:space-between; pointer-events:none; }
+  .panel { background:rgba(22,33,62,0.92); padding:8px 14px; border-radius:6px; font-size:14px; }
+  #res { display:flex; gap:8px; flex-shrink:0; }
+  /* v6.6.1：失守状态文字变长后 wave-info 会挤扁资源栏（"遗物"被折成两行、被音效按钮压住）。
+     资源栏固定不收缩，让 wave-info 自己换行。 */
+  #wave-info { flex:1 1 auto; min-width:0; }
+  #res .panel { white-space:nowrap; }
+  #status {
+    position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+    background:rgba(22,33,62,0.92); padding:9px 18px; border-radius:6px;
+    font-size:15px; text-align:center; white-space:nowrap;
+  }
+  #start-btn {
+    margin-left:12px; padding:4px 16px; background:#27ae60; color:#fff;
+    border:none; border-radius:5px; font-size:14px; cursor:pointer; vertical-align:middle;
+  }
+  #start-btn:hover { background:#2ecc71; }
+  #start-btn:disabled { background:#555; color:#aaa; cursor:not-allowed; }
+  #start-btn:disabled:hover { background:#555; }
+  #restart-btn {
+    display:none; margin:8px 0; padding:8px 28px; background:#3498db; color:#fff;
+    border:none; border-radius:6px; font-size:15px; cursor:pointer;
+  }
+  #instructions { font-size:13px; color:#888; text-align:center; max-width:880px; line-height:1.7; margin-bottom:20px; }
+  #menu {
+    position:fixed; display:none; background:#16213e; border:1px solid #2c3e50;
+    border-radius:8px; padding:6px; z-index:10; box-shadow:0 4px 16px rgba(0,0,0,0.5);
+  }
+  #menu button {
+    display:block; width:100%; margin:3px 0; padding:7px 12px; text-align:left;
+    background:#1e3a5f; color:#eee; border:none; border-radius:5px;
+    font-size:13px; cursor:pointer;
+  }
+  #menu button:hover:not(:disabled) { background:#2e86c1; }
+  #menu button:disabled { opacity:0.4; cursor:not-allowed; }
+  #menu .menu-tip { color:#9ab; font-size:12px; padding:4px 8px; margin:0 0 4px; border-bottom:1px solid #2c3e50; }
+  #shop {
+    position:fixed; display:none; top:50%; left:50%; transform:translate(-50%,-50%);
+    background:#16213e; border:1px solid #2c3e50; border-radius:12px;
+    padding:18px; z-index:20; box-shadow:0 8px 32px rgba(0,0,0,0.6); text-align:center;
+  }
+  #shop-title { font-size:16px; margin-bottom:14px; }
+  #shop-cards { display:flex; gap:12px; justify-content:center; margin-bottom:14px; }
+  /* v6.8.2 常驻基础件货架：付费店 2 格、每格 1 份；与主牌 3 格视觉上分开 */
+  #shop-shelf {
+    display:none; margin:0 0 12px; padding-top:10px; border-top:1px dashed #2c3e50;
+  }
+  #shelf-title { font-size:12px; color:#9ff0d8; margin-bottom:8px; }
+  #shelf-cards { display:flex; gap:10px; justify-content:center; }
+  .shelf-card {
+    width:150px; background:#152238; border:1px dashed #365078; border-radius:8px;
+    padding:9px; text-align:left; display:flex; flex-direction:column; gap:6px;
+  }
+  .shelf-card .rname { font-size:13px; font-weight:600; }
+  .shelf-card .rstack { font-size:11px; color:#f9e79f; line-height:1.35; }
+  .shelf-card button {
+    padding:5px; background:#27ae60; color:#fff; border:none; border-radius:5px;
+    font-size:12px; cursor:pointer;
+  }
+  .shelf-card button:disabled { background:#555; opacity:0.5; cursor:not-allowed; }
+  /* v6.4 事件房 */
+  #event-room {
+    position:fixed; display:none; top:50%; left:50%; transform:translate(-50%,-50%);
+    background:#1a1626; border:1px solid #4a3a6e; border-radius:12px;
+    padding:18px; z-index:21; box-shadow:0 8px 32px rgba(0,0,0,0.7); text-align:center;
+    min-width:600px; max-width:760px;
+  }
+  #event-title { font-size:17px; color:#c39bd3; margin-bottom:6px; letter-spacing:1px; }
+  #event-sub { font-size:12px; color:#8a7aa0; margin-bottom:14px; }
+  #event-cards { display:flex; gap:12px; justify-content:center; margin-bottom:14px; }
+  .event-card {
+    width:190px; background:#241d38; border:1px solid #4a3a6e; border-radius:8px;
+    padding:12px; text-align:left; display:flex; flex-direction:column; gap:8px;
+  }
+  .event-card .ename { font-size:14px; font-weight:600; color:#d7bde2; }
+  .event-card .etag { font-size:11px; padding:1px 8px; border-radius:8px; align-self:flex-start; }
+  .event-card .etag.exchange { background:#1c4a3a; color:#7ee2b8; }
+  .event-card .etag.gamble { background:#5a3a10; color:#f5b041; }
+  .event-card .etag.loan { background:#5a1c1c; color:#ec7063; }
+  .event-card .etag.upgrade { background:#1c3a5a; color:#85c1e9; }
+  .event-card .edesc { font-size:12px; color:#aab; line-height:1.5; flex:1; }
+  /* v6.8.2 事件花费行：金币=黄，免费=绿，让“要付什么”一眼可读 */
+  .event-card .ecost { font-size:12px; font-weight:600; color:#f9e79f; }
+  .event-card .ecost:empty { display:none; }
+  .event-card button {
+    padding:6px; background:#8e44ad; color:#fff; border:none; border-radius:5px;
+    cursor:pointer; font-size:13px;
+  }
+  .event-card button:hover:not(:disabled) { background:#a569bd; }
+  .event-card button:disabled { opacity:0.4; cursor:not-allowed; }
+  .event-card .why { font-size:11px; color:#e67e22; min-height:14px; }
+  #event-leave {
+    padding:6px 20px; background:#34495e; color:#ccc; border:none; border-radius:5px;
+    cursor:pointer; font-size:13px;
+  }
+  #event-leave:hover { background:#4a6076; }
+  .shop-card {
+    width:190px; background:#1a2744; border:1px solid #2c3e50; border-radius:8px;
+    padding:12px; text-align:left; display:flex; flex-direction:column; gap:8px;
+  }
+  .shop-card .rname { font-size:14px; font-weight:600; }
+  .shop-card .rtype { font-size:11px; padding:1px 8px; border-radius:8px; align-self:flex-start; }
+  .shop-card .rtype.global { background:#5d3a8e; color:#d7bde2; }
+  .shop-card .rtype.buckle { background:#7d5a10; color:#f9e79f; }
+  /* 全局乘数读数：资源行已占满 800px 宽，放进 flex 会被挤出右边界；放右上又会撞 #top-controls（暂停/声音），
+     故绝对定位到资源行下方、左对齐（截图实测 v6.6）。
+     v6.8.0：结构读数最多可叠到 9 项（主流/孤塔/攻速/缺血/异型/转弯/塔型/直段/首杀），
+     nowrap 单行会超出 800px 画布被裁、并与右上按钮重叠（浏览器实测：超画布 8px + 与 #top-controls 重叠）。
+     ⚠️ 必须写成 #res #school（特异度 2,0,0）：v6.6.1 为修资源行折行加的 `#res .panel{white-space:nowrap}`
+     特异度是 (1,1,0)，直接写在 #school(1,0,0) 上会被它覆盖——实测 getComputedStyle 仍是 nowrap（假修复）。
+     max-width 收到 700px：给右上 #top-controls 让位，宁可多换一行也不遮挡控件。 */
+  #school { background:rgba(14,90,74,0.92); color:#9ff0d8; position:absolute; top:calc(100% + 4px); left:0; display:none; line-height:1.35; }
+  #res #school { white-space:normal; width:max-content; max-width:700px; }
+  .shop-card .rdesc { font-size:12px; color:#aab; line-height:1.5; flex:1; }
+  .shop-card .rcost { color:#e74c3c; }
+  /* v6.8.1 可叠普通件：已持有 N/上限 + 下一层净效果（只给读数，不放设计标签） */
+  .shop-card .rstack { font-size:12px; color:#f9e79f; line-height:1.4; }
+  .shop-card button {
+    padding:6px; background:#27ae60; color:#fff; border:none; border-radius:5px;
+    font-size:13px; cursor:pointer;
+  }
+  .shop-card button:disabled { background:#555; opacity:0.5; cursor:not-allowed; }
+  .shop-card .lock-btn {
+    padding:5px; background:#24344f; color:#9ab; border:1px solid #2c3e50;
+    border-radius:5px; font-size:12px; cursor:pointer;
+  }
+  .shop-card .lock-btn.on { background:#4a3a10; color:#f9e79f; border-color:#b7950b; }
+  #shop-skip {
+    padding:7px 26px; background:#1e3a5f; color:#ccc; border:1px solid #2c3e50;
+    border-radius:6px; font-size:13px; cursor:pointer;
+  }
+  #shop-skip:hover { background:#2e86c1; color:#fff; }
+  .top-control {
+    pointer-events:auto; border:0; border-radius:6px; padding:7px 10px;
+    background:rgba(22,33,62,0.95); color:#eee; cursor:pointer; font-size:15px;
+  }
+  #top-controls { position:absolute; top:58px; right:12px; z-index:8; display:flex; gap:6px; }
+  .overlay {
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(8,10,22,0.82); z-index:40; padding:20px;
+  }
+  .overlay-card {
+    width:min(620px,92vw); background:#16213e; border:1px solid #365078; border-radius:14px;
+    padding:26px; box-shadow:0 12px 50px rgba(0,0,0,.65); text-align:center;
+  }
+  .overlay-card h1 { font-size:34px; margin-bottom:12px; }
+  .overlay-card h2 { font-size:24px; margin-bottom:12px; }
+  .overlay-card p { color:#bbc7d9; line-height:1.7; margin:10px 0 18px; }
+  .overlay-card button, .tutorial-card button {
+    margin:5px; padding:9px 22px; background:#2878b8; color:#fff; border:0;
+    border-radius:7px; cursor:pointer; font-size:14px;
+  }
+  #title-stats { color:#f1c40f; min-height:24px; }
+  #title-help { display:none; text-align:left; font-size:13px; line-height:1.65; color:#ccd5e3; }
+  #result-stars { color:#f1c40f; font-size:34px; letter-spacing:4px; }
+  #result-details { white-space:pre-line; }
+  #build-tag { font-size:11px; color:#7f8c9a; margin-top:6px; letter-spacing:.02em; }
+  #copy-run { background:#2e86c1; }
+  #copy-status { font-size:12px; color:#9ff0d8; min-height:16px; margin:4px 0; }
+  #tutorial {
+    position:fixed; left:50%; bottom:28px; transform:translateX(-50%); z-index:35;
+    display:none; width:min(560px,90vw);
+  }
+  .tutorial-card { background:#16213e; border:2px solid #3498db; border-radius:12px; padding:15px 18px; box-shadow:0 8px 32px #000; }
+  #tutorial-skip { float:right; font-size:12px; background:#45556d; padding:6px 10px; }
+  #tutorial-step { color:#7fc8ff; font-size:12px; }
+  #tutorial-text { margin:8px 0; line-height:1.5; }
+</style>
+</head>
+<body data-page-node-id="JXmjbLEVz5EAk6RTOM7PBl">
+<div id="game-container" data-page-node-id="L2i6n0k3LXG8TdUwgPuY0c">
+  <canvas id="game" width="800" height="600" data-page-node-id="fMoMFVfWsxTRv1glxcJh0u"></canvas>
+  <div id="ui" data-page-node-id="5Kc6lgO1KkTjJZBuWLXPM7">
+    <div class="panel" id="wave-info" data-page-node-id="4BucHyq9cf5wPDzVByAVqj">第 1/12 波 · 备战</div>
+    <div id="res" data-page-node-id="2PdlDHfIouStfRefY4JOsq">
+      <div class="panel" id="hp" data-page-node-id="pDl1PBRIOeKOYvYwTNznJM">基地 100</div>
+      <div class="panel" id="energy" data-page-node-id="LXsP29AHa00Co1E7vc8sYG">能量 10</div>
+      <div class="panel" id="gold" data-page-node-id="SDmEfMT2D09Upe2jJsznFj">金币 100</div>
+      <div class="panel" id="relics" data-page-node-id="64cALMsoBGcNLQQbUezojc">遗物 0</div>
+      <div class="panel" id="school">全局 ×1.00</div>
+    </div>
+  </div>
+  <div id="status" data-page-node-id="bmArnKwXYUKihHSsJiIlnr"><span id="status-text" data-page-node-id="FHjSP0HF3FhEndiaTGcI4r">拖动画面移动 · 滚轮缩放 · 从基地拖线，终点落在出生点。每接 1 个出生点，每波多 1 份编队。</span><button id="start-btn" data-page-node-id="yCQpVrAdKtb95xlGnrAHmN">开始出怪 ▶</button></div>
+  <div id="top-controls"><button id="pause-btn" class="top-control" title="暂停 (Esc)">⏸</button><button id="sound-btn" class="top-control" title="声音开关">🔊</button></div>
+</div>
+<div id="menu" data-page-node-id="RrMVy461WyL0XKCD6oxmBS"></div>
+<div id="shop" data-page-node-id="kPRLszgwZoKR3mtE1aYiOh">
+  <div id="shop-title" data-page-node-id="35AsloA466ZB3V0IjuuNIM"></div>
+  <div id="shop-cards" data-page-node-id="ZH3dPBdriMvIJOwR4kGPIe"></div>
+  <div id="shop-shelf">
+    <div id="shelf-title"></div>
+    <div id="shelf-cards"></div>
+  </div>
+  <button id="shop-skip" data-page-node-id="HMQyOqpOJKupwYsBEdC83Z">跳过</button>
+</div>
+<div id="event-room">
+  <div id="event-title"></div>
+  <div id="event-sub"></div>
+  <div id="event-cards"></div>
+  <button id="event-leave">离开（不交易）</button>
+</div>
+<button id="restart-btn" data-page-node-id="TNhQVjmKvDujltvH92d4q0">重新开始</button>
+<div id="instructions" data-page-node-id="tHkF2eMVx8exNdRqyNw4Ky">
+  <b>操作</b>：拖动空白处移动视角，滚轮缩放，小地图跳转。从基地拖线，经过塔即激活；<b>终点落在出生点</b>才算连上。<br>
+  <b>连点 = 怪物份数</b>：每接 1 个出生点，每波多 1 份完整编队。红圈逐波外扩；<b>更外环还有连着的出生点，内环就不算失守</b>。<br>
+  <b>塔与开荒</b>：<b style="color:#2e86c1">↑ 箭塔</b> / <b style="color:#d4ac0d">◉ 减速</b> / <b style="color:#cb4335">✸ 爆破</b>。连线经过即激活，删线只休眠；暗色虚线塔不可通行，已激活的箭塔/爆破塔能开荒拿金，越往外塔越少。<br>
+  <b>环层与路线</b>：内环简单、中环标准、外环高危高赏。外环跳过内环/中环时（孤军深入），外环怪每跳 1 环 +30% 血（最多 +60%）；<b>中环直插不加税</b>。<br>
+  <b>波次与商店</b>：12 波；第 3/6/9 波是任务波（连到 ◆ 目标点得免费遗物），第 6/12 波是 Boss。波间商店 2 遗物 + 1 卡扣（第 8 波起全遗物），可锁定；遗物有红代价、同类互斥，卡扣点塔安装/拆卸。<br>
+  <b>读数</b>：遗物会改变伤害、塔型、路径或经济；部分遗物会在 HUD/塔菜单显示当前生效的数字（主流/塔型/直段/转弯/异型/孤塔/缺血/首杀/本波攻速），其余直接看卡面与战斗。
+</div>
+<div id="title-overlay" class="overlay">
+  <div class="overlay-card">
+    <h1>一笔画塔防</h1>
+    <p>从基地出发，用一笔画向外开拓领土：连线经过塔即激活，环层越远怪越肥也越凶，固定波次内让你的防线追上你的野心。</p>
+    <div id="title-stats"></div>
+    <div id="build-tag"></div>
+    <div id="title-main"><button id="title-start">开始游戏</button><button id="title-instructions">玩法说明</button></div>
+    <div id="title-help">
+      <b>目标：</b>从基地拖一笔画，连到出生点，守住 12 波。<br>
+      <b>连线：</b>经过塔即激活；<b>终点必须是出生点</b>。没连到的线会变成橙色草稿，可继续拖或右键回收；草稿修好前不能开波。<br>
+      <b>出生点：</b><b>每接 1 个点，每波多 1 份完整编队</b>。红圈逐波外扩；更外环还有连着的出生点，内环就不算失守。<br>
+      <b>路线：</b>内环简单、中环标准、外环高危高赏。外环跳过内环/中环时（孤军深入），外环怪每跳 1 环 +30% 血（最多 +60%，Boss 减半）；<b>中环直插不加税</b>。<br>
+      <b>波次与商店：</b>第 3/6/9 波任务波（连到 ◆ 得免费遗物），第 6/12 波 Boss。波间商店 2 遗物 + 1 卡扣，可锁定；遗物有红代价、同类互斥，卡扣点塔安装。<br>
+      <button id="title-help-back">返回</button>
+    </div>
+  </div>
+</div>
+<div id="pause-overlay" class="overlay"><div class="overlay-card"><h2>已暂停</h2><button id="resume-btn">继续</button><button class="back-title">回标题</button></div></div>
+<div id="result-overlay" class="overlay"><div class="overlay-card"><h2 id="result-title"></h2><div id="result-stars"></div><p id="result-details"></p><button id="copy-run">复制本局数据</button><div id="copy-status"></div><button id="result-retry"></button><button class="back-title">回标题</button></div></div>
+<div id="tutorial"><div class="tutorial-card"><button id="tutorial-skip">跳过教学</button><div id="tutorial-step"></div><div id="tutorial-text"></div><button id="tutorial-next">继续</button></div></div>
+
+<script id="game-data" type="application/json">
+{
+  "_maintenance": "改数值只编辑本 JSON，然后运行 capability/codex-game-pipeline/specs/GTD-sync-data.cjs；不直接编辑 HTML 内嵌 DATA。",
+  "maxWave": 12,
+  "rating": { "leak3Pct": 0.20, "leak2Pct": 0.50 },
+  "_rating_note": "v6.7.3 评级只看敌人漏怪伤害占基地上限的比例；主动卖血/买遗物扣血/治疗不计入。",
+  "seedPool": [104729, 130363, 155921, 196613, 221251, 262147, 299993, 349999, 350003, 450011, 550007, 750019],
+  "questWaves": [3, 6, 9],
+  "bossWaves": [6, 12],
+  "startGold": 100,
+  "startEnergy": 10,
+  "baseMaxHp": 100,
+  "events": {
+    "_note": "v6.4.1 资源运营层；v6.8.2 整批重做。事件房固定波次触发（时机确定、种类随机）。eventWaves 写【备战期序号】= 即将开打的那一波号：[3,6,9,12] 表示 prep3/prep6/prep9/prep12 各弹一次。v6.8.2 的设计口径：① 只做加速器——当场给路线/遗物/货架上的东西，不做「先拿钱后还债」的拖发育交易；② 删掉高利贷/风险投资/能量过载；③ 抽卡按局面加权，并保底一张现在就能执行的卡；④ 花费必须上卡面（cost 由 eventCostText 渲染），不能只在选不了时说一句不够。",
+    "eventWaves": [3, 6, 9, 12],
+    "minHpSafe": 15,
+    "pool": [
+      { "id": "blood_machine", "name": "卖血机", "desc": "抽走 12 点生命，吐出 90 金币", "tags": ["exchange"],
+        "cost": { "hp": 12 }, "gain": { "gold": 90 }, "repeatable": true },
+      { "id": "energy_forge", "name": "能量熔炉", "desc": "以 70 金币为燃料，永久扩容 2 点能量", "tags": ["exchange"],
+        "cost": { "gold": 70 }, "gain": { "energy": 2 }, "repeatable": true },
+      { "id": "energy_cash", "name": "能量变现", "desc": "拆解 2 点能量容量，换得 110 金币", "tags": ["exchange"],
+        "cost": { "energy": 2 }, "gain": { "gold": 110 }, "repeatable": true },
+      { "id": "relic_casino", "name": "遗物赌坊", "desc": "投入 120 金币，六成概率开出随机遗物", "tags": ["gamble"],
+        "cost": { "gold": 120 }, "gain": { "gambleRelic": { "chance": 0.6, "pity": 2 } }, "repeatable": true },
+      { "id": "pawn_shop", "name": "典当行", "desc": "拆掉一件已购遗物，返还其价格的六成", "tags": ["exchange"],
+        "cost": {}, "gain": { "pawRelic": true }, "repeatable": true },
+      { "id": "vitality_core", "name": "生命核心", "desc": "基地生命上限 +25，并立即回复 25 点", "tags": ["upgrade"],
+        "cost": { "gold": 80 }, "gain": { "maxHp": 25 }, "repeatable": true },
+      { "id": "heart_bank", "name": "生命银行", "desc": "存入 20 点生命，下一波结束时连本带息取回 30 点", "tags": ["exchange"],
+        "cost": { "hp": 20 }, "gain": { "deposit": { "amount": 30, "delayWaves": 1 } }, "repeatable": true },
+      { "id": "air_rent", "name": "空域租金", "desc": "租出 1 个未连接出生点（外环优先）：之后 4 波每波 +20 金，连接该点即终止", "tags": ["exchange"],
+        "cost": {}, "gain": { "airRent": { "amount": 20, "waves": 4 } }, "repeatable": true },
+      { "id": "cornerstone", "name": "基石", "desc": "随机一件未满层的普通件 +2 层（一件都没有时给一件新的）", "tags": ["upgrade"],
+        "cost": { "gold": 90 }, "gain": { "stackLayers": 2 }, "repeatable": true },
+      { "id": "black_market", "name": "黑市情报", "desc": "接下来 2 家付费商店各多 1 张货（3 选变 4 选）", "tags": ["upgrade"],
+        "cost": { "gold": 60 }, "gain": { "shopIntel": 2 }, "repeatable": true },
+      { "id": "route_supply", "name": "路线补给", "desc": "立刻获得 6 点能量，当场把线接下去", "tags": ["exchange"],
+        "cost": { "gold": 90 }, "gain": { "energyNow": 6 }, "repeatable": true },
+      { "id": "ante", "name": "加注", "desc": "免费获得一件随机遗物；下一波怪物血量 +50%", "tags": ["gamble"],
+        "cost": {}, "gain": { "freeRelic": true, "nextWaveHpMul": 1.5 }, "repeatable": false }
+    ]
+  },
+  "economy": {
+    "_note": "v6.2.4 从代码抽出的散落数值。env* 为环境/节奏常量，奖励为结算数值。",
+    "energyPerWaveBase": 3,
+    "goldPerWaveBase": 20,
+    "reclaimReward": 15,
+    "reclaimHp": 100,
+    "monsterSpeedScale": 1.8,
+    "speedFloor": 0.15,
+    "slowBaseFactor": 0.45,
+    "focusPerStack": 0.15,
+    "focusMaxStacks": 5,
+    "wandererHpMul": 0.6,
+    "wandererReward": 15,
+    "gildedPenaltyGold": 30,
+    "gildedPenaltyThreshold": 100,
+    "towerRate": 0.55,
+    "blastOpeningTargets": 3
+  },
+  "hpScale": {
+    "base": 1,
+    "perWave": 0.17
+  },
+  "leak": {
+    "_note": "v6.2 起漏怪扣血 = baseMaxHp × 系数，与怪物当前血量脱钩，避免抬 HP 造成双重加压；Boss/wanderer 用 arrivalPct。",
+    "basePct": 0.06,
+    "bossPct": 0.25,
+    "wandererPct": 0.05
+  },
+  "skipTax": {
+    "_note": "v6.7 跳环难度税。某环出生的怪，按【它内侧还有几个环没有任何已连接出生点】加血；口径是 zoneConnectionCount（本环），与失守用的 zoneCovered（外侧兜底）刻意分开。只加血、不加数量、不改金币。mini 不计税（与 mini 不吃 hpScale 一致）。",
+    "perRing": 0.3,
+    "maxRings": 2,
+    "bossMul": 0.5
+  },
+  "ring": {
+    "r0": 250,
+    "step": 28,
+    "lostMode": "C",
+    "spawnBonus": [20, 60, 120]
+  },
+  "monsters": {
+    "normal": { "name": "普通怪", "hp": 100, "speed": 1.15, "color": "#e74c3c", "r": 10, "reward": 10, "tags": [] },
+    "fast": { "name": "快速怪", "hp": 50, "speed": 2.3, "color": "#f39c12", "r": 8, "reward": 15, "tags": ["swift"] },
+    "heavy": { "name": "重甲怪", "hp": 280, "speed": 0.65, "color": "#8e44ad", "r": 14, "reward": 30, "tags": ["armored"] },
+    "splitter": { "name": "分裂怪", "hp": 120, "speed": 1, "color": "#58d68d", "r": 11, "reward": 20, "tags": [] },
+    "mini": { "name": "小分裂体", "hp": 40, "speed": 1.6, "color": "#82e0aa", "r": 6, "reward": 5, "tags": [] },
+    "boss": { "name": "Boss", "hp": 900, "speed": 0.55, "color": "#c39bd3", "r": 20, "reward": 100, "tags": ["armored", "boss"] },
+    "mist": { "name": "雾行者", "hp": 80, "speed": 1.35, "color": "#7f8c8d", "r": 9, "reward": 22, "tags": ["swift", "invis"] },
+    "gilded": { "name": "携金兽", "hp": 100, "speed": 1.5, "color": "#f4d03f", "r": 10, "reward": 50, "tags": ["swift"] }
+  },
+  "towers": {
+    "arrow": { "dmg": 25, "cd": 25, "range": 115, "color": "#2e86c1", "label": "箭塔", "sym": "↑" },
+    "slow": { "cd": 40, "range": 95, "dur": 100, "factor": 0.45, "color": "#d4ac0d", "label": "减速塔", "sym": "◉" },
+    "blast": { "dmg": 16, "cd": 70, "range": 100, "splash": 55, "color": "#cb4335", "label": "爆破塔", "sym": "✸" }
+  },
+  "zones": [
+    { "name": "内环", "rMax": 300, "hpMul": 0.7, "goldMul": 0.6, "fill": "rgba(93,173,226,0.05)" },
+    { "name": "中环", "rMax": 475, "hpMul": 1, "goldMul": 1, "fill": "rgba(212,172,13,0.045)" },
+    { "name": "外环", "rMax": 660, "hpMul": 1.4, "goldMul": 1.5, "fill": "rgba(231,76,60,0.05)" }
+  ],
+  "spawnRings": [
+    { "zone": 0, "r": 250, "angles": [45, 135, 225, 315] },
+    { "zone": 1, "r": 400, "angles": [56.25, 191.25, 303.75] },
+    { "zone": 2, "r": 555, "angles": [11.25, 146.25, 236.25, 348.75] }
+  ],
+  "bands": [
+    { "r": 90, "n": 6, "spread": 0.3, "jr": 6, "lock": 0.1, "off": 0 },
+    { "r": 160, "n": 9, "spread": 0.26, "jr": 5, "lock": 0.12, "off": 0.35 },
+    { "r": 230, "n": 12, "spread": 0.2, "jr": 4, "lock": 0.18, "off": 0.262 },
+    { "r": 320, "n": 16, "spread": 0.05, "jr": 4, "lock": 0.3, "off": 0 },
+    { "r": 410, "n": 16, "spread": 0.05, "jr": 4, "lock": 0.45, "off": 0 },
+    { "r": 490, "n": 16, "spread": 0.05, "jr": 4, "lock": 0.55, "off": 0 }
+  ],
+  "shop": { "paidRelics": 2, "paidBuckles": 1, "allRelicWavesFrom": 8, "mutexWeight": 0.3 },
+  "relics": [
+    { "id": "g_rage", "type": "global", "name": "狂怒发条", "desc": "全局攻速 +100%", "cost": "，但伤害降至 35%", "price": 90, "pair": "atkMod", "hooks": { "globalCdMul": 0.5, "globalDmgMul": 0.35 } },
+    { "id": "g_sniper", "type": "global", "name": "猎颅校准", "desc": "全局伤害 ×2.5", "cost": "，但攻速减半", "price": 90, "pair": "atkMod", "hooks": { "globalCdMul": 2, "globalDmgMul": 2.5 } },
+    { "id": "g_volley", "type": "global", "name": "箭雨敕令", "desc": "所有箭塔可同时攻击 2 个目标", "cost": "，但单发伤害 ×65%", "price": 95, "pair": "spread", "hooks": { "arrowDmgMul": 0.65 } },
+    { "id": "g_focus", "type": "global", "name": "点杀矩阵", "desc": "同塔连续攻击同一目标，每击伤害 +15%", "cost": "，至多叠 5 层；对群怪几乎无增益", "price": 95, "pair": "spread", "hooks": {} },
+    { "id": "g_frontier", "type": "global", "name": "远征法典", "desc": "每多连接 1 个环，全局伤害 +18%", "cost": "，但获得时基地生命 -20%", "price": 100, "pair": "space", "hooks": { "frontierPerRing": 0.18, "frontierHpCostMul": 0.8 } },
+    { "id": "g_bastion", "type": "global", "name": "深垒誓约", "desc": "基地每满 20 血，全局伤害 +12%", "cost": "，但外环塔伤害 ×70%", "price": 100, "pair": "space", "hooks": { "bastionPerHp": 20, "bastionDmgMul": 0.12, "bastionOuterDmgMul": 0.7 } },
+    { "id": "g_toxin", "type": "global", "name": "腐毒导管", "desc": "每次攻击附加毒素：每秒 8 点，持续 3 秒", "cost": "，至多叠 3 层；全局伤害 ×80%", "price": 90, "hooks": { "globalDmgMul": 0.8, "poisonDps": 8, "poisonDur": 180, "poisonMax": 3 } },
+    { "id": "g_chain", "type": "global", "name": "共振尖塔", "desc": "爆破溅射命中 ≥3 个目标时，追加一次 40% 伤害的小爆炸", "price": 95, "hooks": { "chainTrigger": 3, "chainDmgMul": 0.4, "chainRadiusMul": 0.6 } },
+    { "id": "g_harvest", "type": "global", "name": "掠金义肢", "desc": "击杀金币 ×1.6", "cost": "，但每波开始时基地 -2 血", "price": 85, "hooks": { "goldMul": 1.6, "waveHpCost": 2 } },
+    { "id": "g_mirror", "type": "global", "name": "镜像刻印", "desc": "战斗开始时，复制卡扣槽里第一个卡扣到随机另一座无卡扣的激活塔", "price": 80, "hooks": {} },
+    { "id": "g_anvil", "type": "global", "name": "铁砧协议", "desc": "全局伤害 ×1.7", "cost": "，但全局射程 ×0.7", "price": 100, "pair": "range", "hooks": { "globalDmgMul": 1.7, "globalRangeMul": 0.7 } },
+    { "id": "g_eagle", "type": "global", "name": "鹰眼透镜", "desc": "全局射程 ×1.4", "cost": "，但全局伤害 ×0.8", "price": 95, "pair": "range", "hooks": { "globalRangeMul": 1.4, "globalDmgMul": 0.8 } },
+    { "id": "g_burst", "type": "global", "name": "暴烈引信", "desc": "每波每塔的前 5 次攻击伤害 ×3", "cost": "，但全局攻速 ×0.88", "price": 95, "pair": "tempo", "hooks": { "burstShots": 5, "burstMul": 3, "globalCdMul": 1.14 } },
+    { "id": "g_endure", "type": "global", "name": "绵长战意", "desc": "每波开波 6 秒后，全局伤害 ×1.6", "cost": "，但前 6 秒 ×0.8", "price": 95, "pair": "tempo", "hooks": { "endureFrames": 360, "endureLateMul": 1.6, "endureEarlyMul": 0.8 } },
+    { "id": "g_swarm", "type": "global", "name": "蜂群协议", "desc": "每座激活塔使全局攻速 +7%（上限 +70%）", "cost": "，但全局伤害 ×0.7", "price": 100, "hooks": { "swarmPerTower": 0.07, "swarmMax": 0.7, "globalDmgMul": 0.7 } },
+    { "id": "g_winter", "type": "global", "name": "冬寂之息", "desc": "被减速塔命中的怪物，3 秒内受到的所有伤害 +25%", "price": 90, "hooks": { "chillDmgMul": 1.25, "chillDur": 180 } },
+    { "id": "g_thorns", "type": "global", "name": "荆棘回路", "desc": "漏怪对基地的伤害 ×0.5", "cost": "，但击杀金币 ×0.75", "price": 85, "hooks": { "leakReduceMul": 0.5, "goldMul": 0.75 } },
+    { "id": "g_forge", "type": "global", "name": "过载核心", "desc": "全局攻速 ×1.3", "cost": "，但每波能量恢复 -1", "price": 90, "hooks": { "globalCdMul": 0.77, "forgeEnergyMod": -1 } },
+    { "id": "g_tide", "type": "global", "name": "潮汐引擎", "desc": "怪物沿路径每前进 1 个节点，受伤 +4%（上限 +40%）", "price": 95, "hooks": { "tidePerNode": 0.04, "tideMax": 0.4 } },
+    { "id": "g_resonance", "type": "global", "name": "共鸣线圈", "desc": "路径上紧挨的同类型塔互相提供 +15% 伤害", "price": 85, "pair": "adjType", "hooks": { "resonanceMul": 1.15 } },
+    { "id": "g_idle", "type": "global", "name": "闲置产能", "desc": "每 1 点未使用的能量，全局伤害 +3%", "cost": "，上限 +45%", "price": 90, "hooks": { "idleEnergyPer": 0.03, "idleEnergyCap": 0.45 } },
+    { "id": "g_lonely", "type": "global", "name": "孤塔誓约", "desc": "路径上前后都没有紧挨着其他塔的塔，伤害 +60%", "price": 95, "hooks": { "lonelyMul": 1.6 } },
+    { "id": "g_bloodpact", "type": "global", "name": "血契", "desc": "每波结束回复 3 点基地生命", "cost": "，但获得时立即 -15 血", "price": 80, "pair": "hpState", "hooks": { "waveHpGain": 3, "hpCostOnBuy": 15 } },
+    { "id": "g_hoard", "type": "global", "name": "封存账本", "desc": "开波时每持有 75 金，本波全局伤害 +5%", "cost": "，上限 +30%（波内花费不影响本波）", "price": 90, "hooks": { "hoardPer": 0.05, "hoardUnit": 75, "hoardCap": 0.3 } },
+    { "id": "g_tax", "type": "global", "name": "主流税契", "desc": "路径上数量最多的一种塔型超过半数时，全局伤害 +60%", "cost": "，塔型分散时失效", "price": 100, "hooks": { "mainTypeDmgMul": 1.6 } },
+    { "id": "g_convert", "type": "global", "name": "余能折现", "desc": "每波结束，每 1 点未使用能量换 5 金", "cost": "，上限 60 金", "price": 85, "hooks": { "energyGoldPer": 5, "energyGoldCap": 60 } },
+    { "id": "q_atk", "type": "buckle", "name": "迅捷卡扣", "desc": "挂载塔攻速 +40%", "price": 55, "hooks": { "cdMul": 0.71 } },
+    { "id": "q_dmg", "type": "buckle", "name": "重弹卡扣", "desc": "挂载塔伤害 +50%", "price": 60, "hooks": { "dmgMul": 1.5 } },
+    { "id": "q_rng", "type": "buckle", "name": "游侠卡扣", "desc": "挂载塔射程 +30%", "price": 50, "hooks": { "rangeMul": 1.3 } },
+    { "id": "q_frost", "type": "buckle", "name": "霜结卡扣", "desc": "挂载减速塔强度 ×2", "price": 65, "hooks": { "slowPowMul": 2 } },
+    { "id": "q_mine", "type": "buckle", "name": "矿镐卡扣", "desc": "挂载箭塔开荒伤害 ×2", "price": 55, "hooks": { "buckleReclaimMul": 2 } },
+    { "id": "q_fuse", "type": "buckle", "name": "引信卡扣", "desc": "每波前 3 次有效攻击伤害 ×2", "price": 35, "hooks": { "openingShotMul": 2 } },
+    { "id": "q_hunter", "type": "buckle", "name": "猎手卡扣", "desc": "对快速怪/雾行者伤害 +35%", "price": 40, "hooks": { "tagDmgMul": { "swift": 1.35 } } },
+    { "id": "q_breaker", "type": "buckle", "name": "破阵卡扣", "desc": "对重甲怪/Boss 伤害 +35%", "price": 65, "hooks": { "tagDmgMul": { "armored": 1.35 } } },
+    { "id": "q_quake", "type": "buckle", "name": "余震卡扣", "desc": "爆破半径 +40%（仅爆破塔）", "price": 60, "hooks": { "splashMul": 1.4 } },
+    { "id": "q_charge", "type": "buckle", "name": "蓄压卡扣", "desc": "连续 180 帧未开火，下一击 ×3", "price": 55, "hooks": { "idleChargeMul": 3 } },
+    { "id": "q_relay", "type": "buckle", "name": "中继卡扣", "desc": "路径上相邻其他塔冷却 ×0.88", "price": 100, "hooks": { "adjacentCdMul": 0.88 } },
+    { "id": "q_cloak", "type": "buckle", "name": "反隐卡扣", "desc": "可直接索敌隐身单位，对显形目标伤害 +20%", "price": 30, "rarity": "common", "hooks": { "revealOnHit": 180, "revealedDmgMul": 1.2 } },
+    { "id": "q_hub", "type": "buckle", "name": "共鸣枢纽", "desc": "载体塔停止攻击（视为路径节点），路径上紧挨它的塔伤害 +80%", "price": 100, "rarity": "rare", "hooks": { "hubSacrifice": true, "hubAdjMul": 1.8 } },
+    { "id": "g_rime", "type": "global", "name": "霜蚀", "desc": "被减速的怪每秒受 6 点伤害，最多 2 层", "cost": "，但全局伤害 ×0.85", "price": 90, "engine": true, "hooks": { "chillDotDps": 6, "chillDotMax": 2, "globalDmgMul": 0.85 } },
+    { "id": "g_venom", "type": "global", "name": "蚀刻协议", "desc": "毒/冰持续伤害 +50%", "price": 70, "requiresAny": ["g_rime", "g_toxin"], "hooks": { "dotDmgMul": 1.5 } },
+    { "id": "g_exec", "type": "global", "name": "处决协议", "desc": "对生命低于 30% 的怪伤害 +80%", "cost": "，但对满血怪伤害 ×0.85", "price": 95, "engine": true, "hooks": { "executeThreshold": 0.3, "executeMul": 1.8, "fullHpMul": 0.85 } },
+    { "id": "g_guillotine", "type": "global", "name": "断头台", "desc": "处决线提高到 35%，对低血怪额外 +20%", "price": 70, "requiresAny": ["g_exec"], "hooks": { "executeThresholdAdd": 0.05, "executeBonusAdd": 0.2 } },
+    { "id": "g_discount", "type": "global", "name": "折扣券", "desc": "所有遗物/卡扣价格 ×0.85", "cost": "，但每波开始金币 -3、击杀金 ×0.9", "price": 90, "hooks": { "shopPriceMul": 0.85, "waveGoldCost": 3, "goldMul": 0.9 } },
+    { "id": "g_last", "type": "global", "name": "残血协议", "desc": "基地每损失 10 点生命，全局伤害 +8%（上限 +48%）", "cost": "，但所有治疗 ×0.5；与血契互斥", "price": 95, "engine": true, "pair": "hpState", "hooks": { "lastMissingPer": 10, "lastDmgPer": 0.08, "lastDmgCap": 0.48, "healMul": 0.5 } },
+    { "id": "g_backwater", "type": "global", "name": "背水", "desc": "残血协议每 10 点缺血增伤 +4%（上限 +72%）", "price": 70, "requiresAny": ["g_last"], "hooks": { "backwaterPerAdd": 0.04, "backwaterCapAdd": 0.24 } },
+    { "id": "g_twin", "type": "global", "name": "双生塔", "desc": "路径上紧挨的异类型塔互相 +15% 伤害", "cost": "，与共鸣线圈互斥", "price": 90, "pair": "adjType", "hooks": { "twinMul": 1.15 } },
+    { "id": "g_corner", "type": "global", "name": "拐角协议", "desc": "路径每 1 个急转弯（偏折 ≥30°），全局伤害 +5%（上限 +35%）", "cost": "，但全局射程 ×0.9", "price": 95, "hooks": { "cornerPerTurn": 0.05, "cornerCap": 0.35, "globalRangeMul": 0.9 } },
+    { "id": "g_barrage", "type": "global", "name": "火力覆盖", "desc": "爆破塔溅射伤害 +35%", "cost": "，但箭塔伤害 ×0.85", "price": 95, "hooks": { "blastDmgMul": 1.35, "arrowDmgMul": 0.85 } },
+    { "id": "q_rime", "type": "buckle", "name": "蚀刻卡扣", "desc": "攻击附加 4/s × 2s 毒素，最多 2 层", "price": 55, "hooks": { "venomDps": 4, "venomDur": 120, "venomMax": 2 } },
+    { "id": "q_exec", "type": "buckle", "name": "处决卡扣", "desc": "对生命低于 30% 的怪伤害 +50%", "price": 60, "hooks": { "execThreshold": 0.3, "execMul": 1.5 } },
+    { "id": "q_corner", "type": "buckle", "name": "拐角卡扣", "desc": "塔在急转弯 1 节点内，伤害 +30%", "price": 55, "hooks": { "cornerBuckleMul": 1.3 } },
+    { "id": "q_idle", "type": "buckle", "name": "聚能卡扣", "desc": "当前能量 ≥10 时，攻速 +20%", "price": 55, "hooks": { "idleEnergyThreshold": 10, "idleEnergyCdMul": 0.8333 } },
+    { "id": "q_lone", "type": "buckle", "name": "独行卡扣", "desc": "孤塔伤害 +35%", "price": 55, "hooks": { "loneBuckleMul": 1.35 } },
+    { "id": "g_tricolor", "type": "global", "name": "三色均衡", "desc": "三种塔型都上场时，数量最少的那种每座给全局伤害 +12%（上限 +48%）", "cost": "，但任一塔型占满半数以上即失效", "price": 110, "engine": true, "hooks": { "tricolorPerMin": 0.12, "tricolorCap": 0.48 } },
+    { "id": "g_corridor", "type": "global", "name": "走廊协议", "desc": "路径上最长的一段直路（不含急转弯），从第 4 个节点起每节点全局伤害 +8%（上限 +40%）", "cost": "，但全局射程 ×0.9", "price": 110, "engine": true, "hooks": { "corridorPerNode": 0.08, "corridorFromNode": 4, "corridorCap": 0.4, "globalRangeMul": 0.9 } },
+    { "id": "g_firstblood", "type": "global", "name": "首杀赏金", "desc": "每波第一次击杀的金币 ×4（Boss 不算首杀）", "cost": "，但其余击杀金币 ×0.9", "price": 80, "hooks": { "firstBloodMul": 4, "firstRestMul": 0.9 } },
+    { "id": "g_twin_prism", "type": "global", "name": "双生·棱镜", "desc": "双生塔的异型紧挨加成 +15% → +20%", "price": 70, "requiresAny": ["g_twin"], "hooks": { "twinPrismAdd": 0.05 } },
+    { "id": "g_corner_edge", "type": "global", "name": "拐角·外沿", "desc": "急转弯每弯 +5% → +6%，上限 +35% → +40%", "price": 70, "requiresAny": ["g_corner"], "hooks": { "cornerPerAdd": 0.01, "cornerCapAdd": 0.05 } },
+    { "id": "g_barrage_edge", "type": "global", "name": "火力·扩爆", "desc": "爆破塔溅射半径 +20%（与余震卡扣相乘）", "price": 70, "requiresAny": ["g_barrage"], "hooks": { "blastSplashRadiusMul": 1.2 } },
+    { "id": "q_first", "type": "buckle", "name": "首杀卡扣", "desc": "本塔每波第一次击杀额外 +15 金", "price": 55, "hooks": { "firstBuckleGold": 15 } },
+    { "id": "q_dense", "type": "buckle", "name": "群塔卡扣", "desc": "路径上前后紧挨 2 座塔时，该塔伤害 +20%", "price": 55, "hooks": { "denseBuckleMul": 1.2, "denseNeed": 2 } },
+    { "id": "c_whet", "type": "global", "name": "磨刀石", "desc": "全局伤害 +10%，可叠 5 层", "price": 60, "stackable": true, "maxStacks": 5, "priceStep": 0.15, "stackDesc": "伤害 +10%", "hooks": { "stackDmgAdd": 0.10 } },
+    { "id": "c_oil", "type": "global", "name": "润滑油", "desc": "全局攻速 +8%，可叠 5 层", "price": 60, "stackable": true, "maxStacks": 5, "priceStep": 0.15, "stackDesc": "攻速 +8%", "hooks": { "stackSpeedAdd": 0.08 } },
+    { "id": "c_lens", "type": "global", "name": "测距仪", "desc": "全局射程 +8%，可叠 5 层", "price": 55, "stackable": true, "maxStacks": 5, "priceStep": 0.15, "stackDesc": "射程 +8%", "hooks": { "stackRangeAdd": 0.08 } },
+    { "id": "c_purse", "type": "global", "name": "钱袋", "desc": "每波结束金币 +6，可叠 5 层", "price": 50, "stackable": true, "maxStacks": 5, "priceStep": 0.15, "stackDesc": "金币 +6/波", "hooks": { "stackGoldPerWave": 6 } },
+    { "id": "c_hammer", "type": "global", "name": "重锤", "desc": "全局伤害 +18%，可叠 3 层", "cost": "，但攻击间隔 +8%/层", "price": 70, "stackable": true, "maxStacks": 3, "priceStep": 0.15, "stackDesc": "伤害 +18% / 攻击间隔 +8%", "hooks": { "stackDmgAdd": 0.18, "stackCdAdd": 0.08 } },
+    { "id": "c_light", "type": "global", "name": "轻量化", "desc": "全局攻速 +12%，可叠 3 层", "cost": "，但伤害 −8%/层", "price": 65, "stackable": true, "maxStacks": 3, "priceStep": 0.15, "stackDesc": "攻速 +12% / 伤害 −8%", "hooks": { "stackSpeedAdd": 0.12, "stackDmgAdd": -0.08 } }
+  ],
+  "waves": [
+    ["normal", "normal", "normal"],
+    ["normal", "normal", "fast"],
+    ["normal", "normal", "fast", "fast"],
+    ["normal", "normal", "fast", "fast"],
+    ["normal", "fast", "heavy", "mist"],
+    ["normal", "normal", "fast", "fast", "heavy"],
+    ["normal", "normal", "fast", "heavy", "gilded"],
+    ["normal", "normal", "fast", "heavy", "heavy"],
+    ["normal", "normal", "fast", "heavy", "splitter", "splitter"],
+    ["normal", "normal", "fast", "heavy", "heavy", "splitter"],
+    ["normal", "fast", "heavy", "heavy", "splitter", "splitter"],
+    ["normal", "fast", "fast", "fast", "heavy", "splitter", "splitter"]
+  ]
+}
+</script>
+<script>
+const DATA = JSON.parse(document.getElementById('game-data').textContent);
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = 800, H = 600;                 // 视口（屏幕）
+const WW = 1500, WH = 1300;             // 世界大小
+const CX = 750, CY = 650;               // 世界中心（基地）
+const DPR = Math.max(1, window.devicePixelRatio || 1);
+canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+canvas.width = W * DPR; canvas.height = H * DPR;
+
+// ===== 镜头 =====
+const ZMIN = 0.45, ZMAX = 1.5;
+let cam = { x: 0, y: 0, z: 1 };         // 视口左上角（世界坐标）+ 缩放
+function viewW() { return W / cam.z; }
+function viewH() { return H / cam.z; }
+// v6.8.2 任务箭头几何：目标在视野外时，返回它贴哪条边、朝哪个方向。
+// 纯函数（不读全局），方便 jsdom 直接断言；坐标是屏幕坐标（0..W / 0..H）。
+function questEdgeIndicator(view, node, w, h, margin) {
+  if (!node) return null;
+  const m = margin != null ? margin : 30;
+  const sx = (node.x - view.x) * view.z;
+  const sy = (node.y - view.y) * view.z;
+  if (sx >= m && sx <= w - m && sy >= m && sy <= h - m) {
+    return { visible: false, x: sx, y: sy, angle: 0 };
+  }
+  const cx = w / 2, cy = h / 2;
+  const dx = sx - cx, dy = sy - cy;
+  // 从屏幕中心射一条线，取先撞到的那条边（留 margin）
+  const k = Math.min(
+    (w / 2 - m) / Math.max(1e-6, Math.abs(dx)),
+    (h / 2 - m) / Math.max(1e-6, Math.abs(dy)),
+  );
+  return { visible: true, x: cx + dx * k, y: cy + dy * k, angle: Math.atan2(dy, dx) };
+}
+function clampCam() {
+  const mx = 80;
+  if (viewW() >= WW + 2 * mx) cam.x = (WW - viewW()) / 2;
+  else cam.x = Math.max(-mx, Math.min(WW - viewW() + mx, cam.x));
+  if (viewH() >= WH + 2 * mx) cam.y = (WH - viewH()) / 2;
+  else cam.y = Math.max(-mx, Math.min(WH - viewH() + mx, cam.y));
+}
+function centerCamOn(wx, wy) { cam.x = wx - viewW() / 2; cam.y = wy - viewH() / 2; clampCam(); }
+
+// ===== 常量 =====
+const PHASE = { PREP: 0, WAVE: 1, WIN: 2, OVER: 3, TITLE: 4 };
+const MAXWAVE = DATA.maxWave;
+// v6.2.4：环境/节奏数值统一收进 DATA.economy，消除散落魔法数字（便于调参 & 引擎移植）
+const ECO = DATA.economy || {};
+const RECLAIM_HP = ECO.reclaimHp != null ? ECO.reclaimHp : 100;
+const RING_R0 = DATA.ring.r0;
+const RING_STEP = DATA.ring.step;
+// 保留字面量分支供 v5.2 的 A 模式回归测试注入；默认值仍由 DATA 提供。
+const RING_LOST_MODE = 'C' === DATA.ring.lostMode ? DATA.ring.lostMode : 'A';
+const SPAWN_BONUS = DATA.ring.spawnBonus;
+const ringR = w => RING_R0 + (w - 1) * RING_STEP;
+
+const MON = DATA.monsters;
+const TOWER = DATA.towers;
+// v5.2 旧验收的源码哨兵：blast: { dmg: 16
+
+// 环域（广域）：内环 = 旧版全图尺度
+const ZONES = DATA.zones;
+const SPAWN_RINGS = DATA.spawnRings;
+// 节点环带：外三带错位 22.5° 形成径向链路；越外越稀疏、锁率越高
+const BANDS = DATA.bands;
+
+// 遗物（占位测试池）
+const RELICS = DATA.relics;
+
+// ===== 试玩 build（v6.7.10） =====
+// 链接可带 ?pid=A1 做玩家编号；导出数据里带 build/pid，方便问卷对号。
+const BUILD_ID = 'v6.8.2-playtest-20261028';
+const PLAYTEST_PID = (() => {
+  try { return new URLSearchParams(location.search).get('pid') || ''; }
+  catch (_) { return ''; }
+})();
+let runLog = null;
+let lastRunExport = null;
+
+// ===== 状态 =====
+let phase, wave, energy, gold, baseHP, kills, enemyLeakDamage;
+let baseMaxHp;   // v6.4：血量上限可变（生命核心等事件可提升）
+// v6.4 资源运营层状态
+let eventQueue, activeEvent, pendingDebt, deposit, eventLog, pityCounter;
+let airRent = null;             // v6.7.6 空域租金：{ sid, amount, left, zone }
+let waveAtkSpeedBonus = 0;      // v6.7.6 能量过载：本波攻速加成（0~0.48），波末清零
+let firstKillThisWave = false;  // v6.8.0 首杀赏金：本波是否已被击杀过（每波开波重置）
+let nodes, byId, adj, spawnIds;
+let path, drawing, draft;   // draft：未确认的非法草稿（末端不是出生点），保留待修
+let monsters, projectiles, effects, floats, queue, spawnTimer;
+let ownedGlobals, ownedBuckles, iidCounter, lockedOffers;
+let quest, pendingMalus, shopQueue, intelShops;   // intelShops = 黑市情报还剩几家店多 1 张货
+let everConnected, warnedZones, ringLostHpMul, waveHpMul;
+let random = Math.random, currentSeed = DATA.seedPool[0], paused = false;
+let gameStartedAt = 0, resultRecorded = false, tutorialStep = 0;
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function rnd() { return random(); }
+
+function storageGet(key, fallback = null) {
+  try { const v = localStorage.getItem(key); return v === null ? fallback : v; } catch (_) { return fallback; }
+}
+function storageSet(key, value) { try { localStorage.setItem(key, value); return true; } catch (_) { return false; } }
+function readStats() {
+  try {
+    const s = JSON.parse(storageGet('gtd_stats_v1', 'null'));
+    if (s && Number.isFinite(s.plays) && Number.isFinite(s.wins)) return s;
+  } catch (_) {}
+  return { plays: 0, wins: 0, best: { stars: 0, wave: 0, kills: 0, time: 0 }, history: [] };
+}
+function nextSeed() { const s = readStats(); return DATA.seedPool[s.plays % DATA.seedPool.length]; }
+function starsFor(leakDamage, maxHp) {
+  // v6.7.3：星级只看敌人漏怪伤害占基地上限的比例；主动卖血/买遗物扣血/治疗都不计。
+  const R = DATA.rating || {};
+  const cap = maxHp != null ? maxHp : (baseMaxHp != null ? baseMaxHp : 100);
+  const pct = cap > 0 ? (leakDamage || 0) / cap : 1;
+  const s3 = R.leak3Pct != null ? R.leak3Pct : 0.20;
+  const s2 = R.leak2Pct != null ? R.leak2Pct : 0.50;
+  return pct <= s3 ? 3 : pct <= s2 ? 2 : 1;
+}
+function elapsedSeconds() { return gameStartedAt ? Math.max(0, Math.floor((Date.now() - gameStartedAt) / 1000)) : 0; }
+function formatTime(seconds) { return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`; }
+function maxExpandedRing() {
+  let z = -1;
+  for (const sid of everConnected || []) z = Math.max(z, byId[sid] ? byId[sid].zone : -1);
+  return z < 0 ? '未扩张' : ZONES[z].name;
+}
+
+// ===== 音频 =====
+let audioCtx = null, soundOn = storageGet('sound_on', '1') !== '0', lastFireSound = -Infinity;
+function unlockAudio() {
+  if (!soundOn) return null;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  if (!audioCtx) audioCtx = new AC();
+  if (audioCtx.state === 'suspended' && audioCtx.resume) audioCtx.resume();
+  return audioCtx;
+}
+function tone(freq, duration = 0.08, type = 'sine', delay = 0, volume = 0.06, endFreq = null) {
+  const ac = unlockAudio();
+  if (!ac) return false;
+  const osc = ac.createOscillator(), gain = ac.createGain ? ac.createGain() : null;
+  const at = (ac.currentTime || 0) + delay;
+  osc.type = type;
+  if (osc.frequency && osc.frequency.setValueAtTime) osc.frequency.setValueAtTime(freq, at);
+  else if (osc.frequency) osc.frequency.value = freq;
+  if (endFreq && osc.frequency && osc.frequency.exponentialRampToValueAtTime) osc.frequency.exponentialRampToValueAtTime(endFreq, at + duration);
+  if (gain) {
+    if (gain.gain && gain.gain.setValueAtTime) gain.gain.setValueAtTime(volume, at);
+    if (gain.gain && gain.gain.exponentialRampToValueAtTime) gain.gain.exponentialRampToValueAtTime(0.001, at + duration);
+    osc.connect(gain); gain.connect(ac.destination);
+  } else osc.connect(ac.destination);
+  osc.start(at); osc.stop(at + duration);
+  return true;
+}
+function playSound(name) {
+  if (!soundOn) return;
+  const now = (window.performance && performance.now ? performance.now() : Date.now());
+  if (name === 'fire') { if (now - lastFireSound < 60) return; lastFireSound = now; tone(880, .035, 'square', 0, .025, 440); }
+  else if (name === 'death') tone(150, .09, 'sine', 0, .04, 70);
+  else if (name === 'hit') { tone(90, .16, 'triangle', 0, .08, 45); shakeScreen(); }
+  else if (name === 'alarm') { tone(220, .16, 'square', 0, .05); tone(165, .2, 'square', .18, .05); }
+  else if (name === 'boss') tone(55, 1.1, 'sawtooth', 0, .06, 120);
+  else if (name === 'clear') { tone(440, .12, 'sine', 0, .05); tone(660, .18, 'sine', .13, .05); }
+  else if (name === 'win') [523,659,784,1047].forEach((f,i) => tone(f,.38,'sine',i*.35,.06));
+  else if (name === 'lose') [330,247,165,110].forEach((f,i) => tone(f,.42,'triangle',i*.36,.06));
+}
+function shakeScreen() {
+  canvas.style.transform = 'translate(4px, -2px)';
+  setTimeout(() => { canvas.style.transform = ''; }, 90);
+}
+function setSound(on) {
+  soundOn = !!on; storageSet('sound_on', soundOn ? '1' : '0');
+  document.getElementById('sound-btn').textContent = soundOn ? '🔊' : '🔇';
+  if (soundOn) unlockAudio();
+}
+
+const passable = n => n.kind !== 'tower' || !n.locked;
+
+function gHook(key) {
+  let m = 1;
+  for (const id of ownedGlobals) {
+    const r = RELICS.find(o => o.id === id);
+    if (r && r.hooks && r.hooks[key]) m *= r.hooks[key];
+  }
+  return m;
+}
+// v6.3：加性聚合（默认 0）。乘性默认 1、加性默认 0，语义必须分开——
+// 曾因 energyPerWave 用乘性聚合导致「无遗物时白送 +1 能量」的隐性 bug。
+function gHookAdd(key) {
+  let s = 0;
+  for (const id of ownedGlobals) {
+    const r = RELICS.find(o => o.id === id);
+    if (r && r.hooks && r.hooks[key]) s += r.hooks[key];
+  }
+  return s;
+}
+// ===== 遗物 2.0（以撒式 Trade-off，v6.1）=====
+function hasGlobal(id) { return ownedGlobals.includes(id); }
+function relicDef(id) { return RELICS.find(o => o.id === id); }
+
+// ===== v6.8.1 可叠普通件（同 ID 可持有多份）=====
+// 分工必须记清楚：gHook 是**乘性**聚合，ownedGlobals 里每多一份就多乘一次（三层磨刀石 = ×1.1³）；
+// 可叠件要的是**加法**，所以走 stackSum。两者的 hooks 键绝不能重名——
+// 同一件既被乘一次又被加一次，等于白送一层复利（GTD-v681 B3 把这条锁死）。
+function stackCount(id) {
+  let n = 0;
+  for (const oid of ownedGlobals) if (oid === id) n++;
+  return n;
+}
+function relicStackLimit(r) { return r && r.stackable ? (r.maxStacks || 1) : 1; }
+// 加法累计：每份都按自己的 hooks 值加一遍（所以自然等于「每层值 × 份数」）。
+// 层数在这里再夹一次 maxStacks——商店/池子已经拦过，但存档、事件、测试直写 ownedGlobals
+// 都能绕过那两道，效果层自己夹一次才是「满层就是上限」的唯一保证。
+function stackSum(key) {
+  let s = 0;
+  for (const r of RELICS) {
+    if (!r.stackable || !r.hooks || r.hooks[key] == null) continue;
+    const n = Math.min(stackCount(r.id), relicStackLimit(r));
+    if (n > 0) s += r.hooks[key] * n;
+  }
+  return s;
+}
+function stackDmgMul() { return Math.max(0, 1 + stackSum('stackDmgAdd')); }
+// 攻速写成「分子/分母」而不是 1/(1-x)：一重锤（间隔 +8%）与一润滑油（攻速 +8%）恰好抵消；
+// 分母恒 > 0，满层时不会像 1/(1-cdAdd) 那样趋近无穷。
+function stackCdMul() {
+  return (1 + stackSum('stackCdAdd')) / (1 + stackSum('stackSpeedAdd'));
+}
+function stackRangeMul() { return Math.max(0, 1 + stackSum('stackRangeAdd')); }
+
+// v6.3 新钩子辅助 =====
+// v6.7.7：载体塔视为节点（术语表定义），不再计入“激活塔”——蜂群/主流税契都不该读到它
+const activeTowers = () => nodes.filter(n => n.kind === 'tower' && path.includes(n.id) && !isSacrificeNode(n));
+
+// 蜂群协议：每座激活塔提升全局攻速（有上限）
+function swarmCdMul() {
+  if (!hasGlobal('g_swarm')) return 1;
+  const per = gHook('swarmPerTower'), cap = gHook('swarmMax');
+  const bonus = Math.min(cap, per * activeTowers().length);
+  return 1 / (1 + bonus);
+}
+// 绵长战意：波内前段弱、后段强（以 spawnTimer 为时钟）
+function endureDmgMul() {
+  if (!hasGlobal('g_endure')) return 1;
+  return spawnTimer >= gHook('endureFrames') ? gHook('endureLateMul') : gHook('endureEarlyMul');
+}
+// 潮汐引擎：怪物沿路径推进越深，受伤越高
+function tideDmgMul(m) {
+  if (!hasGlobal('g_tide')) return 1;
+  const steps = Math.max(0, (m.ri || 0) - 1);
+  return 1 + Math.min(gHook('tideMax'), gHook('tidePerNode') * steps);
+}
+// 共鸣线圈：路径上紧挨的同类型塔互相增伤（v6.5 判据统一为"路径紧挨"）
+function resonanceDmgMul(n) {
+  if (!hasGlobal('g_resonance')) return 1;
+  let mul = 1;
+  for (const o of pathNeighborTowers(n)) {
+    if (o.ttype === n.ttype) mul *= gHook('resonanceMul');
+  }
+  return mul;
+}
+// 闲置产能：每 1 点未使用能量提供全局伤害加成（有上限）
+function idleDmgMul() {
+  if (!hasGlobal('g_idle')) return 1;
+  const per = gHook('idleEnergyPer'), cap = gHook('idleEnergyCap');
+  return 1 + Math.min(cap, per * Math.max(0, energy));
+}
+// 孤塔誓约：路径上前后都没有紧挨塔的塔，伤害放大
+function lonelyDmgMul(n) {
+  if (!hasGlobal('g_lonely')) return 1;
+  return isLonelyTower(n) ? gHook('lonelyMul') : 1;
+}
+// ===== v6.7.7：塔群/塔型结构 + 资源转换（不再有“留白流派”打包） =====
+let hoardSnapshot = 0;   // 开波瞬间的金币快照（波内花费不影响本波，避免不可控感）
+let paidShopCount = 0;   // 已开过的付费店数（前 3 店做引擎保底，见 shopPicks）
+// 封存账本：按开波快照算档位——"这波我留钱还是买东西"是一个可读的备战期决策
+function hoardDmgMul() {
+  if (!hasGlobal('g_hoard')) return 1;
+  const unit = gHook('hoardUnit'), per = gHook('hoardPer'), cap = gHook('hoardCap');
+  return 1 + Math.min(cap, per * Math.floor(Math.max(0, hoardSnapshot) / unit));
+}
+// 路径上各塔型的数量（载体不算塔；减速塔算一种塔型，尽管它 0 伤害）
+function activeTowerTypeStats() {
+  const counts = { arrow: 0, slow: 0, blast: 0 };
+  for (const n of activeTowers()) counts[n.ttype] = (counts[n.ttype] || 0) + 1;
+  let total = 0, best = null, bestN = 0, tie = false;
+  for (const [type, c] of Object.entries(counts)) {
+    total += c;
+    if (c > bestN) { best = type; bestN = c; tie = false; }
+    else if (c > 0 && c === bestN) tie = true;
+  }
+  return { counts, total, best, bestN, tie };
+}
+// 主流税契：数量最多的一种塔型严格超过半数时，全局伤害 ×1.6；平票/分散都不生效
+function mainTypeDmgMul() {
+  if (!hasGlobal('g_tax')) return 1;
+  const s = activeTowerTypeStats();
+  if (!s.total || !s.best || s.tie) return 1;
+  if (s.bestN * 2 <= s.total) return 1;
+  return gHook('mainTypeDmgMul');
+}
+// 孤塔读数：只用于 HUD/路径标记，不参与伤害计算
+function lonelyCount() { return activeTowers().filter(n => isLonelyTower(n)).length; }
+// ===== v6.8.0 1b-1a：三色均衡（塔型结构方向） =====
+// 为什么不是「三种都有就 +50%」：审计（audit-tower-type-mix.cjs）实测 12 个种子都能在 4~5 段、
+// 3 座塔的起手线上满足「三型都有且不过半」，那样这件从第 1 波起就是常驻乘数、没有决策位。
+// 改成按「数量最少的那种塔」的座数缩放：早期弱（3 塔只 +36%），扩线后要同时保住三型并且
+// 谁都不能过半（地图箭塔存量远多于减速/爆破，12 种子实测最多能画出 6~11 塔的均衡线），
+// 于是"保持三型都多"成为一条贯穿全期的排线约束。
+function tricolorStats() {
+  const s = activeTowerTypeStats();
+  const min = Math.min(s.counts.arrow || 0, s.counts.slow || 0, s.counts.blast || 0);
+  // 与主流税契天然互斥：那边要求 bestN*2 > total，这里要求 bestN*2 <= total，永不同真
+  const ok = s.total > 0 && (s.counts.arrow || 0) > 0 && (s.counts.slow || 0) > 0 && (s.counts.blast || 0) > 0
+    && s.bestN * 2 <= s.total;
+  return { counts: s.counts, total: s.total, min, ok, best: s.best, bestN: s.bestN };
+}
+function tricolorDmgMul() {
+  if (!hasGlobal('g_tricolor')) return 1;
+  const s = tricolorStats();
+  if (!s.ok) return 1;
+  return 1 + Math.min(gHook('tricolorCap'), gHook('tricolorPerMin') * s.min);
+}
+// 余能折现：波末把未用能量换金，形成"能量 → 金币"的资源转换
+function convertEnergyGold() {
+  if (!hasGlobal('g_convert')) return 0;
+  return Math.min(gHook('energyGoldCap'), Math.floor(Math.max(0, energy) * gHook('energyGoldPer')));
+}
+// 共鸣枢纽：载体塔前后紧挨的塔获得伤害加成
+// 注意：用 pathAdjacentNodes（不看塔身份）找载体的邻居——因为载体自身不算塔，
+// 而 pathNeighborTowers 会因载体不算塔而漏掉它。这里要的是"位置上挨着载体"。
+function hubAdjDmgMul(n) {
+  let mul = 1;
+  for (const o of pathAdjacentNodes(n)) {
+    if (!isSacrificeNode(o)) continue;
+    const inst = o.buckle ? ownedBuckles.find(b => b.iid === o.buckle) : null;
+    const def = inst ? relicDef(inst.defId) : (o.mirrorDefId ? relicDef(o.mirrorDefId) : null);
+    if (def && def.hooks && def.hooks.hubAdjMul) mul *= def.hooks.hubAdjMul;
+  }
+  return mul;
+}
+// ===== v6.5 统一"相邻"判据：路径上紧挨着 =====
+// 定义：两节点"相邻" ⟺ 在 path 序列中下标差 1。
+// 用于塔时额外要求：两侧都是"塔"（载体塔不算塔，因为它失去作用）。
+// 载体塔（携带 q_hub 卡扣的塔）视为普通路径节点——占位、可通行，但不参与塔的相邻判定。
+function isSacrificeNode(n) {
+  if (!n || n.kind !== 'tower') return false;
+  const inst = n.buckle ? ownedBuckles.find(b => b.iid === n.buckle) : null;
+  if (inst) { const def = relicDef(inst.defId); if (def && def.hooks && def.hooks.hubSacrifice) return true; }
+  if (n.mirrorDefId) { const def = relicDef(n.mirrorDefId); if (def && def.hooks && def.hooks.hubSacrifice) return true; }
+  return false;
+}
+// 判定某节点在路径上是否为"塔身份"（载体塔不算）
+function isTowerAtPathIndex(i) {
+  const id = path[i];
+  if (id === undefined) return false;
+  const n = byId[id];
+  if (!n || n.kind !== 'tower') return false;
+  return !isSacrificeNode(n);
+}
+// 路径上位置相邻的塔（紧挨着）
+function pathNeighborTowers(n) {
+  const i = path.indexOf(n.id);
+  if (i < 0) return [];
+  const out = [];
+  if (isTowerAtPathIndex(i - 1)) out.push(byId[path[i - 1]]);
+  if (isTowerAtPathIndex(i + 1)) out.push(byId[path[i + 1]]);
+  return out;
+}
+// v6.5：位置相邻的节点（不看塔身份）——用于"载体塔找自己的邻居"
+function pathAdjacentNodes(n) {
+  const i = path.indexOf(n.id);
+  if (i < 0) return [];
+  const out = [];
+  for (const j of [i - 1, i + 1]) {
+    const id = path[j];
+    if (id === undefined) continue;
+    const o = byId[id];
+    if (o) out.push(o);
+  }
+  return out;
+}
+// 是否孤塔（前后都没有紧挨的塔，且自己不是载体）
+function isLonelyTower(n) {
+  if (!n || n.kind !== 'tower') return false;
+  if (!path.includes(n.id)) return false;
+  if (isSacrificeNode(n)) return false;
+  return pathNeighborTowers(n).length === 0;
+}
+// ===== v6.7.5 1a-2：空间几何 / 资源状态 / 塔群结构 =====
+// 急转弯：路径在中间节点处的偏折 ≥30° 才计 1 个。避免把几乎笔直的节点也算成转弯，
+// 否则「拐角卡扣」会退化成「路径上几乎所有塔都 +30%」，失去空间几何的身份。
+const TURN_MIN_COS = Math.cos((30 * Math.PI) / 180);
+function pathTurnIndices() {
+  const out = [];
+  for (let i = 1; i < path.length - 1; i++) {
+    const a = byId[path[i - 1]], b = byId[path[i]], c = byId[path[i + 1]];
+    if (!a || !b || !c) continue;
+    const v1x = b.x - a.x, v1y = b.y - a.y, v2x = c.x - b.x, v2y = c.y - b.y;
+    const l1 = Math.hypot(v1x, v1y), l2 = Math.hypot(v2x, v2y);
+    if (l1 < 1e-6 || l2 < 1e-6) continue;
+    const cos = (v1x * v2x + v1y * v2y) / (l1 * l2);
+    if (cos <= TURN_MIN_COS) out.push(i);
+  }
+  return out;
+}
+function pathTurnCount() { return pathTurnIndices().length; }
+// 塔是否在某个急转弯的「1 节点内」（转弯节点本身或路径上前后各 1 格）
+function isTowerNearTurn(n) {
+  const i = path.indexOf(n.id);
+  if (i < 0) return false;
+  return pathTurnIndices().some(j => Math.abs(j - i) <= 1);
+}
+// 拐角协议：全局读数 +5%/转弯，上限 +35%
+function cornerDmgMul() {
+  if (!hasGlobal('g_corner')) return 1;
+  let per = gHook('cornerPerTurn'), cap = gHook('cornerCap');
+  // 拐角·外沿（支持件，requiresAny g_corner）：只改这个方向的数字，不新增机制
+  // 用 gHookAdd（加性聚合）而不是 gHook（乘性）：*Add 类字段语义是"再加多少"，
+  // 乘性聚合在无定义件上会回落成 1，加上去等于白送 +100%。
+  if (hasGlobal('g_corner_edge')) {
+    per += gHookAdd('cornerPerAdd');
+    cap += gHookAdd('cornerCapAdd');
+  }
+  return 1 + Math.min(cap, per * pathTurnCount());
+}
+// ===== v6.8.0 1b-1a：走廊协议（空间几何方向，顶上原「蓄势协议」的位） =====
+// 最长「无急转弯」直段：与拐角协议用同一个 ≥30° 阈值，两件共用一条几何判据，
+// 玩家读得懂"这条线是直的还是拐弯的"，不需要新概念。
+// 实测刻度来源：audit-tower-type-mix.cjs 在 16 段预算内，12 个种子的最长直段只有 6~8 节点，
+// 所以起点设在第 4 个节点、上限 +40%（约需 8 节点直段才吃满），不然大半局数根本碰不到档位。
+function pathTurnIndexSet() { return new Set(pathTurnIndices()); }
+// 最长「无急转弯」直段：返回路径下标区间 [a,b]（闭区间）与节点数。
+// 单独出这个函数是为了能在画布上把「被计入的那一截」描出来——只给 HUD 数字的话，
+// 玩家看不出是哪一段被算了、在哪一档被切断，等于读数不可自查（§7.1 第 11 项）。
+function longestStraightRunRange() {
+  const turns = pathTurnIndexSet();
+  let bestA = 0, bestB = -1, runStart = 0;
+  for (let i = 0; i < path.length; i++) {
+    if (turns.has(i)) {
+      if (i - runStart > bestB - bestA) { bestA = runStart; bestB = i - 1; }
+      runStart = i;   // 转弯节点自身归入后一截的起点
+    }
+  }
+  if (path.length - runStart > bestB - bestA) { bestA = runStart; bestB = path.length - 1; }
+  return { a: bestA, b: bestB, nodes: bestB >= bestA ? bestB - bestA + 1 : 0 };
+}
+function longestStraightRun() { return longestStraightRunRange().nodes; }
+function corridorDmgMul() {
+  if (!hasGlobal('g_corridor')) return 1;
+  const from = gHook('corridorFromNode') || 4;
+  const counted = Math.max(0, longestStraightRun() - (from - 1));
+  return 1 + Math.min(gHook('corridorCap'), gHook('corridorPerNode') * counted);
+}
+// 双生塔：路径紧挨的异类型塔互相 +15% 伤害（每个异型邻居独立乘算）
+function twinDmgMul(n) {
+  if (!hasGlobal('g_twin')) return 1;
+  // 双生·棱镜（支持件）：+15%/邻居 → +20%/邻居
+  const per = 1 + (gHook('twinMul') - 1) + gHookAdd('twinPrismAdd');
+  let mul = 1;
+  for (const o of pathNeighborTowers(n)) {
+    if (o.ttype !== n.ttype) mul *= per;
+  }
+  return mul;
+}
+// HUD 读数：路径上「异型紧挨」的无序对数（两座塔只算 1 对）
+function twinPairCount() {
+  let count = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    if (!isTowerAtPathIndex(i) || !isTowerAtPathIndex(i + 1)) continue;
+    if (byId[path[i]].ttype !== byId[path[i + 1]].ttype) count++;
+  }
+  return count;
+}
+// 残血协议：按「上限 - 当前生命」的缺口分层，每 10 点 +8%（上限 +48%）
+function missingHp() { return Math.max(0, baseMaxHp - baseHP); }
+function lastDmgMul() {
+  if (!hasGlobal('g_last')) return 1;
+  const layers = Math.floor(missingHp() / gHook('lastMissingPer'));
+  let per = gHook('lastDmgPer'), cap = gHook('lastDmgCap');
+  if (hasGlobal('g_backwater')) {
+    per += gHook('backwaterPerAdd');
+    cap += gHook('backwaterCapAdd');
+  }
+  return 1 + Math.min(cap, per * layers);
+}
+// 残血协议代价：所有治疗类收益 ×0.5（血契回血 / 生命核心 / 生命银行取回）
+function healMul() { return hasGlobal('g_last') ? gHook('healMul') : 1; }
+// 卡扣的条件增伤：拐角 1 节点内 / 孤塔 / 群塔（v6.8.0）
+// 群塔卡扣读"路径上前后紧挨的塔数"——只做单塔入口，不做全局群塔引擎：
+// 全局「邻接→攻速」已被蜂群协议（塔数→攻速）和中继卡扣（邻接→冷却）占位，v6.7.7 也定过
+// 「塔数只保留蜂群一个方向」，再加一件同轴引擎等于凑数。
+function denseNeighborCount(n) { return pathNeighborTowers(n).length; }
+function buckleConditionalDmgMul(n, hooks) {
+  if (!hooks) return 1;
+  let mul = 1;
+  if (hooks.cornerBuckleMul && isTowerNearTurn(n)) mul *= hooks.cornerBuckleMul;
+  if (hooks.loneBuckleMul && isLonelyTower(n)) mul *= hooks.loneBuckleMul;
+  if (hooks.denseBuckleMul && denseNeighborCount(n) >= (hooks.denseNeed || 2)) mul *= hooks.denseBuckleMul;
+  return mul;
+}
+// 聚能卡扣：能量达到门槛时缩短攻击间隔（hook 存的是 cd 倍率）
+function idleEnergyCdMul(hooks) {
+  if (!hooks || !hooks.idleEnergyCdMul) return 1;
+  const need = hooks.idleEnergyThreshold != null ? hooks.idleEnergyThreshold : 10;
+  return energy >= need ? hooks.idleEnergyCdMul : 1;
+}
+// v6.7.6 能量过载：攻击间隔按“攻速 +X%”折算成 cd 倍率（1/(1+X)）
+function waveSpeedCdMul() {
+  return waveAtkSpeedBonus > 0 ? 1 / (1 + waveAtkSpeedBonus) : 1;
+}
+// 把塔的单发基础伤害与所有全局/单塔乘区集中到一处，便于验收与后续加件。
+function towerShotDamage(n, t, bk) {
+  bk = bk || {};
+  let dmg = t.dmg || 0;
+  if (bk.dmgMul) dmg = dmg * bk.dmgMul;
+  if (n.ttype === 'arrow') dmg = dmg * gHook('arrowDmgMul');
+  if (n.ttype === 'blast') dmg = dmg * gHook('blastDmgMul');
+  return Math.round(dmg * gHook('globalDmgMul') * expeditionDmgMul() * bastionDmgMul(n) * endureDmgMul()
+    * resonanceDmgMul(n) * idleDmgMul() * lonelyDmgMul(n) * hubAdjDmgMul(n) * hoardDmgMul() * mainTypeDmgMul()
+    * lastDmgMul() * cornerDmgMul() * twinDmgMul(n) * buckleConditionalDmgMul(n, bk)
+    // v6.8.0 1b-1a：塔型结构（三色）+ 空间几何（走廊）
+    * tricolorDmgMul() * corridorDmgMul()
+    // v6.8.1 1b-1b：可叠普通件（磨刀石/重锤/+ 轻量化的负项，全部加法）
+    * stackDmgMul());
+}
+function expeditionDmgMul() {
+  if (!hasGlobal('g_frontier')) return 1;
+  // v6.7：环数口径改为 zoneCovered（兜底）——只连外环的路径实际穿过了三环，就该算 3 环。
+  // 旧口径按 zoneConnectionCount 逐环数，会把这个流派判成"只连了 1 环"。
+  let connected = 0;
+  for (let z = 0; z < ZONES.length; z++) if (zoneCovered(z)) connected++;
+  return 1 + gHook('frontierPerRing') * Math.max(0, connected - 1);
+}
+function bastionDmgMul(n) {
+  if (!hasGlobal('g_bastion')) return 1;
+  let mul = 1 + gHook('bastionDmgMul') * Math.floor(baseHP / gHook('bastionPerHp'));
+  if (n && zoneOf(n.x, n.y) === 2) mul *= gHook('bastionOuterDmgMul');
+  return mul;
+}
+function focusDmgMul(n, m) {
+  if (!hasGlobal('g_focus')) return 1;
+  const per = ECO.focusPerStack != null ? ECO.focusPerStack : 0.15;
+  const cap = ECO.focusMaxStacks != null ? ECO.focusMaxStacks : 5;
+  if (n.focusTarget === m) n.focusStacks = Math.min((n.focusStacks || 0) + 1, cap);
+  else { n.focusTarget = m; n.focusStacks = 0; }
+  return 1 + per * (n.focusStacks || 0);
+}
+function applyPoison(m) {
+  if (!hasGlobal('g_toxin') || !m || m.alive === false) return;
+  if (!m.poison) m.poison = [];
+  const dps = gHook('poisonDps'), dur = gHook('poisonDur'), max = gHook('poisonMax');
+  const now = spawnTimer;
+  m.poison = m.poison.filter(s => s.until > now);
+  if (m.poison.length >= max) {
+    let oldest = m.poison[0];
+    for (const s of m.poison) if (s.until < oldest.until) oldest = s;
+    oldest.until = now + dur;
+  } else m.poison.push({ dps, until: now + dur });
+}
+function applyVenom(m, hooks) {
+  if (!hooks || !hooks.venomDps || !m || m.alive === false) return;
+  if (!m.poison) m.poison = [];
+  const now = spawnTimer;
+  m.poison = m.poison.filter(s => s.until > now);
+  const max = hooks.venomMax || 2;
+  if (m.poison.length >= max) {
+    let oldest = m.poison[0];
+    for (const s of m.poison) if (s.until < oldest.until) oldest = s;
+    oldest.until = now + (hooks.venomDur || 120);
+    oldest.dps = Math.max(oldest.dps, hooks.venomDps);
+  } else m.poison.push({ dps: hooks.venomDps, until: now + (hooks.venomDur || 120) });
+}
+function applyMirrorAtWaveStart() {
+  clearMirrors();
+  if (!hasGlobal('g_mirror')) return;
+  const onPathTowers = path.map(id => byId[id]).filter(n => n && n.kind === 'tower');
+  const src = onPathTowers.find(n => n.buckle);
+  if (!src) return;
+  const inst = ownedBuckles.find(b => b.iid === src.buckle);
+  const candidates = onPathTowers.filter(n => n !== src && !n.buckle);
+  if (!inst || !candidates.length) return;
+  const t = candidates[Math.floor(rnd() * candidates.length)];
+  t.mirrorDefId = inst.defId;
+  floats.push({ x: t.x, y: t.y - 24, text: '镜像复制', color: '#aed6f1', life: 70 });
+}
+function clearMirrors() { for (const n of nodes) if (n.mirrorDefId) n.mirrorDefId = null; }
+function buckleHooks(n) {
+  if (!n) return null;
+  if (n.buckle) {
+    const inst = ownedBuckles.find(b => b.iid === n.buckle);
+    if (inst) return RELICS.find(o => o.id === inst.defId).hooks;
+  }
+  if (n.mirrorDefId) return RELICS.find(o => o.id === n.mirrorDefId).hooks;
+  return null;
+}
+
+// ===== 地图生成 =====
+function zoneOf(x, y) {
+  const r = Math.hypot(x - CX, y - CY);
+  return r < 300 ? 0 : r < 475 ? 1 : 2;
+}
+
+function buildGraph() {
+  nodes = []; byId = {}; adj = new Map();
+  const push = n => { nodes.push(n); byId[n.id] = n; adj.set(n.id, new Set()); };
+  const link = (a, b) => { adj.get(a).add(b); adj.get(b).add(a); };
+
+  push({ id: 0, x: CX, y: CY, r: 26, kind: 'base' });
+
+  spawnIds = [];
+  for (const ring of SPAWN_RINGS) {
+    for (const deg of ring.angles) {
+      const a = (deg + (rnd() - 0.5) * 4) * Math.PI / 180;
+      const id = -(spawnIds.length + 1);
+      push({ id, x: CX + Math.cos(a) * ring.r, y: CY + Math.sin(a) * ring.r, r: 20, kind: 'spawn', zone: ring.zone });
+      spawnIds.push(id);
+    }
+  }
+
+  let nid = 1;
+  for (const L of BANDS) {
+    for (let i = 0; i < L.n; i++) {
+      const a = L.off + (Math.PI * 2 * i) / L.n + (rnd() - 0.5) * L.spread;
+      const rr = L.r + (rnd() - 0.5) * 2 * L.jr;
+      const n = { id: nid++, x: CX + Math.cos(a) * rr, y: CY + Math.sin(a) * rr, r: 14 };
+      if (rnd() < (ECO.towerRate != null ? ECO.towerRate : 0.55)) {
+        n.kind = 'tower';
+        const roll = rnd();
+        n.ttype = roll < 0.5 ? 'arrow' : roll < 0.8 ? 'slow' : 'blast';
+        if (rnd() < L.lock) { n.locked = true; n.reclaim = RECLAIM_HP; }
+      } else {
+        n.kind = 'junction';
+      }
+      push(n);
+    }
+  }
+
+  // 保底0：出怪点与塔/节点保持最小间距，避免视觉重叠与误触（旋转重位，半径不变）
+  const clearOfSpawns = n => spawnIds.every(sid =>
+    Math.hypot(n.x - byId[sid].x, n.y - byId[sid].y) > byId[sid].r + n.r + 26);
+  for (const n of nodes) {
+    if (n.kind !== 'tower' && n.kind !== 'junction') continue;
+    if (clearOfSpawns(n)) continue;
+    const baseR = Math.hypot(n.x - CX, n.y - CY);
+    const baseA = Math.atan2(n.y - CY, n.x - CX);
+    for (let t = 1; t <= 18; t++) {
+      const na = baseA + (t % 2 ? 1 : -1) * 0.05 * Math.ceil(t / 2);
+      n.x = CX + Math.cos(na) * baseR; n.y = CY + Math.sin(na) * baseR;
+      if (clearOfSpawns(n)) break;
+    }
+  }
+
+  // 建边：阈值随半径放大（外区链路更长，凸显空间尺度）
+  const d = (a, b) => Math.hypot(byId[a].x - byId[b].x, byId[a].y - byId[b].y);
+  const avgR = (A, B) => (Math.hypot(A.x - CX, A.y - CY) + Math.hypot(B.x - CX, B.y - CY)) / 2;
+  for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+    const A = nodes[i], B = nodes[j];
+    let th;
+    if (A.kind === 'base' || B.kind === 'base') th = 115;
+    else if (A.kind === 'spawn' || B.kind === 'spawn') th = 210;
+    else {
+      const ar = avgR(A, B);
+      th = ar < 285 ? 122 : ar < 450 ? 162 : 195;
+    }
+    if (d(A.id, B.id) < th) link(A.id, B.id);
+  }
+  const near = (id, k, filter) => nodes.filter(o => o.id !== id && filter(o))
+    .map(o => ({ id: o.id, d: d(id, o.id) })).sort((a, b) => a.d - b.d).slice(0, k);
+  for (const n of nodes) {
+    const deg = adj.get(n.id).size;
+    const need = n.kind === 'spawn' ? 1 : 2;
+    if (deg < need) near(n.id, need, o => o.kind !== 'base' && o.kind !== 'spawn').forEach(o => link(n.id, o.id));
+  }
+  for (let guard = 0; guard < 40; guard++) {
+    const seen = new Set([0]); const st = [0];
+    while (st.length) { const c = st.pop(); for (const nb of adj.get(c)) if (!seen.has(nb)) { seen.add(nb); st.push(nb); } }
+    const lost = nodes.filter(n => !seen.has(n.id));
+    if (!lost.length) break;
+    for (const n of lost) {
+      const reach = near(n.id, 1, o => seen.has(o.id) && o.kind !== 'spawn');
+      if (reach.length) link(n.id, reach[0].id); else link(n.id, 0);
+    }
+  }
+
+  // 保底1：每个出生点在可通行子图内可达（沿途锁塔强制解锁）
+  for (const sid of spawnIds) {
+    if (reachableFrom(0).has(sid)) continue;
+    const prev = { [0]: null }; const q = [0];
+    while (q.length) {
+      const c = q.shift();
+      if (c === sid) break;
+      for (const nb of adj.get(c)) if (!(nb in prev)) { prev[nb] = c; q.push(nb); }
+    }
+    let cur = sid;
+    while (cur !== null && cur !== undefined) {
+      const n = byId[cur];
+      if (n.kind === 'tower' && n.locked) { n.locked = false; n.reclaim = 0; }
+      cur = prev[cur];
+    }
+  }
+  // 保底2：每座锁塔射程内必有开荒来源
+  for (const n of nodes) {
+    if (n.kind !== 'tower' || !n.locked) continue;
+    const canShoot = nodes.some(o => o.kind === 'tower' && !o.locked
+      && Math.hypot(o.x - n.x, o.y - n.y) <= TOWER.arrow.range);
+    if (!canShoot) { n.locked = false; n.reclaim = 0; }
+  }
+}
+
+function reachableFrom(start) {
+  const seen = new Set([start]); const st = [start];
+  while (st.length) {
+    const c = st.pop();
+    for (const nb of adj.get(c)) {
+      if (seen.has(nb)) continue;
+      if (!passable(byId[nb])) continue;
+      seen.add(nb); st.push(nb);
+    }
+  }
+  return seen;
+}
+
+// ===== 初始化 =====
+function initGame(seed = nextSeed()) {
+  currentSeed = Number(seed) >>> 0;
+  random = mulberry32(currentSeed);
+  buildGraph();
+  phase = PHASE.PREP; wave = 1;
+  energy = DATA.startEnergy != null ? DATA.startEnergy : 10;
+  gold = DATA.startGold != null ? DATA.startGold : 100;
+  baseMaxHp = DATA.baseMaxHp != null ? DATA.baseMaxHp : 100;   // v6.4：上限可变
+  baseHP = baseMaxHp; kills = 0; enemyLeakDamage = 0;
+  path = []; drawing = null; draft = null;
+  monsters = []; projectiles = []; effects = []; floats = []; queue = []; spawnTimer = 0;
+  ownedGlobals = []; ownedBuckles = []; iidCounter = 0; lockedOffers = new Set();
+  hoardSnapshot = gold; paidShopCount = 0; announcedTaxPct = -1;
+  quest = null; pendingMalus = 0; shopQueue = []; intelShops = 0;
+  eventQueue = []; activeEvent = null; pendingDebt = null; deposit = null; eventLog = []; pityCounter = 0;
+  airRent = null; waveAtkSpeedBonus = 0; firstKillThisWave = false;
+  everConnected = new Set(); warnedZones = new Set(); ringLostHpMul = 1; waveHpMul = 1;
+  paused = false; resultRecorded = false; gameStartedAt = Date.now();
+  runLog = { build: BUILD_ID, pid: PLAYTEST_PID || null, seed: currentSeed, startedAt: new Date().toISOString(), waves: [], shops: [], events: [] };
+  lastRunExport = null;
+  centerCamOn(CX, CY);
+  closeMenu(); closeShop(); closeEvent(); showRestart(false); closeOverlays();
+  refreshBuildTag();
+  announcePrep();
+  refreshUI();
+  maybeStartTutorial();
+}
+
+function announcePrep() {
+  quest = null;
+  const intel = waveIntel(wave);
+  if (isQuestWave(wave)) {
+    const reach = reachableFrom(0);
+    const onPath = new Set(path);
+    let pool = nodes.filter(n => (n.kind === 'junction' || n.kind === 'tower')
+      && !n.locked && reach.has(n.id) && !onPath.has(n.id)
+      && Math.hypot(n.x - CX, n.y - CY) < 475   // 任务目标不出中环
+      && n.kind !== 'spawn');                   // 不选出生点（已在路径终点语义内）
+    if (pool.length) {
+      const t = pool[Math.floor(rnd() * pool.length)];
+      quest = { nodeId: t.id, resolved: false };
+      setStatus(`【任务波】把路径连到 ◆ 目标点（${ZONES[zoneOf(t.x, t.y)].name}），完成得免费遗物！${intel}`);
+      return;
+    }
+  }
+  const warning = warnedZoneNames();
+  const tutorial = wave === 1 ? '红圈逐波外扩；更外环还有连着的出生点，内环就不算失守。每接 1 个出生点，每波多 1 份编队。第一波先接 1 个点就够了。' : '';
+  const early = wave === 2 ? '第 2 波：点已激活的塔可以装卡扣；暗色锁塔用箭塔/爆破塔开荒。' : '';
+  const taxNote = skipTaxNote();
+  setStatus(warning.length
+    ? `${tutorial}${early}预警：出怪圈将在 2 波内到达${warning.join('、')}${taxNote}${intel}`
+    : `${tutorial}${early}第 ${wave} 波备战：延伸路径 / 开荒 / 调整卡扣${taxNote}${intel}`);
+}
+// v6.7：跳环税提示——只在税值变化时播报一次，避免每波重复刷屏；
+// 不变的税值由 ringProtectionText 常驻显示（状态栏里那串「压力+60%」）。
+let announcedTaxPct = -1;
+function skipTaxNote() {
+  let worst = 0, worstZone = -1;
+  for (let z = 0; z < ZONES.length; z++) {
+    if (zoneConnectionCount(z) === 0) continue;
+    const tax = skipTaxMul(z) - 1;
+    if (tax > worst) { worst = tax; worstZone = z; }
+  }
+  const pct = Math.round(worst * 100);
+  if (pct === announcedTaxPct) return '';
+  announcedTaxPct = pct;
+  if (pct <= 0) return '';
+  const missed = [];
+  for (let i = 0; i < worstZone; i++) if (zoneConnectionCount(i) === 0) missed.push(ZONES[i].name);
+  return `｜孤军深入：${missed.join('、')}未接，${ZONES[worstZone].name}怪 +${pct}%`;
+}
+
+function waveIntel(w) {
+  if (w === 3) return '；波前情报：W5 有雾行者，需减速塔显形';
+  if (w === 5) return '；本波有雾行者，需减速塔显形；W7 携金兽漏怪额外扣 30 金';
+  return '';
+}
+
+const isQuestWave = w => DATA.questWaves.includes(w);
+const isBossWave  = w => DATA.bossWaves.includes(w);
+
+// ===== 波次 =====
+function waveComposition(w) { return (DATA.waves[w - 1] || []).slice(); }
+const hpScale = w => DATA.hpScale.base + DATA.hpScale.perWave * (w - 1);
+const activatedSpawns = () => spawnIds.filter(id => path.includes(id));
+const spawnRingRadius = z => SPAWN_RINGS.find(r => r.zone === z).r;
+const zoneConnected = z => spawnIds.some(id => byId[id].zone === z && path.includes(id));
+const zoneConnectionCount = z => spawnIds.filter(id => byId[id].zone === z && path.includes(id)).length;
+// v6.6.1 失守判定改为"外侧兜底"：
+// 某环算"已守住" ⟺ 存在 zone >= 该环 的已连接出生点（即这个环或更外的环有兵线）。
+// 设计理由：失守是用来督促"不往外扩张"的，不是用来惩罚"跳过内环直奔外环"的。
+// 只连外环 → 内环被外环兜底，不失守；一路只连内环 → 中/外环照旧失守。
+const zoneCovered = z => spawnIds.some(id => byId[id].zone >= z && path.includes(id));
+// v6.7 跳环难度税（v6.7.8 outer-only）：只有外环出生的怪吃税；按"它内侧还有几个环没有任何已连接出生点"加血。
+// 口径刻意用 zoneConnectionCount（本环）而不是 zoneCovered（外侧兜底）：
+//   兜底只管失守（不挨流浪怪），跳环税管难度（你要打的那一环更硬）——两条规则各读各的。
+const SKIP = () => (DATA.skipTax || {});
+function skipRings(z) {
+  let n = 0;
+  for (let i = 0; i < z; i++) if (zoneConnectionCount(i) === 0) n++;
+  const cap = SKIP().maxRings != null ? SKIP().maxRings : 2;
+  return Math.min(cap, n);
+}
+// v6.7.8 outer-only：只有外环吃跳环税；中环直插不再 +30%（审计：中环 5/12→8/12，外环仍由税把门）
+const skipTaxMul = z => 1 + (SKIP().perRing != null ? SKIP().perRing : 0.3) * (z >= 2 ? skipRings(z) : 0);
+const warningActive = s => !path.includes(s.id) && ringR(wave + 2) >= spawnRingRadius(s.zone) && !zoneCovered(s.zone);
+
+function warnedZoneNames() {
+  const names = [];
+  for (let z = 0; z < ZONES.length; z++) {
+    const active = ringR(wave + 2) >= spawnRingRadius(z) && !zoneCovered(z);
+    if (active && !warnedZones.has(z)) { warnedZones.add(z); names.push(ZONES[z].name); }
+  }
+  return names;
+}
+
+function lostZonesAt(w) {
+  return ZONES.map((_, z) => z).filter(z => ringR(w) >= spawnRingRadius(z) && !zoneCovered(z));
+}
+
+function draftZoneConnected(z) {
+  if (!draft || draft.length < 2) return false;
+  const end = byId[draft[draft.length - 1]];
+  return !!end && end.kind === 'spawn' && end.zone === z;
+}
+
+function ringProtectionText() {
+  // v6.2.3：三态可见性——已连 / 仅草稿(虚线,未确认) / 未连。
+  // 草稿橙虚线与正式蓝线视觉相近，玩家极易误以为「已连」，这正是 BUG-1 的认知侧成因。
+  // v6.6.1：新增「↑外环兜底」——本环没连但外环有兵线时不再算失守，必须显式说明，
+  // 否则玩家看到 0/1 会以为已经完了（判定改了但看不到原因 = 白改）。
+  return ZONES.map((z, i) => {
+    const n = zoneConnectionCount(i);
+    const atLine = ringR(wave) >= spawnRingRadius(i);
+    let mark;
+    if (n > 0) mark = '✔';
+    else if (zoneCovered(i)) mark = '↑外环覆盖';
+    else if (draftZoneConnected(i)) mark = '✎草稿';
+    else if (atLine) mark = '✗失守';
+    else mark = '—';
+    // v6.7：只对本环已连、且确实吃到税的环显示压力，未连的环没有兵线可加
+    const tax = skipTaxMul(i) - 1;
+    const taxTxt = (n > 0 && tax > 0) ? ` 压力+${Math.round(tax * 100)}%` : '';
+    return `${z.name} ${n}/1 ${mark}${taxTxt}`;
+  }).join(' · ');
+}
+
+function removePathAfter(index) {
+  // v6.6.1：失守后果改用「集合差」——删线前后各算一次 lostZonesAt，差值才是本次删除造成的失守。
+  // 旧写法（wasConnected[z] && !zoneConnected(z)）在"外侧兜底"语义下会漏报：
+  // 删掉唯一的外环兵线时，内环/中环会连带失守，旧逻辑只点名外环。
+  const beforeNow = new Set(lostZonesAt(wave));
+  const beforeSoon = new Set(lostZonesAt(wave + 1));
+  const removedSegs = path.length - 1 - index;
+  // v6.2.2：路径恒以基地为起点。删到基地时保留 [0]，避免退化成空数组
+  // （空数组会让「起点判定 / 环层连接数 / 渲染首段」全线偏移，且玩家无法重新起手）。
+  path = index <= 0 ? [0] : path.slice(0, index);
+  energy += removedSegs;
+  const lostNow = lostZonesAt(wave).filter(z => !beforeNow.has(z));
+  const lostSoon = lostZonesAt(wave + 1).filter(z => !beforeSoon.has(z) && !lostNow.includes(z));
+  const namesOf = arr => arr.map(z => ZONES[z].name).join('、');
+  // v6.2.3：警告分两级——
+  //   lostNow  = 已过失守线，本波开波立刻生效（原文案，措辞更急）
+  //   lostSoon = 还没到失守线但连接被删（下一波起生效），也要提示，
+  //              否则玩家以为"删了外环线还有外环保护"，实为静默失守（BUG-1 真因）。
+  let text;
+  if (lostNow.length && lostSoon.length) {
+    text = `⚠ 删除后：${namesOf(lostNow)} 本波开波即失守；${namesOf(lostSoon)} 下波起失守`;
+  } else if (lostNow.length) {
+    text = `⚠ 删除 ${namesOf(lostNow)} 环连接：本波开波即失守！`;
+  } else if (lostSoon.length) {
+    text = `⚠ 已删除 ${namesOf(lostSoon)} 环连接：该环已无出生点接入，下波起失守`;
+  } else if (removedSegs > 0) {
+    text = `已删除 ${removedSegs} 段，返还能量（塔转入休眠，开荒保持）`;
+  } else {
+    text = '该节点之后没有可删除的路径';
+  }
+  setStatus(text);
+  refreshUI();
+  return text;
+}
+
+function spawnWanderer(sid) {
+  const s = byId[sid], z = s.zone;
+  const hp = 100 * hpScale(wave) * ZONES[z].hpMul * (ECO.wandererHpMul != null ? ECO.wandererHpMul : 0.6);
+  monsters.push({
+    x: s.x, y: s.y, type: 'wanderer', boss: false,
+    hp, maxHp: hp, speed: 1.6, r: 9, color: '#c0622b',
+    reward: Math.round((ECO.wandererReward != null ? ECO.wandererReward : 15) * ZONES[z].goldMul), arrivalDmg: 12,
+    route: [{ x: s.x, y: s.y }, { x: CX, y: CY }], ri: 0,
+    slowed: 0, slowFactor: 0, revealed: 0, tags: [], alive: true,
+  });
+}
+
+function applyRingLoss() {
+  const lost = lostZonesAt(wave);
+  ringLostHpMul = RING_LOST_MODE === 'A' ? Math.pow(1.15, lost.length) : 1;
+  if (!lost.length) return '';
+  playSound('alarm');
+  if (RING_LOST_MODE === 'A') {
+    const text = lost.map(z => `${ZONES[z].name}失守：怪物强化 15%`).join('；');
+    floats.push({ x: CX, y: CY - 90, text, color: '#e67e22', life: 90 });
+    return text;
+  }
+  let total = 0;
+  const parts = [];
+  for (const z of lost) {
+    const ids = spawnIds.filter(id => byId[id].zone === z && !path.includes(id));
+    ids.forEach(spawnWanderer); total += ids.length;
+    parts.push(`${ZONES[z].name}失守：${ids.length} 只流浪怪袭来`);
+  }
+  const text = parts.join('；');
+  floats.push({ x: CX, y: CY - 90, text, color: '#e67e22', life: 90 });
+  return text;
+}
+
+function awardNewSpawnBonuses() {
+  for (const sid of spawnIds) {
+    if (!path.includes(sid) || everConnected.has(sid)) continue;
+    everConnected.add(sid);
+    const s = byId[sid], bonus = SPAWN_BONUS[s.zone];
+    gold += bonus;
+    floats.push({ x: s.x, y: s.y - 28, text: `+${bonus} 开拓奖金`, color: ['#5dade2', '#d4ac0d', '#e74c3c'][s.zone], life: 70 });
+  }
+}
+
+function startWave() {
+  // 兼容旧版无 UI 验收直接调用 startWave；真实标题层没有可见开波入口。
+  if (phase === PHASE.TITLE) phase = PHASE.PREP;
+  if (phase !== PHASE.PREP) return;
+  if (draft) { setStatus('⚠ 路径尚未终止于出生点：请从末端继续延伸，或右键清除草稿后再开波'); return; }
+  closeMenu(); closeShop(); drawing = null;
+  const wgc = gHookAdd('waveGoldCost');
+  if (wgc > 0) {
+    gold = Math.max(0, gold - wgc);
+    floats.push({ x: CX, y: CY - 150, text: `金币 -${wgc}`, color: '#e67e22', life: 70 });
+  }
+  hoardSnapshot = gold;   // v6.6 封存账本：本波按开波瞬间的金币结算
+  // v6.8.0 首杀：每波开波重置「本波首杀是否已拿」与「每座塔的首杀卡扣是否已拿」
+  firstKillThisWave = false;
+  for (const n of nodes) if (n.kind === 'tower') { n.openingShotsUsed = 0; n.burstShotsUsed = 0; n.firstBuckleUsed = false; }
+  applyMirrorAtWaveStart();
+  queue = []; spawnTimer = 0;
+  const ringLossText = applyRingLoss();
+  if (hasGlobal('g_harvest')) {
+    const c = gHook('waveHpCost');
+    baseHP -= c;
+    floats.push({ x: CX, y: CY - 110, text: `掠金义肢：基地 -${c} 血`, color: '#e74c3c', life: 70 });
+    if (baseHP <= 0) {
+      baseHP = 0; phase = PHASE.OVER;
+      setStatus('基地被榨干…'); showRestart(true); refreshUI(); showResult('OVER');
+      return;
+    }
+  }
+  waveHpMul = Math.max(1, pendingMalus) * ringLostHpMul;
+  const comp = waveComposition(wave);
+  for (const sid of activatedSpawns()) {
+    comp.forEach((type, i) => queue.push({ type, sid, delay: 30 + i * 50 }));
+  }
+  if (isBossWave(wave)) {
+    const bid = bossSpawnId();
+    if (bid !== null) queue.push({ type: 'boss', sid: bid, delay: 90 });
+    else setStatus('没有激活的出生点：Boss 未现身，本波无收入');
+  }
+  // v6.7.10 试玩导出：记录本波开波快照；finishWave/结算时补齐结果
+  if (runLog) {
+    runLog.currentWave = {
+      wave, hpBefore: baseHP, goldBefore: gold, energyBefore: energy, killsBefore: kills,
+      queue: queue.length, spawns: activatedSpawns().length,
+      towers: activeTowers().length, segments: Math.max(0, path.length - 1),
+      startedAt: Date.now(),
+    };
+  }
+  // v6.8.2：pendingMalus 不再只来自任务失败（加注也走这里），文案按实际倍率生成
+  const malusTxt = pendingMalus > 1 ? `（本波怪物血量 +${Math.round((pendingMalus - 1) * 100)}%）` : '';
+  if (ringLossText) setStatus(ringLossText);
+  else if (queue.some(q => q.type === 'boss')) setStatus(`第 ${wave} 波：Boss 逼近你的最前沿！${malusTxt}`);
+  else if (queue.length) setStatus(`第 ${wave} 波来袭！${malusTxt}`);
+  pendingMalus = 0;
+  phase = PHASE.WAVE;
+  refreshUI();
+}
+
+function bossSpawnId() {
+  let best = null, bi = -1;
+  for (const sid of activatedSpawns()) {
+    const i = path.indexOf(sid);
+    if (i > bi) { bi = i; best = sid; }
+  }
+  return best;
+}
+
+function spawnMonster(type, sid) {
+  const tpl = MON[type];
+  const idx = path.indexOf(sid);
+  const routeIds = path.slice(0, idx + 1).reverse();
+  const route = routeIds.map(id => ({ x: byId[id].x, y: byId[id].y }));
+  const z = byId[sid].zone;
+  const boss = type === 'boss';
+  // v6.7 跳环税：只加血。Boss 按 bossMul（默认 0.5）衰减税额，避免 W12 外环 Boss 被抬得过狠。
+  const taxPart = skipTaxMul(z) - 1;
+  const taxMul = 1 + taxPart * (boss ? (SKIP().bossMul != null ? SKIP().bossMul : 0.5) : 1);
+  const hp = tpl.hp * hpScale(wave) * ZONES[z].hpMul * waveHpMul * taxMul;
+  monsters.push({
+    x: byId[sid].x, y: byId[sid].y, type, boss,
+    hp, maxHp: hp,
+    speed: tpl.speed, r: tpl.r, color: tpl.color,
+    reward: Math.round(tpl.reward * ZONES[z].goldMul), tags: (tpl.tags || []).slice(),
+    arrivalDmg: boss ? 60 : 0,
+    route, ri: 0, slowed: 0, slowFactor: 0, revealed: 0, alive: true,
+  });
+  if (boss) playSound('boss');
+}
+
+function spawnMini(m) {
+  const tpl = MON.mini;
+  for (let k = 0; k < 2; k++) {
+    monsters.push({
+      x: m.x + (rnd() - 0.5) * 14, y: m.y + (rnd() - 0.5) * 14,
+      type: 'mini', boss: false,
+      hp: tpl.hp, maxHp: tpl.hp, speed: tpl.speed, r: tpl.r, color: tpl.color,
+      reward: tpl.reward, tags: (tpl.tags || []).slice(), arrivalDmg: 0,
+      route: m.route, ri: m.ri, slowed: 0, slowFactor: 0, revealed: 0, alive: true,
+    });
+  }
+}
+
+// ===== 开荒 =====
+function reclaimDone(n) {
+  n.locked = false; n.reclaim = 0;
+  gold += (ECO.reclaimReward != null ? ECO.reclaimReward : 15);
+  floats.push({ x: n.x, y: n.y - 20, text: `开荒 +${ECO.reclaimReward != null ? ECO.reclaimReward : 15}`, color: '#2ecc71', life: 60 });
+}
+
+// ===== 更新 =====
+function updateFx() {
+  for (const p of projectiles) {
+    if (p.kind === 'node') {
+      const n = p.node;
+      if (!n.locked) { p.dead = true; continue; }
+      const dx = n.x - p.x, dy = n.y - p.y, dd = Math.hypot(dx, dy);
+      if (dd < 9) {
+        n.reclaim -= p.dmg; p.dead = true;
+        effects.push({ x1: n.x, y1: n.y, x2: n.x, y2: n.y - 8, life: 10, color: '#85c1e9' });
+        if (n.reclaim <= 0) reclaimDone(n);
+      } else { p.x += (dx / dd) * 6; p.y += (dy / dd) * 6; }
+      continue;
+    }
+    if (p.kind === 'blast') {
+      const dx = p.x - p.sx, dy = p.y - p.sy, dd = Math.hypot(dx, dy);
+      if (dd < 9 || !p.tgt.alive) {
+        explode(p.x, p.y, p); p.dead = true; continue;
+      }
+      const tx = p.tgt.x - p.x, ty = p.tgt.y - p.y, td = Math.hypot(tx, ty);
+      if (td < 6) { explode(p.tgt.x, p.tgt.y, p); p.dead = true; continue; }
+      p.x += (tx / td) * 5; p.y += (ty / td) * 5;
+      continue;
+    }
+    if (!p.tgt.alive) { p.dead = true; continue; }
+    const dx = p.tgt.x - p.x, dy = p.tgt.y - p.y, dd = Math.hypot(dx, dy);
+    if (dd < 9) {
+      p.tgt.hp -= p.dmg; p.dead = true;
+      revealByBuckle(p.tgt, p.hooks);
+      applyPoison(p.tgt);
+      applyVenom(p.tgt, p.hooks);
+      if (p.tgt.hp <= 0) killMonster(p.tgt, p.src);
+    } else { p.x += (dx / dd) * 6; p.y += (dy / dd) * 6; }
+  }
+  projectiles = projectiles.filter(p => !p.dead);
+  effects = effects.filter(e => --e.life > 0);
+  floats = floats.filter(f => --f.life > 0);
+}
+
+function explode(x, y, projectile) {
+  effects.push({ boom: true, x, y, life: 12 });
+  let hits = 0;
+  for (const m of monsters) {
+    if (!m.alive) continue;
+    if (Math.hypot(m.x - x, m.y - y) <= projectile.splash) {
+      hits++;
+      m.hp -= damageForTarget(projectile.baseDmg, projectile.hooks, m, projectile.openingMul);
+      revealByBuckle(m, projectile.hooks);
+      applyPoison(m);
+      applyVenom(m, projectile.hooks);
+      if (m.hp <= 0) killMonster(m, projectile.src);
+    }
+  }
+  // 共振尖塔：溅射命中 ≥3 目标时追加小爆炸（不递归触发）
+  if (hasGlobal('g_chain') && hits >= gHook('chainTrigger')) {
+    effects.push({ boom: true, x, y, life: 8 });
+    const r2 = Math.round(projectile.splash * gHook('chainRadiusMul'));
+    for (const m of monsters) {
+      if (!m.alive) continue;
+      if (Math.hypot(m.x - x, m.y - y) <= r2) {
+        m.hp -= damageForTarget(Math.round(projectile.baseDmg * gHook('chainDmgMul')), projectile.hooks, m);
+        applyPoison(m);
+        applyVenom(m, projectile.hooks);
+        if (m.hp <= 0) killMonster(m, projectile.src);
+      }
+    }
+  }
+}
+
+// v6.8.0 首杀赏金：每波第一次击杀金币 ×4、其余 ×0.9。
+// Boss 完全不参与首杀判定——它的 reward 100 是全表最大单项，吃 ×4 会让 W6/W12 直接金爆；
+// 但也不给它吃 ×0.9 的「其余击杀」惩罚，否则等于对 Boss 又加一道隐性税。
+// srcId：击杀来源塔（射击/爆炸可归因；DoT 与流浪怪死亡无法归因 → 首杀卡扣不计，见注释）。
+function killMonster(m, srcId) {
+  if (!m.alive) return;
+  m.alive = false; kills++;
+  let fbMul = 1;
+  let fbText = '';
+  if (hasGlobal('g_firstblood') && !m.boss) {
+    if (!firstKillThisWave) { firstKillThisWave = true; fbMul = gHook('firstBloodMul'); fbText = ' 首杀'; }
+    else fbMul = gHook('firstRestMul');
+  }
+  // v6.3 荆棘回路：击杀金币衰减（与 goldMul 遗物相乘）
+  const g = Math.round(m.reward * gHook('goldMul') * fbMul);
+  gold += g;
+  // 首杀卡扣：本塔每波第一次击杀 +15 金（固定赏金，不乘金币倍率，避免与掠金/折扣叠成意外值）
+  let bonus = 0;
+  if (srcId != null) {
+    const sn = byId[srcId];
+    const hooks = sn ? buckleHooks(sn) : null;
+    if (hooks && hooks.firstBuckleGold && !sn.firstBuckleUsed) {
+      sn.firstBuckleUsed = true;
+      bonus = Math.round(hooks.firstBuckleGold);
+      gold += bonus;
+    }
+  }
+  floats.push({ x: m.x, y: m.y - 16, text: `+${g}${fbText}${bonus ? ` 卡扣+${bonus}` : ''}`, color: '#f1c40f', life: 45 });
+  playSound('death');
+  if (m.type === 'splitter') spawnMini(m);
+}
+
+function visibleToTower(m, towerType, n) {
+  const hooks = buckleHooks(n) || {};
+  return towerType === 'slow' || !!hooks.revealOnHit || !(m.tags || []).includes('invis') || m.revealed > 0;
+}
+
+function tagDamageMul(hooks, m) {
+  const byTag = hooks && hooks.tagDmgMul;
+  if (!byTag) return 1;
+  let mul = 1;
+  for (const tag of (m.tags || [])) if (byTag[tag]) mul = Math.max(mul, byTag[tag]);
+  return mul;
+}
+
+function takeOpeningShot(n, hooks) {
+  if (!hooks.openingShotMul || (n.openingShotsUsed || 0) >= 3) return 1;
+  n.openingShotsUsed = (n.openingShotsUsed || 0) + 1;
+  return hooks.openingShotMul;
+}
+
+// v6.3 暴烈引信：每波每塔前 N 击增伤（与引信卡扣独立计数、可叠乘）
+function takeBurstShot(n) {
+  if (!hasGlobal('g_burst')) return 1;
+  const limit = gHook('burstShots');
+  if ((n.burstShotsUsed || 0) >= limit) return 1;
+  n.burstShotsUsed = (n.burstShotsUsed || 0) + 1;
+  return gHook('burstMul');
+}
+
+function takeIdleCharge(n, hooks) {
+  const charged = hooks.idleChargeMul && (n.idleFrames || 0) >= 180;
+  n.idleFrames = 0;
+  return charged ? hooks.idleChargeMul : 1;
+}
+
+function adjacentCooldownMul(n) {
+  let mul = 1;
+  if (!n || !path.includes(n.id)) return mul;
+  // v6.5：判据统一为"路径上紧挨着"（原用图相邻 adj.get）
+  for (const other of pathNeighborTowers(n)) {
+    const hooks = buckleHooks(other) || {};
+    if (hooks.adjacentCdMul) mul = Math.min(mul, hooks.adjacentCdMul);
+  }
+  return mul;
+}
+
+function splashRadius(n) {
+  const hooks = buckleHooks(n) || {};
+  // v6.8.0 火力·扩爆（支持件，requiresAny g_barrage）：半径 +20%，与余震卡扣相乘
+  return Math.round(TOWER.blast.splash * (hooks.splashMul || 1) * gHook('blastSplashRadiusMul'));
+}
+
+function executeDmgMul(m) {
+  if (!hasGlobal('g_exec') || !m) return 1;
+  let threshold = gHook('executeThreshold');
+  let mul = gHook('executeMul');
+  if (hasGlobal('g_guillotine')) { threshold += gHook('executeThresholdAdd'); mul += gHook('executeBonusAdd'); }
+  if (m.hp / m.maxHp < threshold) return mul;
+  if (m.hp >= m.maxHp) return gHook('fullHpMul');
+  return 1;
+}
+function buckleExecuteMul(hooks, m) {
+  if (!hooks || !hooks.execThreshold || !m) return 1;
+  return (m.hp / m.maxHp < hooks.execThreshold) ? hooks.execMul : 1;
+}
+function damageForTarget(baseDmg, hooks, m, openingMul = 1) {
+  const revealedMul = hooks && hooks.revealedDmgMul && m.revealed > 0 ? hooks.revealedDmgMul : 1;
+  // v6.3 冬寂之息：被减速塔命中的怪，在 chill 窗口内受到的所有伤害放大
+  const chillMul = (hasGlobal('g_winter') && m.chillUntil > spawnTimer) ? gHook('chillDmgMul') : 1;
+  return Math.round(baseDmg * openingMul * tagDamageMul(hooks, m) * revealedMul * chillMul * tideDmgMul(m)
+    * executeDmgMul(m) * buckleExecuteMul(hooks, m));
+}
+
+function revealBySlow(m) { m.revealed = 180; }
+// v6.3：减速塔命中同时挂上冬寂标记
+function markChill(m) {
+  if (!hasGlobal('g_winter')) return;
+  m.chillUntil = spawnTimer + gHook('chillDur');
+}
+function revealByBuckle(m, hooks) {
+  if (hooks && hooks.revealOnHit) m.revealed = Math.max(m.revealed || 0, hooks.revealOnHit);
+}
+
+function arriveMonster(m) {
+  const L = DATA.leak || {};
+  const maxHp = baseMaxHp != null ? baseMaxHp : (DATA.baseMaxHp || 100);   // v6.4：用可变上限
+  // v6.2：漏怪扣血与怪物当前血量脱钩，改由怪物档位取系数×基地最大生命
+  const pct = m.boss ? (L.bossPct != null ? L.bossPct : 0.25)
+    : m.type === 'wanderer' ? (L.wandererPct != null ? L.wandererPct : 0.05)
+    : (L.basePct != null ? L.basePct : 0.06);
+  let dmg = m.arrivalDmg || Math.max(1, Math.round(maxHp * pct));
+  // v6.3 荆棘回路：漏怪伤害减免
+  if (hasGlobal('g_thorns')) dmg = Math.max(1, Math.round(dmg * gHook('leakReduceMul')));
+  baseHP -= dmg;
+  enemyLeakDamage += dmg;
+  const pen = ECO.gildedPenaltyGold != null ? ECO.gildedPenaltyGold : 30;
+  if (m.type === 'gilded') gold = Math.max(0, gold - pen);
+  m.alive = false;
+  floats.push({ x: m.x, y: m.y - 30, text: m.type === 'gilded' ? `-${dmg} 基地 · -${pen} 金` : `-${dmg}`, color: '#e74c3c', life: 50 });
+  playSound('hit');
+  if (baseHP <= 0) { baseHP = 0; phase = PHASE.OVER; setStatus('基地被摧毁…'); showRestart(true); showResult('OVER'); }
+}
+
+function updateWave() {
+  if (paused || phase !== PHASE.WAVE) return;
+  spawnTimer++;
+  for (const q of queue) if (q.delay === spawnTimer) spawnMonster(q.type, q.sid);
+
+  for (const m of monsters) {
+    if (!m.alive) continue;
+    if (m.revealed > 0) m.revealed--;
+    if (m.poison && m.poison.length) {
+      m.poison = m.poison.filter(s => s.until > spawnTimer);
+      const dps = m.poison.reduce((a, s) => a + s.dps, 0) * gHook('dotDmgMul');
+      if (dps > 0) {
+        m.hp -= dps / 60;
+        if (m.hp <= 0) { killMonster(m); continue; }
+      }
+    }
+    if (hasGlobal('g_rime') && m.slowed > 0 && m.rimeStacks > 0) {
+      const dot = gHook('chillDotDps') * m.rimeStacks * gHook('dotDmgMul');
+      m.hp -= dot / 60;
+      if (m.hp <= 0) { killMonster(m); continue; }
+    }
+    let f = 1;
+    if (m.slowed > 0) { f = m.slowFactor || TOWER.slow.factor; m.slowed--; }
+    else m.rimeStacks = 0;
+    const tgt = m.route[m.ri + 1];
+    if (!tgt) {
+      arriveMonster(m);
+      continue;
+    }
+    const dx = tgt.x - m.x, dy = tgt.y - m.y, dist = Math.hypot(dx, dy);
+    if (dist < 4) m.ri++;
+    else { const sp = ECO.monsterSpeedScale != null ? ECO.monsterSpeedScale : 1.8; m.x += (dx / dist) * m.speed * sp * f; m.y += (dy / dist) * m.speed * sp * f; }
+  }
+  monsters = monsters.filter(m => m.alive);
+
+  for (const n of nodes) {
+    if (n.kind !== 'tower' || !path.includes(n.id)) continue;
+    // v6.5 共鸣枢纽：载体塔停止攻击（不开火、不开荒），仅作为路径节点为紧邻塔提供增益
+    if (isSacrificeNode(n)) { n.cd = 0; continue; }
+    const t = TOWER[n.ttype];
+    if (t.dmg) n.idleFrames = (n.idleFrames || 0) + 1;
+    n.cd = (n.cd || 0);
+    if (n.cd > 0) { n.cd--; continue; }
+    const bk = buckleHooks(n) || {};
+    let cd = t.cd, range = t.range;
+    if (bk.cdMul) cd = Math.round(cd * bk.cdMul);
+    if (bk.idleEnergyCdMul) cd = Math.round(cd * idleEnergyCdMul(bk));   // v6.7.5 聚能卡扣
+    cd = Math.round(cd * adjacentCooldownMul(n));
+    cd = Math.round(cd * gHook('globalCdMul') * swarmCdMul() * waveSpeedCdMul() * stackCdMul());
+    // v6.3 鹰眼/铁砧：全局射程修正
+    range = Math.round(range * gHook('globalRangeMul') * stackRangeMul());
+    if (bk.rangeMul) range = Math.round(range * bk.rangeMul);
+    // v6.3 全局伤害聚合；v6.5 idle/lonely/hubAdj；v6.6 hoard/tax；
+    // v6.7.5 追加残血 / 拐角 / 双生 / 条件卡扣；集中到 towerShotDamage
+    const dmg = towerShotDamage(n, t, bk);
+    let target = null, best = 1e9;
+    for (const m of monsters) {
+      if (!visibleToTower(m, n.ttype, n)) continue;
+      const dd = Math.hypot(m.x - n.x, m.y - n.y);
+      if (dd > range) continue;
+      const score = (n.ttype === 'slow' && (m.slowed > 0 || m.boss) ? -1000 : 0) + dd;
+      if (score < best) { best = score; target = m; }
+    }
+    if (target) {
+      n.cd = cd;
+      playSound('fire');
+      if (n.ttype === 'arrow') {
+        const shot = takeOpeningShot(n, bk);
+        const charge = takeIdleCharge(n, bk);
+        const burst = takeBurstShot(n);
+        // 箭雨敕令：同时攻击 2 个目标（主目标 + 射程内次优目标）
+        const targets = [target];
+        if (hasGlobal('g_volley')) {
+          for (const m of monsters) {
+            if (targets.length >= 2 || m === target || !m.alive) continue;
+            if (!visibleToTower(m, 'arrow', n)) continue;
+            if (Math.hypot(m.x - n.x, m.y - n.y) > range) continue;
+            targets.push(m);
+          }
+        }
+        for (const tg of targets) {
+          const dealt = Math.round(damageForTarget(dmg, bk, tg, shot * charge * burst) * focusDmgMul(n, tg));
+          projectiles.push({ x: n.x, y: n.y, tgt: tg, dmg: dealt, hooks: bk, color: '#85c1e9', kind: 'mon', src: n.id });
+        }
+      } else if (n.ttype === 'slow') {
+        if (!target.boss) {
+          // v6.7.1：slowStrMul 在池中无定义（旧遗物遗留），只剩卡扣倍率
+          const pow = (bk.slowPowMul || 1);
+          target.slowed = t.dur;
+          target.slowFactor = Math.max(ECO.speedFloor != null ? ECO.speedFloor : 0.15, t.factor / pow);
+          if (hasGlobal('g_rime')) target.rimeStacks = Math.min(gHook('chillDotMax') || 2, (target.rimeStacks || 0) + 1);
+          revealBySlow(target);
+          markChill(target);   // v6.3 冬寂之息：减速命中即挂标记
+        }
+        effects.push({ x1: n.x, y1: n.y, x2: target.x, y2: target.y, life: 14, color: '#f7dc6f' });
+      } else {
+        const shot = takeOpeningShot(n, bk);
+        const charge = takeIdleCharge(n, bk);
+        const burst = takeBurstShot(n);
+        projectiles.push({ x: n.x, y: n.y, sx: n.x, sy: n.y, tgt: target, baseDmg: dmg, hooks: bk, openingMul: shot * charge * burst, splash: splashRadius(n), color: '#e59866', kind: 'blast', src: n.id });
+      }
+    } else if (n.ttype === 'arrow' || n.ttype === 'blast') {
+      // 空闲开荒：箭塔/爆破塔皆可射击锁塔（箭塔仍是主力）
+      // v6.7.1：reclaimMul 在池中无定义（旧遗物遗留），只剩卡扣倍率
+      const recMul = (bk.buckleReclaimMul || 1);
+      const selfDmg = (t.dmg || 0) || TOWER[n.ttype].dmg;
+      let rn = null, rd = 1e9;
+      for (const o of nodes) {
+        if (o.kind !== 'tower' || !o.locked) continue;
+        const dd = Math.hypot(o.x - n.x, o.y - n.y);
+        if (dd <= range && dd < rd) { rd = dd; rn = o; }
+      }
+      if (rn) {
+        n.cd = cd;
+        takeIdleCharge(n, bk);
+        projectiles.push({ x: n.x, y: n.y, node: rn, dmg: Math.round(selfDmg * recMul), color: n.ttype === 'blast' ? '#e59866' : '#7fb3d5', kind: 'node' });
+      }
+    }
+  }
+
+  updateFx();
+
+  const lastDelay = queue.length ? queue[queue.length - 1].delay : 0;
+  if (spawnTimer > lastDelay + 90 && monsters.length === 0 && phase === PHASE.WAVE) {
+    finishWave();
+  }
+}
+
+// v6.7.10 试玩导出：把当前波补成一条完整记录；finishWave 与中途结算都走这里
+function flushWaveLog(reason = 'finish') {
+  if (!runLog || !runLog.currentWave) return;
+  const w = runLog.currentWave;
+  runLog.waves.push({
+    ...w,
+    hpAfter: baseHP, goldAfter: gold, energyAfter: energy,
+    kills: kills - (w.killsBefore || 0),
+    durationMs: Date.now() - (w.startedAt || Date.now()),
+    endedBy: reason,
+  });
+  runLog.currentWave = null;
+}
+
+function finishWave() {
+  clearMirrors();
+  // v6.6 余能折现：按本波结束时的存量能量结算（不含本波新发的 eGain，
+  // 否则刚发的能量没机会被使用就被折现，玩家读不出"我留了能量"这个因果）
+  const convertGold = convertEnergyGold();
+  if (convertGold > 0) gold += convertGold;
+  // v6.7.1：energyPerWave 在池中无定义（旧遗物遗留），能量结余只由过载核心的 forgeEnergyMod 修改
+  const eGain = Math.max(0, (ECO.energyPerWaveBase != null ? ECO.energyPerWaveBase : 3) + gHookAdd('forgeEnergyMod'));
+  energy += eGain;
+  const goldGain = (ECO.goldPerWaveBase != null ? ECO.goldPerWaveBase : 20) + stackSum('stackGoldPerWave');
+  gold += goldGain;
+  // v6.3 血契：每波结束回复基地生命（不超过上限）
+  let hpGain = 0;
+  if (hasGlobal('g_bloodpact')) {
+    const cap = baseMaxHp != null ? baseMaxHp : 100;
+    const before = baseHP;
+    // v6.7.5 残血协议：治疗类收益 ×0.5
+    baseHP = Math.min(cap, baseHP + Math.round(gHook('waveHpGain') * healMul()));
+    hpGain = baseHP - before;
+  }
+  // v6.4 生命银行：存款到期连本带息取回
+  // 注意：允许突破上限——存入时已从当前血扣走，取回若被上限卡住会白亏，
+  // 且"血量超越上限"正是"上限提升类事件"之外的第二种血量增值手段。
+  if (deposit && deposit.dueWave <= wave) {
+    // v6.7.5 残血协议：取回的生命也按治疗折扣
+    const amt = Math.round(deposit.amount * healMul());
+    baseHP += amt;
+    if (baseHP > baseMaxHp) baseMaxHp = baseHP;   // 超出部分抬升上限，避免"隐性溢出"
+    floats.push({ x: CX, y: CY - 130, text: `生命银行取出 +${amt} 血`, color: '#2ecc71', life: 80 });
+    deposit = null;
+  }
+  // v6.4 负债：每波扣偿（高利贷 / 风险投资共用，label 区分）
+  if (pendingDebt && pendingDebt.left > 0) {
+    gold = Math.max(0, gold - pendingDebt.amount);
+    pendingDebt.left--;
+    floats.push({ x: CX, y: CY - 150, text: `${pendingDebt.label || '负债'}偿还 -${pendingDebt.amount} 金（剩 ${pendingDebt.left} 波）`, color: '#e67e22', life: 80 });
+    if (pendingDebt.left <= 0) pendingDebt = null;
+  }
+  // v6.7.6 空域租金：未连接才付；连接即视为终止
+  if (airRent) {
+    if (path.includes(airRent.sid)) {
+      floats.push({ x: CX, y: CY - 190, text: `空域租金终止：${ZONES[airRent.zone].name}出生点已连接`, color: '#e67e22', life: 90 });
+      airRent = null;
+    } else {
+      gold += airRent.amount;
+      airRent.left--;
+      floats.push({ x: CX, y: CY - 190, text: `空域租金 +${airRent.amount} 金（剩 ${airRent.left} 波）`, color: '#2ecc71', life: 90 });
+      if (airRent.left <= 0) airRent = null;
+    }
+  }
+  floats.push({ x: CX, y: CY - 60, text: `+${goldGain}金 +${eGain}能量${hpGain > 0 ? ` +${hpGain}血` : ''}`, color: '#2ecc71', life: 70 });
+  if (convertGold > 0) floats.push({ x: CX, y: CY - 170, text: `余能折现 +${convertGold} 金`, color: '#7ef0cf', life: 80 });
+  playSound('clear');
+  waveAtkSpeedBonus = 0;   // v6.7.6 能量过载只持续本波，结算即失效
+
+  let questOk = null;
+  if (quest && !quest.resolved) {
+    quest.resolved = true;
+    questOk = path.includes(quest.nodeId);
+    if (!questOk) {
+      pendingMalus = 1.2;
+      floats.push({ x: CX, y: CY - 90, text: '任务失败：下波怪物强化', color: '#e67e22', life: 80 });
+    }
+  }
+
+  flushWaveLog('finish');
+  wave++;
+  if (wave > MAXWAVE) {
+    phase = PHASE.WIN;
+    setStatus(`胜利！12 波守住，击杀 ${kills}，基地剩余 ${baseHP}`);
+    showRestart(true);
+    refreshUI();
+    showResult('WIN');
+    return;
+  }
+  phase = PHASE.PREP;
+  announcePrep();
+  refreshUI();
+
+  shopQueue = [];
+  // v6.4 资源运营层：波间先弹事件房，再进商店
+  if (shouldOfferEvent()) shopQueue.push('event');
+  if (questOk === true) shopQueue.push('free');
+  shopQueue.push('normal');
+  openNextShop();
+}
+
+// ===== v6.4 资源运营层（事件房）=====
+const EV = () => (DATA.events || {});
+
+// 波次结束（finishWave 里 wave 已 ++）时调用，判断本备战期是否出事件房
+// v6.4.1：固定波次触发（时机确定、种类随机）
+// 语义：eventWaves 里写的是【备战期序号】（= 即将开打的那一波号），不是"打完的波号"。
+//   例：[3,6,9,12] 表示 prep3 / prep6 / prep9 / prep12 各弹一次，
+//   即"迎战第 3/6/9/12 波之前"各给一次资源调度机会。
+function shouldOfferEvent() {
+  const cfg = EV();
+  if (activeEvent) return false;
+  const waves = cfg.eventWaves || [];
+  return waves.includes(wave);
+}
+
+// ===== v6.7.6 1a-2 收尾事件 =====
+// 空域租金：只能租“还没连上的出生点”；外环优先，尽量把“不扩张”变成一个可读的选择。
+function unconnectedSpawns() {
+  return spawnIds.filter(id => !path.includes(id)).map(id => byId[id]);
+}
+function pickAirRentSpawn() {
+  const cands = unconnectedSpawns();
+  if (!cands.length) return null;
+  cands.sort((a, b) => {
+    if (a.zone !== b.zone) return b.zone - a.zone;
+    const da = Math.hypot(a.x - CX, a.y - CY), db = Math.hypot(b.x - CX, b.y - CY);
+    if (da !== db) return db - da;
+    return a.id - b.id;
+  });
+  return cands[0];
+}
+// 事件是否应该出现在本轮的候选里：避免发“当前必然用不了”的死卡。
+function eventVisible(ev) {
+  if (!ev) return false;
+  if (ev.gain && ev.gain.airRent && (!unconnectedSpawns().length || airRent)) return false;
+  if (ev.gain && ev.gain.debt && pendingDebt) return false;
+  if (ev.cost && ev.cost.energyAll && energy <= 0) return false;
+  // v6.8.2：新事件只在「还有东西可给」时出现
+  if (ev.gain && ev.gain.stackLayers
+    && !RELICS.some(r => r.stackable && stackCount(r.id) < relicStackLimit(r))) return false;
+  if (ev.gain && ev.gain.freeRelic && !relicPool().some(r => r.type === 'global')) return false;
+  if (ev.gain && ev.gain.nextWaveHpMul && pendingMalus > 1) return false;
+  return true;
+}
+// v6.8.2 事件花费行：卡面必须写清楚要付什么，不能只在点不了时提示一句“不足”。
+function eventCostText(ev) {
+  const c = (ev && ev.cost) || {};
+  const parts = [];
+  if (c.gold != null) parts.push(`${c.gold} 金`);
+  if (c.hp != null) parts.push(`${c.hp} 生命`);
+  if (c.energy != null) parts.push(`${c.energy} 能量`);
+  if (c.energyAll) parts.push(`全部能量（当前 ${energy}）`);
+  return parts.length ? `花费 ${parts.join(' + ')}` : '无需花费';
+}
+// v6.8.2 抽卡权重：按当前局面把“现在真解决问题”的卡抬高。
+// 只调出现概率，不改效果数值；权重表是设计意图，不是收益模型。
+function eventWeight(ev) {
+  if (!ev) return 0;
+  const id = ev.id;
+  const poor = gold < 80, rich = gold >= 300;
+  const hurt = baseHP < baseMaxHp * 0.4;
+  const shortPath = path.length < 12;
+  let w = 1;
+  if (poor) {
+    if (id === 'blood_machine' || id === 'energy_cash' || id === 'pawn_shop') w *= 2.4;
+    if (id === 'relic_casino' || id === 'energy_forge' || id === 'vitality_core'
+      || id === 'cornerstone' || id === 'black_market' || id === 'route_supply') w *= 0.35;
+    if (ev.gain && ev.gain.freeRelic) w *= 1.6;
+  }
+  if (rich) {
+    if (id === 'energy_forge' || id === 'vitality_core' || id === 'relic_casino'
+      || id === 'cornerstone' || id === 'black_market' || id === 'route_supply') w *= 1.8;
+    if (id === 'blood_machine' || id === 'energy_cash' || id === 'pawn_shop') w *= 0.35;
+  }
+  if (hurt) {
+    if (id === 'blood_machine') w *= 0.2;
+    if (id === 'vitality_core') w *= 2.5;
+    if (id === 'heart_bank') w *= 0.5;
+    if (ev.gain && ev.gain.nextWaveHpMul) w *= 0.4;
+  }
+  if (shortPath) {
+    if (id === 'route_supply' || id === 'energy_forge' || id === 'air_rent') w *= 2.2;
+  } else if (path.length >= 18) {
+    if (id === 'route_supply' || id === 'energy_forge') w *= 0.4;
+  }
+  return w;
+}
+// 抽 3 个候选事件（先过滤不可用/无意义的卡，再按权重抽）
+// v6.8.2 保底：第一张一定从「现在就能执行」的卡里挑；一张都没有时才退回全池（此时全是灰卡，玩家自己会走）。
+function rollEvents() {
+  const pool = (EV().pool || []).filter(eventVisible);
+  const take = arr => {
+    if (!arr.length) return null;
+    const total = arr.reduce((s, ev) => s + eventWeight(ev), 0);
+    let roll = rnd() * total, idx = arr.length - 1;
+    for (let i = 0; i < arr.length; i++) { roll -= eventWeight(arr[i]); if (roll <= 0) { idx = i; break; } }
+    return arr.splice(idx, 1)[0];
+  };
+  const picks = [];
+  const first = take(pool.filter(ev => eventUsable(ev).ok));
+  if (first) { picks.push(first); pool.splice(pool.indexOf(first), 1); }
+  while (picks.length < 3 && pool.length) {
+    const ev = take(pool);
+    if (!ev) break;
+    picks.push(ev);
+  }
+  return picks;
+}
+
+// 事件是否可执行（资源是否足够）
+function eventUsable(ev) {
+  if (!ev) return { ok: false, why: '无效事件' };
+  const c = ev.cost || {};
+  const minSafe = EV().minHpSafe != null ? EV().minHpSafe : 15;
+  if (c.hp != null) {
+    if (baseHP - c.hp < minSafe) return { ok: false, why: `生命不足（需 ${c.hp}，且保留 ${minSafe}）` };
+  }
+  if (c.gold != null && gold < c.gold) return { ok: false, why: `金币不足（需 ${c.gold} 金）` };
+  if (c.energy != null && energy < c.energy) return { ok: false, why: `能量不足（需 ${c.energy}）` };
+  if (c.energyAll && energy <= 0) return { ok: false, why: '没有能量' };
+  if (ev.gain && ev.gain.pawRelic) {
+    if (!ownedGlobals.length && !ownedBuckles.length) return { ok: false, why: '没有可典当的遗物' };
+  }
+  // v6.7.6：空域租金要有未连接出生点，且不能叠第二份租约
+  if (ev.gain && ev.gain.airRent) {
+    if (airRent) return { ok: false, why: '已有空域租约' };
+    if (!unconnectedSpawns().length) return { ok: false, why: '没有可租出的出生点' };
+  }
+  // v6.7.6：负债同一时间只允许一笔，避免 pendingDebt 互相覆盖、债务凭空消失
+  if (ev.gain && ev.gain.debt && pendingDebt) return { ok: false, why: '已有负债未还清' };
+  // v6.8.2 加速器事件的可执行判据（和 eventVisible 同口径，防止灰卡混进保底位）
+  if (ev.gain && ev.gain.stackLayers
+    && !RELICS.some(r => r.stackable && stackCount(r.id) < relicStackLimit(r))) {
+    return { ok: false, why: '普通件都满层了' };
+  }
+  if (ev.gain && ev.gain.freeRelic && !relicPool().some(r => r.type === 'global')) {
+    return { ok: false, why: '遗物池已空' };
+  }
+  if (ev.gain && ev.gain.nextWaveHpMul && pendingMalus > 1) {
+    return { ok: false, why: '下一波已经有加压' };
+  }
+  return { ok: true, why: '' };
+}
+
+// 执行事件
+function applyEvent(ev) {
+  const check = eventUsable(ev);
+  if (!check.ok) return check.why;
+  const c = ev.cost || {}, g = ev.gain || {};
+  let text = `【${ev.name}】`;
+  let spentEnergy = null;   // v6.7.6 能量过载：记录“消耗了多少点”用于计算本波攻速
+
+  // 代价
+  if (c.hp != null) { baseHP = Math.max(1, baseHP - c.hp); text += ` -${c.hp} 血；`; }
+  if (c.gold != null) { gold -= c.gold; text += ` -${c.gold} 金；`; }
+  if (c.energy != null) { energy = Math.max(0, energy - c.energy); text += ` -${c.energy} 能量；`; }
+  if (c.energyAll) { spentEnergy = energy; energy = 0; text += ` 消耗 ${spentEnergy} 能量；`; }
+
+  // 收益
+  if (g.gold != null) { gold += g.gold; text += ` +${g.gold} 金；`; }
+  if (g.energy != null) { energy += g.energy; text += ` 能量上限 +${g.energy}；`; }
+  if (g.maxHp != null) {
+    // v6.7.5 残血协议：上限照加，当前生命的「回复」部分 ×0.5
+    const healed = Math.round(g.maxHp * healMul());
+    baseMaxHp += g.maxHp;
+    baseHP = Math.min(baseMaxHp, baseHP + healed);
+    text += ` 生命上限 +${g.maxHp}，回复 ${healed}；`;
+  }
+  if (g.deposit) {
+    deposit = { amount: g.deposit.amount, dueWave: wave + (g.deposit.delayWaves || 1) };
+    text += ` 存入 ${c.hp || 0} 血，${deposit.dueWave} 波后取回 ${g.deposit.amount} 血；`;
+  }
+  if (g.debt) {
+    pendingDebt = { amount: g.debt.amount, left: g.debt.waves, label: ev.name };
+    text += ` 负债 ${g.debt.amount} 金 × ${g.debt.waves} 波；`;
+  }
+  // ===== v6.8.2 加速器事件 =====
+  if (g.energyNow != null) { energy += g.energyNow; text += ` +${g.energyNow} 能量；`; }
+  if (g.stackLayers) {
+    // 基石：随机一件未满层的普通件 +N 层（含一件都没有的情况——此时等于给一件新的）
+    const cand = RELICS.filter(r => r.stackable && stackCount(r.id) < relicStackLimit(r));
+    if (!cand.length) return '普通件都满层了';
+    const target = cand[Math.floor(rnd() * cand.length)];
+    const add = Math.min(g.stackLayers, relicStackLimit(target) - stackCount(target.id));
+    for (let i = 0; i < add; i++) ownedGlobals.push(target.id);
+    text += ` 「${target.name}」+${add} 层（${stackCount(target.id)}/${relicStackLimit(target.id)}）；`;
+  }
+  if (g.shopIntel) {
+    intelShops += g.shopIntel;
+    text += ` 之后 ${intelShops} 家付费商店各多 1 张货；`;
+  }
+  if (g.freeRelic) {
+    const pool = relicPool().filter(r => r.type === 'global');
+    if (!pool.length) return '遗物池已空';
+    const got = pool[Math.floor(rnd() * pool.length)];
+    ownedGlobals.push(got.id);
+    text += ` 获得「${got.name}」；`;
+  }
+  // 加注：先拿遗物、下一波加血。加压走 pendingMalus，与任务失败的同一根管子（waveHpMul 统一读）
+  if (g.nextWaveHpMul) {
+    pendingMalus = Math.max(pendingMalus, g.nextWaveHpMul);
+    text += ` 下一波怪物血量 +${Math.round((g.nextWaveHpMul - 1) * 100)}%；`;
+  }
+  // v6.7.6 空域租金：自动挑一个未连接出生点（外环优先），连接该点即终止
+  if (g.airRent) {
+    const target = pickAirRentSpawn();
+    if (!target) return '没有可租出的出生点';
+    airRent = { sid: target.id, amount: g.airRent.amount, left: g.airRent.waves, zone: target.zone };
+    text += ` 租出${ZONES[target.zone].name}出生点：${airRent.amount} 金 × ${airRent.left} 波（连接即终止）；`;
+  }
+  // v6.7.6 能量过载：消耗多少点就按多少点算本波攻速，最后波末清零
+  if (g.waveSpeed) {
+    const spent = spentEnergy != null ? spentEnergy : 0;
+    waveAtkSpeedBonus = Math.min(g.waveSpeed.cap, g.waveSpeed.per * spent);
+    text += ` 本波攻速 +${Math.round(waveAtkSpeedBonus * 100)}%；`;
+  }
+  if (g.gambleRelic) {
+    // 保底机制：连续失败达 pity 次数后，下一次必中
+    const pity = g.gambleRelic.pity != null ? g.gambleRelic.pity : 2;
+    const lucky = rnd() < g.gambleRelic.chance || pityCounter >= pity;
+    if (lucky) {
+      pityCounter = 0;
+      const pool = relicPool().filter(r => r.type === 'global');
+      if (pool.length) {
+        const got = pool[Math.floor(rnd() * pool.length)];
+        ownedGlobals.push(got.id);
+        text += ` ✦ 开出了「${got.name}」！`;
+      } else text += ' 但遗物池已空…';
+    } else {
+      pityCounter++;
+      text += ` 空手而归（保底计数 ${pityCounter}/${pity}，下次必中）`;
+    }
+  }
+  if (g.pawRelic) {
+    // 典当：拆掉最贵的一件已购遗物，返还基础价的 60%
+    const owned = ownedGlobals.map(id => relicDef(id)).filter(Boolean);
+    if (!owned.length) return '没有可典当的遗物';
+    owned.sort((a, b) => b.price - a.price);
+    const target = owned[0];
+    // v6.8.1：可叠件可能持有多份，典当只拆「一份」（旧写法按 id 全过滤会一次拆光还只退一份钱）
+    const at = ownedGlobals.lastIndexOf(target.id);
+    ownedGlobals = ownedGlobals.filter((id, i) => i !== at);
+    const refund = pawnRefund(target);
+    gold += refund;
+    text += ` 典当「${target.name}」→ +${refund} 金`;
+  }
+
+  eventLog.push({ wave, id: ev.id, text });
+  if (runLog) runLog.events.push({ wave, id: ev.id, name: ev.name, text });
+  floats.push({ x: CX, y: CY - 170, text, color: '#aed6f1', life: 110 });
+  playSound('clear');
+  refreshUI();
+  return null;
+}
+
+function openNextShop() {
+  if (shopQueue.length) {
+    const mode = shopQueue.shift();
+    if (mode === 'event') openEvent();
+    else openShop(mode);
+  }
+}
+
+// v6.4 事件房 UI
+function openEvent() {
+  const picks = rollEvents();
+  activeEvent = picks;
+  const room = document.getElementById('event-room');
+  document.getElementById('event-title').textContent = '✦ 途遇事件房 ✦';
+  document.getElementById('event-sub').textContent =
+    `第 ${wave} 波备战 · 生命 ${baseHP}/${baseMaxHp} · 金币 ${gold} · 能量 ${energy}`;
+  const cards = document.getElementById('event-cards');
+  cards.innerHTML = '';
+  if (!picks.length) {
+    const p = document.createElement('p');
+    p.style.cssText = 'color:#aaa;font-size:13px';
+    p.textContent = '此处空无一物';
+    cards.appendChild(p);
+  }
+  const tagName = { exchange: '置换', gamble: '赌注', upgrade: '强化' };
+  for (const ev of picks) {
+    const card = document.createElement('div');
+    card.className = 'event-card';
+    const nm = document.createElement('div');
+    nm.className = 'ename'; nm.textContent = ev.name;
+    const tp = document.createElement('span');
+    const tg = (ev.tags && ev.tags[0]) || 'exchange';
+    tp.className = 'etag ' + tg;
+    tp.textContent = tagName[tg] || '事件';
+    const de = document.createElement('div');
+    de.className = 'edesc'; de.textContent = ev.desc;
+    // v6.8.2：花费单独一行上卡面（之前只在选不了时让人猜要多少钱）
+    const cost = document.createElement('div');
+    cost.className = 'ecost';
+    cost.textContent = eventCostText(ev);
+    const why = document.createElement('div');
+    why.className = 'why';
+    const chk = eventUsable(ev);
+    if (!chk.ok) why.textContent = '✗ ' + chk.why;
+    const btn = document.createElement('button');
+    btn.className = 'ev-btn';
+    btn.textContent = '执行';
+    btn.disabled = !chk.ok;
+    btn.onclick = () => {
+      const err = applyEvent(ev);
+      if (err) { why.textContent = '✗ ' + err; return; }
+      activeEvent = null;
+      closeEvent();
+      openNextShop();
+    };
+    card.appendChild(nm); card.appendChild(tp); card.appendChild(de);
+    card.appendChild(cost); card.appendChild(why); card.appendChild(btn);
+    cards.appendChild(card);
+  }
+  room.style.display = 'block';
+}
+
+function closeEvent() {
+  const room = document.getElementById('event-room');
+  if (room) room.style.display = 'none';
+  activeEvent = null;
+}
+// 事件房「离开」绑定：关闭并继续队列（通常是商店）
+document.getElementById('event-leave').addEventListener('click', () => {
+  activeEvent = null;
+  closeEvent();
+  openNextShop();
+});
+
+// ===== 商店 =====
+function relicPool() {
+  const owned = new Set(ownedGlobals);
+  return RELICS.filter(r => {
+    // 支持件：没持有指定引擎时不进商店池
+    if (r.requiresAny && !r.requiresAny.some(id => owned.has(id))) return false;
+    // v6.8.1 可叠普通件：没满层就继续留在池里（能重复买到同一件）；其余全局件买过即移出
+    if (r.type === 'global') return !owned.has(r.id) || stackCount(r.id) < relicStackLimit(r);
+    return !ownedBuckles.some(b => b.defId === r.id);
+  });
+}
+// 互斥对冷却：拿到 A 后，同 pair 的 B 出现权重 ×mutexWeight（不消失，赌玩家忍不住）
+function mutexWeight(r) {
+  if (!r.pair) return 1;
+  for (const id of ownedGlobals) {
+    const o = relicDef(id);
+    if (o && o.pair && o.pair === r.pair) return DATA.shop.mutexWeight;
+  }
+  return 1;
+}
+function weightedPick(pool, n) {
+  const arr = pool.slice(), out = [];
+  while (out.length < n && arr.length) {
+    let total = 0;
+    const ws = arr.map(r => { const w = mutexWeight(r); total += w; return w; });
+    let roll = rnd() * total, idx = arr.length - 1;
+    for (let i = 0; i < arr.length; i++) { roll -= ws[i]; if (roll <= 0) { idx = i; break; } }
+    out.push(arr.splice(Math.min(idx, arr.length - 1), 1)[0]);
+  }
+  return out;
+}
+function pick3() { return weightedPick(relicPool(), 3); }
+// 付费商店 = 2 遗物 + 1 卡扣；高阶波（≥ allRelicWavesFrom）= 3 遗物
+// 土豆兄弟式：每波重新随机；锁定的商品（lockedOffers）占位保留，已购不再入池
+function shopPicks(mode) {
+  const pool = relicPool();
+  // v6.8.2 黑市情报：付费店多 1 张主牌（3 → 4），免费店不受影响
+  const n = mode === 'free' ? 3 : 3 + (intelShops > 0 ? 1 : 0);
+  const picks = pool.filter(r => lockedOffers.has(r.id)).slice(0, n);
+  const rest = pool.filter(r => !picks.includes(r));
+  const fill = (type, k) => {
+    if (k <= 0) return;
+    const sub = rest.filter(r => !type || r.type === type);
+    const got = weightedPick(sub, Math.min(k, sub.length));
+    for (const g of got) { rest.splice(rest.indexOf(g), 1); picks.push(g); }
+  };
+  if (mode === 'free') { fill(null, n - picks.length); return picks; }
+  if (wave >= DATA.shop.allRelicWavesFrom || !rest.some(r => r.type === 'buckle')) { fill('global', n - picks.length); return ensureEngineOffer(picks, n); }
+  const gHave = picks.filter(r => r.type === 'global').length;
+  fill('global', Math.min(DATA.shop.paidRelics - gHave, n - picks.length));
+  fill('buckle', n - picks.length);
+  fill(null, n - picks.length);
+  return ensureEngineOffer(picks, n);
+}
+// 1a：前 3 个付费店至少出现 1 个机制引擎（不指定哪个）。支持件没引擎不进池。
+// v6.7.7：不再有「留白」流派保底；引擎保底可替换任意未锁定的遗物位。
+function ensureEngineOffer(picks, n) {
+  const want = n || 3;
+  if (paidShopCount > 3) return picks;
+  const hasEngine = ownedGlobals.some(id => { const r = relicDef(id); return r && r.engine; });
+  if (hasEngine || picks.some(r => r.engine)) return picks;
+  const cand = relicPool().filter(r => r.engine);
+  if (!cand.length) return picks;
+  const pick = cand[Math.floor(rnd() * cand.length)];
+  if (picks.length < want) { picks.push(pick); return picks; }
+  // 只替换未锁定的遗物位，不挤掉卡扣位
+  for (let i = picks.length - 1; i >= 0; i--) {
+    if (picks[i].type === 'global' && !lockedOffers.has(picks[i].id)) {
+      picks[i] = pick; break;
+    }
+  }
+  return picks;
+}
+// v6.8.2 常驻基础件货架：付费店固定 2 格，从「还没满层的普通件」里轮换，不占主牌 3 格。
+// 与主牌去重；每格每店限购 1 份（买完即撤）。货架是「想叠就有入口」，不保证同款连刷。
+function shelfPicks(mainPicks) {
+  const cand = RELICS.filter(r =>
+    r.stackable && stackCount(r.id) < relicStackLimit(r) && !mainPicks.includes(r));
+  const out = [];
+  while (out.length < 2 && cand.length) {
+    out.push(cand.splice(Math.floor(rnd() * cand.length), 1)[0]);
+  }
+  return out;
+}
+// v6.8.1 可叠件价格：每多持有一层，基础价 ×(1 + 0.15)，向下取整。
+// 折扣券（shopPriceMul）作用在「已经涨过价的有效价」上，两件事分开算，验收也分开断言。
+function stackPriceMul(r) {
+  if (!r || !r.stackable) return 1;
+  const step = r.priceStep != null ? r.priceStep : 0.15;
+  return 1 + step * stackCount(r.id);
+}
+function shopPrice(r) {
+  const base = Math.max(1, Math.floor(r.price * stackPriceMul(r)));
+  return Math.max(1, Math.round(base * gHook('shopPriceMul')));
+}
+// 典当口径永远按基础价 60%，不按涨价后的有效价——否则"叠满再典当"会变成套利
+function pawnRefund(r) { return Math.round(r.price * 0.6); }
+function openShop(mode) {
+  const free = mode === 'free';
+  if (!free) paidShopCount++;
+  const picks = shopPicks(mode);
+  // 黑市情报：本店若吃到 +1 主牌，就在开店这一刻消耗 1 家（shopPicks 读的是消耗前的值）
+  const intel = !free && intelShops > 0;
+  if (intel) intelShops--;
+  const shelf = free ? [] : shelfPicks(picks);
+  const shopLog = runLog ? {
+    wave, mode, offers: picks.map(r => r.id), bought: [],
+    shelfOffers: shelf.map(r => r.id), shelfBought: [], intel, skipped: false,
+  } : null;
+  if (runLog) runLog.shops.push(shopLog);
+  let resolved = false;
+  const el = document.getElementById('shop');
+  document.getElementById('shop-title').textContent = free
+    ? '◆ 任务完成！免费遗物三选一' : `波间商店（金币 ${gold}）`;
+  const cards = document.getElementById('shop-cards');
+  const shelfWrap = document.getElementById('shop-shelf');
+  const shelfCards = document.getElementById('shelf-cards');
+  cards.innerHTML = '';
+  shelfCards.innerHTML = '';
+  shelfWrap.style.display = shelf.length ? 'block' : 'none';
+  document.getElementById('shelf-title').textContent = '◆ 常驻基础件 · 本店每格限 1 份';
+  if (!picks.length) {
+    const p = document.createElement('p');
+    p.style.cssText = 'color:#aaa;font-size:13px';
+    p.textContent = '遗物池已空';
+    cards.appendChild(p);
+  }
+  const syncAffordability = () => {
+    if (free) return;
+    for (const box of [cards, shelfCards]) {
+      for (const c of box.querySelectorAll('.shop-card, .shelf-card')) {
+        const rb = c.querySelector('.buy-btn');
+        if (rb) rb.disabled = gold < parseInt(rb.dataset.price, 10);
+      }
+    }
+  };
+  // 主牌与货架都空才关店；只空主牌时留一句话，避免玩家以为商店坏了
+  const closeIfEmpty = () => {
+    const mainLeft = cards.querySelectorAll('.shop-card').length;
+    const shelfLeft = shelfCards.querySelectorAll('.shelf-card').length;
+    shelfWrap.style.display = shelfLeft ? 'block' : 'none';
+    if (!mainLeft && !shelfLeft) { closeShop(); openNextShop(); return true; }
+    if (!mainLeft && !cards.querySelector('.sold-out')) {
+      const p = document.createElement('p');
+      p.className = 'sold-out';
+      p.style.cssText = 'color:#888;font-size:12px';
+      p.textContent = '主牌已售罄，货架还有货';
+      cards.appendChild(p);
+    }
+    return false;
+  };
+  for (const r of picks) {
+    const card = document.createElement('div');
+    card.className = 'shop-card';
+    cards.appendChild(card);
+    // v6.8.2 一店一份：卡面只画一次，买完即撤；可叠件想再买一层，得等它下家店再刷出来。
+    // 价格仍在这里现算（叠层涨价 / 折扣券），不能挪到外面缓存。
+    const price = shopPrice(r);
+    const nm = document.createElement('div');
+    nm.className = 'rname'; nm.textContent = r.name;
+    const tp = document.createElement('span');
+    tp.className = 'rtype ' + r.type;
+    tp.textContent = r.type === 'global' ? '全局遗物' : '卡扣';
+    const ds = document.createElement('div');
+    ds.className = 'rdesc';
+    ds.innerHTML = r.desc + (r.cost ? `<span class="rcost">${r.cost}</span>` : '');
+    // 可叠件专有：已持有 N/上限 + 下一层净效果。不写「纯收益/交换」这类设计标签。
+    let st = null;
+    if (r.stackable) {
+      st = document.createElement('div');
+      st.className = 'rstack';
+      st.textContent = `已持有 ${stackCount(r.id)}/${relicStackLimit(r)} · 下一层 ${r.stackDesc || ''}`;
+    }
+    const lk = document.createElement('button');
+    lk.className = 'lock-btn';
+    const syncLock = () => {
+      const on = lockedOffers.has(r.id);
+      lk.textContent = on ? '🔒 已锁定 · 下波保留' : '🔒 锁定此商品';
+      lk.classList.toggle('on', on);
+    };
+    syncLock();
+    lk.onclick = ev => {
+      ev.stopPropagation();
+      if (lockedOffers.has(r.id)) lockedOffers.delete(r.id); else lockedOffers.add(r.id);
+      syncLock();
+    };
+    const btn = document.createElement('button');
+    btn.className = 'buy-btn';
+    btn.textContent = free ? '免费领取' : `购买（${price} 金）`;
+    btn.dataset.price = price;
+    btn.disabled = !free && gold < price;
+    btn.onclick = () => {
+      if (btn.disabled) return;
+      if (!free) gold -= price;
+      if (shopLog) shopLog.bought.push(r.id);
+      lockedOffers.delete(r.id);
+      if (r.type === 'global') {
+        ownedGlobals.push(r.id);
+        // v6.2.5 远征法典：获得时按比例扣基地生命（比例在 hooks，文案自动跟随）
+        if (r.id === 'g_frontier') {
+          const hpMul = (r.hooks && r.hooks.frontierHpCostMul != null) ? r.hooks.frontierHpCostMul : 0.8;
+          const pctText = Math.round((1 - hpMul) * 100);
+          baseHP = Math.max(1, Math.round(baseHP * hpMul));
+          floats.push({ x: CX, y: CY - 90, text: `远征法典：基地 -${pctText}% 生命`, color: '#e74c3c', life: 80 });
+        }
+        // v6.3 血契：获得时立即扣固定血量（有概率致死，故做保底）
+        if (r.hooks && r.hooks.hpCostOnBuy) {
+          const c = r.hooks.hpCostOnBuy;
+          baseHP = Math.max(1, baseHP - c);
+          floats.push({ x: CX, y: CY - 90, text: `${r.name}：基地 -${c} 血`, color: '#e74c3c', life: 80 });
+        }
+      }
+      else ownedBuckles.push({ iid: 'b' + (iidCounter++), defId: r.id });
+      floats.push({ x: CX, y: CY - 70, text: `获得「${r.name}」${r.stackable ? ` ${stackCount(r.id)}/${relicStackLimit(r)}` : ''}`, color: '#f9e79f', life: 80 });
+      if (free) {
+        // 免费三选一：拿 1 其余消
+        card.remove();
+        resolved = true;
+        refreshUI();
+        closeShop();
+        openNextShop();
+        return;
+      }
+      card.remove();   // v6.8.2 一店一份：不论还能不能叠，本店这张买完就撤
+      document.getElementById('shop-title').textContent = `波间商店（金币 ${gold}）`;
+      refreshUI();
+      syncAffordability();
+      closeIfEmpty();
+    };
+    card.append(nm, tp);
+    if (st) card.append(st);
+    card.append(ds, lk, btn);
+  }
+  // v6.8.2 货架：便宜、可叠、每店每格 1 份；不占主牌 3 格，也不参与锁定
+  for (const r of shelf) {
+    const card = document.createElement('div');
+    card.className = 'shelf-card';
+    shelfCards.appendChild(card);
+    const price = shopPrice(r);
+    const nm = document.createElement('div');
+    nm.className = 'rname'; nm.textContent = r.name;
+    const st = document.createElement('div');
+    st.className = 'rstack';
+    st.textContent = `${stackCount(r.id)}/${relicStackLimit(r)} · 下一层 ${r.stackDesc || ''}`;
+    const btn = document.createElement('button');
+    btn.className = 'buy-btn';
+    btn.textContent = `购买（${price} 金）`;
+    btn.dataset.price = price;
+    btn.disabled = gold < price;
+    btn.onclick = () => {
+      if (btn.disabled || gold < price) return;
+      gold -= price;
+      if (shopLog) shopLog.shelfBought.push(r.id);
+      ownedGlobals.push(r.id);
+      floats.push({ x: CX, y: CY - 70, text: `获得「${r.name}」${stackCount(r.id)}/${relicStackLimit(r)}`, color: '#f9e79f', life: 80 });
+      card.remove();
+      document.getElementById('shop-title').textContent = `波间商店（金币 ${gold}）`;
+      refreshUI();
+      syncAffordability();
+      closeIfEmpty();
+    };
+    card.append(nm, st, btn);
+  }
+  document.getElementById('shop-skip').onclick = () => {
+    if (resolved) return;
+    resolved = true;
+    if (shopLog) shopLog.skipped = true;
+    closeShop();
+    openNextShop();
+  };
+  el.style.display = 'block';
+}
+function closeShop() { document.getElementById('shop').style.display = 'none'; }
+
+// ===== 游戏壳 =====
+function closeOverlays() {
+  for (const id of ['title-overlay', 'pause-overlay', 'result-overlay']) document.getElementById(id).style.display = 'none';
+}
+function enterTitle() {
+  paused = false; phase = PHASE.TITLE; closeMenu(); closeShop(); closeOverlays(); hideTutorial();
+  refreshBuildTag();
+  const stats = readStats();
+  document.getElementById('title-stats').textContent = stats.plays
+    ? `最佳战绩 ${'★'.repeat(stats.best.stars || 0) || '—'} · 通关 ${stats.wins}/${stats.plays} 次`
+    : '尚无战绩';
+  document.getElementById('title-main').style.display = 'block';
+  document.getElementById('title-help').style.display = 'none';
+  document.getElementById('title-overlay').style.display = 'flex';
+  refreshUI();
+}
+function togglePause(force) {
+  if (phase !== PHASE.WAVE) return false;
+  paused = typeof force === 'boolean' ? force : !paused;
+  document.getElementById('pause-overlay').style.display = paused ? 'flex' : 'none';
+  document.getElementById('pause-btn').textContent = paused ? '▶' : '⏸';
+  return paused;
+}
+function recordResult(result, stars, seconds) {
+  if (resultRecorded) return readStats();
+  resultRecorded = true;
+  const stats = readStats();
+  stats.plays++; if (result === 'WIN') stats.wins++;
+  const candidate = { stars, wave: Math.min(wave, MAXWAVE), kills, time: seconds };
+  const best = stats.best || { stars: 0, wave: 0, kills: 0, time: 0 };
+  if (candidate.stars > (best.stars || 0)) best.stars = candidate.stars;
+  if (candidate.wave > (best.wave || 0)) best.wave = candidate.wave;
+  if (candidate.kills > (best.kills || 0)) best.kills = candidate.kills;
+  if (!best.time || (result === 'WIN' && seconds < best.time)) best.time = seconds;
+  stats.best = best;
+  stats.history = [...(stats.history || []), { date: new Date().toISOString(), stars, result, seed: currentSeed }].slice(-5);
+  storageSet('gtd_stats_v1', JSON.stringify(stats));
+  return stats;
+}
+// v6.7.10 试玩导出：本局可复制的纯 JSON；不含账号/设备信息
+function playtestExport() {
+  flushWaveLog('result');
+  const stars = phase === PHASE.WIN ? starsFor(enemyLeakDamage, baseMaxHp) : 0;
+  return {
+    build: BUILD_ID,
+    pid: PLAYTEST_PID || null,
+    seed: currentSeed,
+    startedAt: runLog ? runLog.startedAt : null,
+    endedAt: new Date().toISOString(),
+    result: phase === PHASE.WIN ? 'WIN' : (phase === PHASE.OVER ? 'OVER' : 'UNFINISHED'),
+    wave: Math.min(wave, MAXWAVE),
+    stars,
+    leakDamage: enemyLeakDamage,
+    baseHP, baseMaxHp, gold, energy, kills,
+    path: {
+      segments: Math.max(0, path.length - 1),
+      towers: activeTowers().length,
+      spawns: activatedSpawns().length,
+    },
+    relics: ownedGlobals.slice(),
+    buckles: ownedBuckles.map(b => b.defId),
+    waves: runLog ? runLog.waves.slice() : [],
+    shops: runLog ? runLog.shops.slice() : [],
+    events: runLog ? runLog.events.slice() : [],
+  };
+}
+
+function copyText(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (_) {}
+  document.body.removeChild(ta);
+  return ok ? Promise.resolve() : Promise.reject(new Error('copy failed'));
+}
+
+function showResult(result) {
+  const win = result === 'WIN', stars = win ? starsFor(enemyLeakDamage, baseMaxHp) : 0, seconds = elapsedSeconds();
+  recordResult(result, stars, seconds); paused = false;
+  document.getElementById('result-title').textContent = win ? `守住 ${MAXWAVE} 波` : `败于第 ${Math.min(wave, MAXWAVE)} 波`;
+  document.getElementById('result-stars').textContent = '★'.repeat(stars) || '无星';
+  // v6.8.1：可叠件会重复出现在 ownedGlobals 里，结算按「名称 ×N」聚合，别让同一件印三遍
+  const grouped = [];
+  for (const id of ownedGlobals.concat(ownedBuckles.map(b => b.defId))) {
+    const name = (RELICS.find(r => r.id === id) || {}).name;
+    if (!name) continue;
+    const hit = grouped.find(o => o.name === name);
+    if (hit) hit.n++; else grouped.push({ name, n: 1 });
+  }
+  const items = grouped.map(o => (o.n > 1 ? `${o.name} ×${o.n}` : o.name));
+  document.getElementById('result-details').textContent = `击杀数：${kills}\n漏怪伤害：${enemyLeakDamage} / ${baseMaxHp}\n最远扩张环：${maxExpandedRing()}\n遗物/卡扣：${items.join('、') || '无'}\n用时：${formatTime(seconds)}`;
+  document.getElementById('result-retry').textContent = win ? '再来一局（新图）' : '再试一次';
+  lastRunExport = playtestExport();
+  document.getElementById('copy-status').textContent = '';
+  document.getElementById('result-overlay').style.display = 'flex';
+  playSound(win ? 'win' : 'lose');
+}
+function maybeStartTutorial() {
+  if (wave !== 1 || storageGet('seen_tutorial')) return;
+  tutorialStep = 1; renderTutorial();
+}
+function renderTutorial() {
+  const texts = {
+    1: '从基地蓝圈拖线，经过塔会激活；终点落在出生点才算连上。',
+    2: '每接 1 个出生点，每波多 1 份编队；更外环还有连着的点，内环就不算失守。',
+    3: '没连到出生点的线会变橙色草稿：继续拖到出生点，或右键回收；草稿修好前不能开波。',
+  };
+  document.getElementById('tutorial-step').textContent = `教学 ${tutorialStep}/3`;
+  document.getElementById('tutorial-text').textContent = texts[tutorialStep];
+  const next = document.getElementById('tutorial-next');
+  next.style.display = tutorialStep === 1 ? 'none' : 'inline-block';
+  next.textContent = tutorialStep === 3 ? '开始出怪' : '继续';
+  document.getElementById('tutorial').style.display = 'block';
+}
+function advanceTutorial() { if (!tutorialStep) return; tutorialStep++; if (tutorialStep > 3) finishTutorial(); else renderTutorial(); }
+function finishTutorial() { tutorialStep = 0; storageSet('seen_tutorial', '1'); hideTutorial(); }
+function hideTutorial() { document.getElementById('tutorial').style.display = 'none'; }
+
+// ===== 输入（镜头 + 画线 + 点击） =====
+function mpos(e) { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+function wpos(e) {
+  const m = mpos(e);
+  return { sx: m.x, sy: m.y, x: cam.x + m.x / cam.z, y: cam.y + m.y / cam.z };
+}
+
+// 小地图
+const MM = { w: 150, h: 130, pad: 12 };
+MM.x = W - MM.w - MM.pad; MM.y = H - MM.h - MM.pad;
+MM.sx = MM.w / WW; MM.sy = MM.h / WH;
+
+const inMinimap = (sx, sy) => sx >= MM.x && sx <= MM.x + MM.w && sy >= MM.y && sy <= MM.y + MM.h;
+function minimapToWorld(sx, sy) { return { x: (sx - MM.x) / MM.sx, y: (sy - MM.y) / MM.sy }; }
+
+function hitTower(p) {
+  for (const n of nodes) {
+    if (n.kind !== 'tower') continue;
+    if (Math.hypot(p.x - n.x, p.y - n.y) <= n.r + 6) return n;
+  }
+  return null;
+}
+function hitSpawn(p) {
+  for (const sid of spawnIds) {
+    const n = byId[sid];
+    if (Math.hypot(p.x - n.x, p.y - n.y) <= n.r + 6) return n;
+  }
+  return null;
+}
+
+let dragStart = null;     // 路径末端按下（待判定拖拽/点击）
+let panDrag = null;       // { sx, sy, camX, camY, moved }
+let miniDrag = false;
+let pendingClick = null;  // { type:'tower'|'spawn', n }
+
+canvas.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  closeMenu();
+  const p = wpos(e);
+
+  if (inMinimap(p.sx, p.sy)) { miniDrag = true; const wpt = minimapToWorld(p.sx, p.sy); centerCamOn(wpt.x, wpt.y); return; }
+
+  if (phase === PHASE.PREP) {
+    const endId = draft ? draft[draft.length - 1] : (path.length ? path[path.length - 1] : 0);
+    const endNode = byId[endId];
+    if (Math.hypot(p.x - endNode.x, p.y - endNode.y) < endNode.r + 10) {
+      dragStart = { x: p.sx, y: p.sy, endId };
+      return;
+    }
+  }
+
+  const t = hitTower(p);
+  if (t) {
+    pendingClick = { type: 'tower', n: t };
+    panDrag = { sx: p.sx, sy: p.sy, camX: cam.x, camY: cam.y, moved: false };
+    return;
+  }
+  const s = hitSpawn(p);
+  if (s) {
+    pendingClick = { type: 'spawn', n: s };
+    panDrag = { sx: p.sx, sy: p.sy, camX: cam.x, camY: cam.y, moved: false };
+    return;
+  }
+  pendingClick = null;
+  panDrag = { sx: p.sx, sy: p.sy, camX: cam.x, camY: cam.y, moved: false };
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (miniDrag) { const p = mpos(e); const wpt = minimapToWorld(p.x, p.y); centerCamOn(wpt.x, wpt.y); return; }
+  if (panDrag) {
+    const m = mpos(e);
+    if (Math.hypot(m.x - panDrag.sx, m.y - panDrag.sy) > 6) panDrag.moved = true;
+    if (panDrag.moved) {
+      cam.x = panDrag.camX - (m.x - panDrag.sx) / cam.z;
+      cam.y = panDrag.camY - (m.y - panDrag.sy) / cam.z;
+      clampCam();
+    }
+    return;
+  }
+  if (dragStart && !drawing) {
+    const m = mpos(e);
+    if (Math.hypot(m.x - dragStart.x, m.y - dragStart.y) > 14) {
+      drawing = { temp: [dragStart.endId], valid: false, fromDraft: !!draft };
+      dragStart = null;
+      setStatus('拖拽延伸路径…终点必须是出生点（右键可取消）');
+    }
+    return;
+  }
+  if (!drawing) return;
+  const p = wpos(e);
+  const last = drawing.temp[drawing.temp.length - 1];
+  const visited = new Set([...path, ...(draft || []), ...drawing.temp]);
+  const usedSegs = (drawing.fromDraft && draft ? draft.length - 1 : 0) + drawing.temp.length - 1;
+  for (const nb of adj.get(last)) {
+    if (visited.has(nb)) continue;
+    const n = byId[nb];
+    if (!passable(n)) continue;
+    if (Math.hypot(p.x - n.x, p.y - n.y) > n.r + 10) continue;
+    if (usedSegs >= energy) {
+      setStatus('能量不足，无法继续延伸！');
+      break;
+    }
+    drawing.temp.push(nb);
+    drawing.valid = byId[drawing.temp[drawing.temp.length - 1]].kind === 'spawn';
+    setStatus(drawing.valid
+      ? `松手确认连接（消耗 ${usedSegs + 1} 能量；继续拖可越过出生点外延）`
+      : `绘制中…已耗 ${usedSegs + 1}/${energy} 能量`);
+    break;
+  }
+});
+
+canvas.addEventListener('mouseup', e => {
+  if (miniDrag) { miniDrag = false; return; }
+  if (panDrag) {
+    if (!panDrag.moved && pendingClick) {
+      if (pendingClick.type === 'tower') {
+        const n = pendingClick.n;
+        if (n.locked) setStatus('未开荒的塔：让已激活的箭塔/爆破塔攻击它，进度打满即解锁');
+        else openTowerMenu(n);
+      } else {
+        const z = ZONES[pendingClick.n.zone];
+        setStatus(`出生点（${z.name}）· 怪物强度 ×${z.hpMul} · 击杀奖励 ×${z.goldMul}${path.includes(pendingClick.n.id) ? ' · 已激活' : ''}`);
+      }
+    }
+    panDrag = null; pendingClick = null;
+    return;
+  }
+  if (dragStart && !drawing) {
+    const id = dragStart.endId;
+    dragStart = null;
+    const n = byId[id];
+    if (n && n.kind === 'tower' && !n.locked && path.includes(id)) openTowerMenu(n);
+    return;
+  }
+  if (!drawing) return;
+  const { temp, valid, fromDraft } = drawing;
+  drawing = null;
+  if (temp.length < 2) { setStatus('未延伸任何节点'); return; }
+  if (!valid) {
+    // 无效草稿：不删线，保留待修；禁止开波直至末端连回出生点
+    if (fromDraft) draft = draft.concat(temp.slice(1));
+    else draft = temp;
+    setStatus('⚠ 路径尚未终止于出生点：请从末端继续延伸，或右键点击草稿节点回收段');
+    refreshUI();
+    return;
+  }
+  const cost = temp.length - 1 + (fromDraft ? draft.length - 1 : 0);
+  if (cost > energy) { setStatus('能量不足！'); return; }
+  energy -= cost;
+  if (fromDraft) {
+    path = path.concat(draft.slice(1), temp.slice(1));
+    draft = null;
+  } else {
+    path = path.length ? path.concat(temp.slice(1)) : temp.slice();
+  }
+  awardNewSpawnBonuses();
+  const act = nodes.filter(n => n.kind === 'tower' && path.includes(n.id) && !isSacrificeNode(n)).length;
+  const nSp = activatedSpawns().length;
+  setStatus(`已激活 ${act} 座塔${nSp > 1 ? `，串起 ${nSp} 个出生点（每波 ${nSp} 份编队）` : ''}${act === 0 ? '；这条线没有开火塔，建议换条路' : ''}（点击塔可管理卡扣，然后开怪）`);
+  refreshUI();
+  if (tutorialStep === 1) advanceTutorial();
+});
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const p = wpos(e);
+  const nz = Math.min(ZMAX, Math.max(ZMIN, cam.z * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+  cam.x = p.x - p.sx / nz;
+  cam.y = p.y - p.sy / nz;
+  cam.z = nz;
+  clampCam();
+}, { passive: false });
+
+canvas.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  dragStart = null;
+  if (phase !== PHASE.PREP || drawing) { drawing = null; return; }
+  const p = wpos(e);
+  // 草稿段回收：从草稿末端往回删，删光即解除草稿态
+  if (draft) {
+    for (let i = draft.length - 1; i >= 1; i--) {
+      const n = byId[draft[i]];
+      if (Math.hypot(p.x - n.x, p.y - n.y) < n.r + 10) {
+        draft = draft.slice(0, i);
+        setStatus(draft.length > 1 ? `已回收草稿段，剩余 ${draft.length - 1} 段待修` : '草稿已清空，可重新画线');
+        if (draft.length <= 1) draft = null;
+        refreshUI();
+        return;
+      }
+    }
+    // 点击草稿以外的任何位置：清除整个草稿
+    draft = null;
+    setStatus('已放弃草稿，可重新画线');
+    refreshUI();
+    return;
+  }
+  for (let i = 0; i < path.length; i++) {
+    const n = byId[path[i]];
+    if (Math.hypot(p.x - n.x, p.y - n.y) < n.r + 10) {
+      removePathAfter(i);
+      return;
+    }
+  }
+});
+
+document.getElementById('start-btn').addEventListener('click', startWave);
+document.getElementById('restart-btn').addEventListener('click', enterTitle);
+document.getElementById('title-start').addEventListener('click', () => { unlockAudio(); initGame(nextSeed()); });
+document.getElementById('title-instructions').addEventListener('click', () => {
+  document.getElementById('title-main').style.display = 'none'; document.getElementById('title-help').style.display = 'block';
+});
+document.getElementById('title-help-back').addEventListener('click', () => {
+  document.getElementById('title-main').style.display = 'block'; document.getElementById('title-help').style.display = 'none';
+});
+document.getElementById('pause-btn').addEventListener('click', () => togglePause());
+document.getElementById('resume-btn').addEventListener('click', () => togglePause(false));
+document.getElementById('sound-btn').addEventListener('click', () => setSound(!soundOn));
+document.getElementById('result-retry').addEventListener('click', () => initGame(nextSeed()));
+document.getElementById('copy-run').addEventListener('click', () => {
+  const status = document.getElementById('copy-status');
+  const data = lastRunExport || playtestExport();
+  copyText(JSON.stringify(data, null, 2))
+    .then(() => { status.textContent = '已复制，请粘贴到问卷'; })
+    .catch(() => { status.textContent = '复制失败：请截图结算页发给测试组织者'; });
+});
+document.querySelectorAll('.back-title').forEach(btn => btn.addEventListener('click', enterTitle));
+document.getElementById('tutorial-skip').addEventListener('click', finishTutorial);
+document.getElementById('tutorial-next').addEventListener('click', () => {
+  if (tutorialStep === 3) { finishTutorial(); startWave(); } else advanceTutorial();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && phase === PHASE.WAVE) togglePause(); });
+document.addEventListener('pointerdown', unlockAudio, { once: true });
+
+// ===== 塔菜单（卡扣管理） =====
+const menuEl = document.getElementById('menu');
+function menuAt(n) {
+  const r = canvas.getBoundingClientRect();
+  const sx = (n.x - cam.x) * cam.z, sy = (n.y - cam.y) * cam.z;
+  let x = r.left + sx + 20, y = r.top + sy - 10;
+  if (x + 200 > window.innerWidth) x = r.left + sx - 220;
+  menuEl.style.left = x + 'px'; menuEl.style.top = y + 'px'; menuEl.style.display = 'block';
+}
+function openTowerMenu(n) {
+  menuEl.innerHTML = '';
+  const t = TOWER[n.ttype];
+  const onPath = path.includes(n.id);
+  const tip = document.createElement('p');
+  tip.className = 'menu-tip';
+  let stat = '';
+  if (n.ttype === 'arrow') stat = `伤害 ${t.dmg}`;
+  else if (n.ttype === 'slow') stat = `减速 ${Math.round((1 - t.factor) * 100)}%`;
+  else stat = `溅射 ${Math.round((t.dmg || 0) * gHook('blastDmgMul'))} / 半径 ${splashRadius(n)}`;
+  tip.innerHTML = `<b style="color:${t.color}">${t.sym} ${t.label}</b> · ${stat} · ${onPath ? '<span style="color:#2ecc71">已激活</span>' : '<span style="color:#e67e22">休眠中</span>'}`;
+  menuEl.appendChild(tip);
+
+  // v6.7.5 条件卡扣读数：让「拐角/独行/聚能」是否生效在塔菜单里可见
+  const condHooks = buckleHooks(n) || {};
+  const cond = [];
+  if (condHooks.cornerBuckleMul) cond.push(`拐角 +${Math.round((condHooks.cornerBuckleMul - 1) * 100)}%（${isTowerNearTurn(n) ? '生效' : '未生效'}）`);
+  if (hasGlobal('g_lonely') && path.includes(n.id) && !isSacrificeNode(n)) {
+    cond.push(`孤塔 +${Math.round((gHook('lonelyMul') - 1) * 100)}%（${isLonelyTower(n) ? '生效' : '未生效'}）`);
+  }
+  if (condHooks.loneBuckleMul) cond.push(`独行 +${Math.round((condHooks.loneBuckleMul - 1) * 100)}%（${isLonelyTower(n) ? '生效' : '未生效'}）`);
+  if (condHooks.idleEnergyCdMul) cond.push(`聚能 攻速 +${Math.round((1 / condHooks.idleEnergyCdMul - 1) * 100)}%（${energy >= (condHooks.idleEnergyThreshold != null ? condHooks.idleEnergyThreshold : 10) ? '生效' : '未生效'}，能量 ${energy}）`);
+  // v6.8.0 1b-1a：群塔 / 首杀 两个卡扣的条件读数（不生效要说为什么不生效）
+  if (condHooks.denseBuckleMul) {
+    const dn = denseNeighborCount(n), need = condHooks.denseNeed || 2;
+    cond.push(`群塔 +${Math.round((condHooks.denseBuckleMul - 1) * 100)}%（${dn >= need ? '生效' : '未生效'}，紧挨 ${dn}/${need} 塔）`);
+  }
+  if (condHooks.firstBuckleGold) cond.push(`首杀 +${condHooks.firstBuckleGold} 金（${n.firstBuckleUsed ? '本波已拿' : '本波未拿'}）`);
+  if (cond.length) {
+    const c = document.createElement('p');
+    c.className = 'menu-tip';
+    c.textContent = cond.join(' · ');
+    menuEl.appendChild(c);
+  }
+
+  const slot = document.createElement('p');
+  slot.className = 'menu-tip';
+  const cur = n.buckle ? ownedBuckles.find(b => b.iid === n.buckle) : null;
+  slot.innerHTML = cur
+    ? `卡扣槽：<b style="color:#f9e79f">${RELICS.find(r => r.id === cur.defId).name}</b>`
+    : (n.mirrorDefId
+      ? `卡扣槽：<b style="color:#aed6f1">镜像·${RELICS.find(r => r.id === n.mirrorDefId).name}</b>（本波复制，不可摘下）`
+      : '卡扣槽：空');
+  menuEl.appendChild(slot);
+
+  if (cur) {
+    const un = document.createElement('button');
+    un.textContent = '卸下卡扣（收回背包）';
+    un.onclick = () => { n.buckle = null; n.idleFrames = 0; openTowerMenu(n); refreshUI(); };
+    menuEl.appendChild(un);
+  }
+  const loose = ownedBuckles.filter(b => {
+    if (nodes.some(o => o.buckle === b.iid)) return false;
+    const def = RELICS.find(r => r.id === b.defId);
+    return !(def.hooks.splashMul && n.ttype !== 'blast');
+  });
+  for (const b of loose) {
+    const def = RELICS.find(r => r.id === b.defId);
+    const eq = document.createElement('button');
+    eq.textContent = `装备「${def.name}」（${def.desc}）`;
+    eq.onclick = () => { n.buckle = b.iid; n.idleFrames = 0; openTowerMenu(n); refreshUI(); };
+    menuEl.appendChild(eq);
+  }
+  if (!cur && !loose.length) {
+    const hint = document.createElement('p');
+    hint.style.cssText = 'color:#aaa;font-size:12px;padding:4px 8px;margin:0';
+    hint.textContent = '没有可用的卡扣（商店购买 / 任务奖励）';
+    menuEl.appendChild(hint);
+  }
+  menuAt(n);
+}
+function closeMenu() { menuEl.style.display = 'none'; }
+
+// ===== 绘制 =====
+function line(a, b, color, w, dash) {
+  ctx.strokeStyle = color; ctx.lineWidth = w; ctx.setLineDash(dash || []);
+  ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); ctx.setLineDash([]);
+}
+
+function draw() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.setTransform(cam.z * DPR, 0, 0, cam.z * DPR, -cam.x * cam.z * DPR, -cam.y * cam.z * DPR);
+
+  // 世界边框
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 2;
+  ctx.strokeRect(0, 0, WW, WH);
+
+  // 环域底色（外→内覆盖）与边界
+  for (let z = ZONES.length - 1; z >= 0; z--) {
+    ctx.fillStyle = ZONES[z].fill;
+    ctx.beginPath(); ctx.arc(CX, CY, ZONES[z].rMax, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.setLineDash([6, 6]);
+  for (const r of [300, 475]) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(CX, CY, r, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.font = '13px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const zl = [['内环 · 简单怪 保底收入', 250], ['中环 · 标准强度', 400], ['外环 · 高危高赏', 555]];
+  const zlc = ['rgba(93,173,226,0.55)', 'rgba(212,172,13,0.6)', 'rgba(231,76,60,0.55)'];
+  for (let i = 0; i < zl.length; i++) {
+    ctx.fillStyle = zlc[i];
+    ctx.fillText(zl[i][0], CX, CY - zl[i][1] - 24);
+  }
+
+  // 出怪圈使用世界坐标绘制，DPR 只由顶层 transform 处理。
+  ctx.setLineDash([10, 7]);
+  ctx.strokeStyle = 'rgba(231,76,60,0.35)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(CX, CY, ringR(wave), 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]);
+
+  const drawn = new Set();
+  for (const n of nodes) for (const nb of adj.get(n.id)) {
+    const key = Math.min(n.id, nb) + '-' + Math.max(n.id, nb);
+    if (drawn.has(key)) continue;
+    drawn.add(key);
+    const o = byId[nb];
+    if (n.kind === 'spawn' || o.kind === 'spawn') line(n, o, '#4a2020', 1, [4, 4]);
+    else if (n.kind === 'base' || o.kind === 'base') line(n, o, '#1a3a1a', 1, [4, 4]);
+    else line(n, o, '#1e3048', 1);
+  }
+
+  if (path.length > 1) {
+    ctx.strokeStyle = '#3498db'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(byId[path[0]].x, byId[path[0]].y);
+    for (let i = 1; i < path.length; i++) ctx.lineTo(byId[path[i]].x, byId[path[i]].y);
+    ctx.stroke();
+  }
+  // v6.8.0 走廊读数：持有走廊协议时，把「被计入的那一截最长直段」用半透明白光描出来。
+  // 为什么必须画：走廊只取最长一截（不是所有直路累加），且 ≥30° 阈值看不见——
+  // 只有数字的话玩家无法自查是哪一段在吃、从哪一档被切断。
+  // 配色避开怪物(#f1c40f)/草稿橙(#e67e22)/转弯橙(#f39c12)/孤塔青(#7ef0cf)，用中性白。
+  if (hasGlobal('g_corridor') && path.length > 1) {
+    const rr = longestStraightRunRange();
+    if (rr.b - rr.a >= 1) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 9;
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(byId[path[rr.a]].x, byId[path[rr.a]].y);
+      for (let i = rr.a + 1; i <= rr.b; i++) ctx.lineTo(byId[path[i]].x, byId[path[i]].y);
+      ctx.stroke();
+    }
+  }
+  // v6.7.5 拐角读数：持有拐角协议或拐角卡扣时，在路径上标出急转弯节点（偏折 ≥30°）
+  if (path.length > 2 && (hasGlobal('g_corner') || ownedBuckles.some(b => {
+    const def = relicDef(b.defId);
+    return def && def.hooks && def.hooks.cornerBuckleMul;
+  }))) {
+    for (const i of pathTurnIndices()) {
+      const n = byId[path[i]];
+      ctx.fillStyle = '#f39c12';
+      ctx.beginPath(); ctx.arc(n.x, n.y, 5, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  // v6.7.7 孤塔读数：持有孤塔协议或独行卡扣时，给路径上的孤塔套一圈青环
+  if (path.length > 0 && (hasGlobal('g_lonely') || ownedBuckles.some(b => {
+    const def = relicDef(b.defId);
+    return def && def.hooks && def.hooks.loneBuckleMul;
+  }))) {
+    for (const n of activeTowers()) {
+      if (!isLonelyTower(n)) continue;
+      ctx.strokeStyle = '#7ef0cf'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 4, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+  if (drawing && drawing.temp.length > 1) {
+    ctx.strokeStyle = drawing.valid ? '#1abc9c' : '#e67e22';
+    ctx.lineWidth = 3; ctx.setLineDash(drawing.valid ? [] : [8, 6]);
+    ctx.beginPath(); ctx.moveTo(byId[drawing.temp[0]].x, byId[drawing.temp[0]].y);
+    for (let i = 1; i < drawing.temp.length; i++) ctx.lineTo(byId[drawing.temp[i]].x, byId[drawing.temp[i]].y);
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  if (draft && draft.length > 1) {
+    ctx.strokeStyle = '#e67e22'; ctx.lineWidth = 3; ctx.setLineDash([8, 6]);
+    ctx.beginPath(); ctx.moveTo(byId[draft[0]].x, byId[draft[0]].y);
+    for (let i = 1; i < draft.length; i++) ctx.lineTo(byId[draft[i]].x, byId[draft[i]].y);
+    ctx.stroke(); ctx.setLineDash([]);
+    const dEnd = byId[draft[draft.length - 1]];
+    ctx.strokeStyle = `rgba(231,76,62,${0.5 + Math.sin(Date.now() / 200) * 0.3})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(dEnd.x, dEnd.y, dEnd.r + 8 + Math.sin(Date.now() / 200) * 3, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  if (phase === PHASE.PREP && !drawing && !draft) {
+    const end = byId[path.length ? path[path.length - 1] : 0];
+    ctx.strokeStyle = 'rgba(52,152,219,0.6)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(end.x, end.y, end.r + 6 + Math.sin(Date.now() / 300) * 3, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  ctx.font = '11px sans-serif';
+  for (const n of nodes) {
+    if (n.kind !== 'tower' && n.kind !== 'junction') continue;
+    const onPath = path.includes(n.id);
+
+    if (n.kind === 'junction') {
+      ctx.fillStyle = onPath ? '#2c5a8f' : '#3a3a4a';
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r - 4, 0, Math.PI * 2); ctx.fill();
+    } else {
+      const t = TOWER[n.ttype];
+      if (n.locked) {
+        ctx.fillStyle = '#26263a';
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill();
+        ctx.setLineDash([4, 3]);
+        ctx.strokeStyle = 'rgba(130,130,170,0.55)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+        if (n.reclaim < RECLAIM_HP) {
+          const pct = 1 - n.reclaim / RECLAIM_HP;
+          ctx.strokeStyle = '#5dade2'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 5, -Math.PI / 2, -Math.PI / 2 + pct * Math.PI * 2); ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(200,200,225,0.4)'; ctx.font = 'bold 11px sans-serif';
+        ctx.fillText(t.sym, n.x, n.y);
+        ctx.font = '11px sans-serif';
+      } else {
+        ctx.globalAlpha = onPath ? 1 : 0.4;
+        ctx.fillStyle = t.color;
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 12px sans-serif';
+        ctx.fillText(t.sym, n.x, n.y);
+        ctx.font = '11px sans-serif';
+        if (n.buckle) {
+          ctx.fillStyle = '#f9e79f';
+          ctx.beginPath();
+          ctx.moveTo(n.x, n.y - n.r - 7); ctx.lineTo(n.x + 4, n.y - n.r - 3);
+          ctx.lineTo(n.x, n.y - n.r + 1); ctx.lineTo(n.x - 4, n.y - n.r - 3);
+          ctx.closePath(); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        if (onPath) {
+          ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 2, 0, Math.PI * 2); ctx.stroke();
+        }
+      }
+    }
+
+    if (quest && !quest.resolved && quest.nodeId === n.id) {
+      ctx.strokeStyle = `rgba(241,196,15,${0.55 + 0.35 * Math.sin(Date.now() / 220)})`;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 8 + Math.sin(Date.now() / 220) * 2, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#f1c40f'; ctx.font = 'bold 12px sans-serif';
+      ctx.fillText('◆任务', n.x, n.y - n.r - 16);
+      ctx.font = '11px sans-serif';
+    }
+  }
+
+  for (const sid of spawnIds) {
+    const s = byId[sid];
+    const act = path.includes(sid);
+    const z = ZONES[s.zone];
+    const zoneEdge = ['#5dade2', '#d4ac0d', '#e74c3c'][s.zone];   // 环层色：蓝/黄/红，与区域底色同义
+    ctx.fillStyle = act ? '#e74c3c' : '#6b2018';
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = zoneEdge; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r + 4, 0, Math.PI * 2); ctx.stroke();
+    if (warningActive(s)) {
+      ctx.strokeStyle = `rgba(231,76,60,${0.55 + 0.35 * Math.sin(Date.now() / 220)})`;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r + 10 + Math.sin(Date.now() / 220) * 3, 0, Math.PI * 2); ctx.stroke();
+    }
+    if (act) {
+      ctx.strokeStyle = `rgba(231,76,60,${0.4 + 0.3 * Math.sin(Date.now() / 250)})`;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r + 5, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 12px sans-serif';
+    ctx.fillText(act ? '启' : '出', s.x, s.y);
+    ctx.font = '11px sans-serif';
+    if (phase === PHASE.PREP && !act && !everConnected.has(sid)) {
+      ctx.fillStyle = zoneEdge;
+      ctx.fillText(`赏 ${SPAWN_BONUS[s.zone]}`, s.x, s.y - s.r - 14);
+    }
+    if (phase === PHASE.PREP && act) {
+      const comp = waveComposition(wave);
+      const counts = {};
+      comp.forEach(t => counts[t] = (counts[t] || 0) + 1);
+      const names = { normal: '普', fast: '快', heavy: '重', splitter: '裂', mist: '雾行者', gilded: '携金兽' };
+      const parts = Object.entries(counts).map(([k, v]) => `${names[k]}×${v}`).join(' ');
+      ctx.fillStyle = '#f5b7b1';
+      ctx.fillText(`${z.name} ${parts} (强度${z.hpMul}x 奖励${z.goldMul}x)`, s.x, s.y - s.r - 14);
+    }
+  }
+
+  const base = byId[0];
+  ctx.fillStyle = '#27ae60';
+  ctx.beginPath(); ctx.arc(base.x, base.y, base.r, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 13px sans-serif';
+  ctx.fillText('基地', base.x, base.y);
+
+  for (const m of monsters) {
+    ctx.globalAlpha = (m.tags || []).includes('invis') && m.revealed <= 0 ? 0.3 : 1;
+    ctx.fillStyle = m.color;
+    ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    if (m.boss) {
+      ctx.strokeStyle = '#f4ecf7'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(m.x, m.y, m.r + 4, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#f4ecf7'; ctx.font = 'bold 10px sans-serif';
+      ctx.fillText('BOSS', m.x, m.y - m.r - 16);
+    }
+    const bw = m.boss ? 40 : 26, pct = Math.max(0, m.hp / m.maxHp);
+    ctx.fillStyle = '#222'; ctx.fillRect(m.x - bw / 2, m.y - m.r - 9, bw, 3.5);
+    ctx.fillStyle = pct > 0.5 ? '#2ecc71' : pct > 0.25 ? '#f39c12' : '#e74c3c';
+    ctx.fillRect(m.x - bw / 2, m.y - m.r - 9, bw * pct, 3.5);
+    if (m.slowed > 0) {
+      ctx.strokeStyle = '#f7dc6f'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(m.x, m.y, m.r + 3, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+
+  for (const e of effects) {
+    if (e.boom) {
+      ctx.strokeStyle = `rgba(229,152,102,${e.life / 12})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(e.x, e.y, (12 - e.life) * 5 + 6, 0, Math.PI * 2); ctx.stroke();
+    } else {
+      line({ x: e.x1, y: e.y1 }, { x: e.x2, y: e.y2 }, e.color, 2);
+    }
+  }
+  for (const p of projectiles) {
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.kind === 'blast' ? 4.5 : 3, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.font = 'bold 13px sans-serif';
+  for (const f of floats) {
+    ctx.globalAlpha = Math.min(1, f.life / 25);
+    ctx.fillStyle = f.color;
+    ctx.fillText(f.text, f.x, f.y - (45 - f.life) * 0.4);
+    ctx.globalAlpha = 1;
+  }
+
+  // ===== 屏幕空间：小地图 =====
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = 'rgba(10,14,30,0.85)';
+  ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 1;
+  ctx.fillRect(MM.x - 2, MM.y - 2, MM.w + 4, MM.h + 4);
+  ctx.strokeRect(MM.x - 2, MM.y - 2, MM.w + 4, MM.h + 4);
+  ctx.save();
+  ctx.translate(MM.x, MM.y); ctx.scale(MM.sx, MM.sy);
+  for (let z = ZONES.length - 1; z >= 0; z--) {
+    ctx.fillStyle = ZONES[z].fill;
+    ctx.beginPath(); ctx.arc(CX, CY, ZONES[z].rMax, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.setLineDash([10, 7]);
+  ctx.strokeStyle = 'rgba(231,76,60,0.55)'; ctx.lineWidth = 1 / Math.max(MM.sx, MM.sy);
+  ctx.beginPath(); ctx.arc(CX, CY, ringR(wave), 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]);
+  for (const n of nodes) {
+    if (n.kind === 'base') { ctx.fillStyle = '#2ecc71'; ctx.beginPath(); ctx.arc(n.x, n.y, 22, 0, Math.PI * 2); ctx.fill(); continue; }
+    if (n.kind === 'spawn') {
+      ctx.fillStyle = path.includes(n.id) ? '#e74c3c' : '#7b2d1e';
+      ctx.beginPath(); ctx.arc(n.x, n.y, 20, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = ['#5dade2', '#d4ac0d', '#e74c3c'][n.zone]; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(n.x, n.y, 24, 0, Math.PI * 2); ctx.stroke();
+      continue;
+    }
+    if (n.kind === 'tower') {
+      ctx.fillStyle = n.locked ? '#3a3a52' : (path.includes(n.id) ? '#85c1e9' : '#41576e');
+      ctx.beginPath(); ctx.arc(n.x, n.y, 12, 0, Math.PI * 2); ctx.fill();
+    } else {
+      ctx.fillStyle = '#33334a';
+      ctx.beginPath(); ctx.arc(n.x, n.y, 8, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  if (path.length > 1) {
+    ctx.strokeStyle = '#3498db'; ctx.lineWidth = 30; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(byId[path[0]].x, byId[path[0]].y);
+    for (let i = 1; i < path.length; i++) ctx.lineTo(byId[path[i]].x, byId[path[i]].y);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#f1c40f';
+  for (const m of monsters) { ctx.beginPath(); ctx.arc(m.x, m.y, 16, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+  // 视口框
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1;
+  ctx.strokeRect(MM.x + cam.x * MM.sx, MM.y + cam.y * MM.sy, viewW() * MM.sx, viewH() * MM.sy);
+
+  // v6.8.2 任务目标在视野外：屏幕边缘画箭头 +「◆任务」，别让玩家满地图找
+  if (quest && !quest.resolved && byId[quest.nodeId]) {
+    const ind = questEdgeIndicator({ x: cam.x, y: cam.y, z: cam.z }, byId[quest.nodeId], W, H, 34);
+    if (ind && ind.visible) {
+      ctx.save();
+      ctx.translate(ind.x, ind.y);
+      ctx.rotate(ind.angle);
+      ctx.fillStyle = 'rgba(241,196,15,0.95)';
+      ctx.beginPath();
+      ctx.moveTo(18, 0); ctx.lineTo(-9, 10); ctx.lineTo(-3, 0); ctx.lineTo(-9, -10);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+      // 文字与目标点上的「◆任务」区分开：边缘这枚只提示方向
+      const label = '任务方向';
+      ctx.font = 'bold 12px sans-serif';
+      const tw = ctx.measureText(label).width || 40;
+      let lx = ind.x - Math.cos(ind.angle) * (22 + tw / 2);
+      let ly = ind.y - Math.sin(ind.angle) * (22 + tw / 2) + 4;
+      lx = Math.max(tw / 2 + 6, Math.min(W - tw / 2 - 6, lx));
+      ly = Math.max(16, Math.min(H - 8, ly));
+      ctx.fillStyle = 'rgba(10,12,24,0.78)';
+      ctx.fillRect(lx - tw / 2 - 5, ly - 12, tw + 10, 17);
+      ctx.fillStyle = '#f1c40f';
+      ctx.fillText(label, lx, ly);
+      ctx.font = '11px sans-serif';
+    }
+  }
+
+  if (phase === PHASE.WIN || phase === PHASE.OVER) {
+    ctx.fillStyle = 'rgba(10,10,20,0.6)'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = phase === PHASE.WIN ? '#2ecc71' : '#e74c3c';
+    ctx.font = 'bold 40px sans-serif';
+    ctx.fillText(phase === PHASE.WIN ? '胜 利' : '失 败', W / 2, H / 2 - 20);
+    ctx.fillStyle = '#eee'; ctx.font = '15px sans-serif';
+    ctx.fillText(`击杀 ${kills} · 遗物 ${ownedGlobals.length + ownedBuckles.length} · 波次 ${Math.min(wave, MAXWAVE)}/${MAXWAVE}`, W / 2, H / 2 + 25);
+  }
+}
+
+// ===== UI =====
+function refreshBuildTag() {
+  const el = document.getElementById('build-tag');
+  if (!el) return;
+  el.textContent = `试玩版 ${BUILD_ID}${PLAYTEST_PID ? ' · ' + PLAYTEST_PID : ''}`;
+}
+function refreshUI() {
+  const ph = phase === PHASE.PREP ? '备战' : phase === PHASE.WAVE ? '战斗中' : '';
+  const tags = [];
+  if (isQuestWave(wave)) tags.push('任务');
+  if (isBossWave(wave)) tags.push('Boss');
+  const protection = (phase === PHASE.PREP || phase === PHASE.TITLE) ? ` · ${ringProtectionText()}` : '';
+  document.getElementById('wave-info').textContent = `出怪圈 · 第 ${Math.min(wave, MAXWAVE)}/${MAXWAVE} 波 · 半径 ${ringR(Math.min(wave, MAXWAVE))}${ph ? ' · ' + ph : ''}${tags.length ? ' · ' + tags.join('+') + '波' : ''}${protection}`;
+  document.getElementById('hp').textContent = `基地 ${baseHP}/${baseMaxHp}`;
+  document.getElementById('energy').textContent = `能量 ${energy}`;
+  document.getElementById('gold').textContent = `金币 ${gold}`;
+  document.getElementById('relics').textContent = `遗物 ${ownedGlobals.length + ownedBuckles.length}`;
+  // v6.7.7 结构读数：塔型/孤塔/残血/双生/拐角/本波攻速。
+  // 界面只显示数值，不出现「留白/引擎/支持」等设计标签。
+  const lbEl = document.getElementById('school');
+  const readouts = [];
+  const TYPE_CN = { arrow: '箭', blast: '爆', slow: '减' };
+  if (hasGlobal('g_tax')) {
+    const ts = activeTowerTypeStats();
+    if (!ts.total) readouts.push('主流 无塔');
+    else if (ts.tie || ts.bestN * 2 <= ts.total) readouts.push('主流 未过半 · +0%');
+    else readouts.push(`主流 ${TYPE_CN[ts.best]}${ts.bestN}/${ts.total} · +${Math.round((mainTypeDmgMul() - 1) * 100)}%`);
+  }
+  if (hasGlobal('g_lonely')) readouts.push(`孤塔 ${lonelyCount()}`);
+  if (waveAtkSpeedBonus > 0) readouts.push(`本波攻速 +${Math.round(waveAtkSpeedBonus * 100)}%`);
+  if (hasGlobal('g_last')) readouts.push(`缺血 ${Math.round(missingHp())} · +${Math.round((lastDmgMul() - 1) * 100)}%`);
+  if (hasGlobal('g_twin')) readouts.push(`异型 ${twinPairCount()} 对`);
+  if (hasGlobal('g_corner')) readouts.push(`转弯 ${pathTurnCount()} · +${Math.round((cornerDmgMul() - 1) * 100)}%`);
+  // v6.8.0 1b-1a：塔型结构 / 空间几何 / 首杀时机
+  if (hasGlobal('g_tricolor')) {
+    const tcs = tricolorStats();
+    if (!tcs.total) readouts.push('塔型 无塔');
+    else if (!tcs.ok) {
+      // 失效原因必须可读：缺型 vs 某型过半（后者正是主流税契吃到的那一档）
+      const miss = ['arrow', 'slow', 'blast'].filter(k => !(tcs.counts[k] > 0)).map(k => TYPE_CN[k]);
+      readouts.push(miss.length ? `塔型 缺${miss.join('/')} · +0%`
+        : `塔型 ${TYPE_CN[tcs.best]}${tcs.bestN}/${tcs.total} 过半 · +0%`);
+    } else readouts.push(`塔型 最少${tcs.min}座 · +${Math.round((tricolorDmgMul() - 1) * 100)}%`);
+  }
+  if (hasGlobal('g_corridor')) readouts.push(`直段 ${longestStraightRun()} · +${Math.round((corridorDmgMul() - 1) * 100)}%`);
+  if (hasGlobal('g_firstblood')) readouts.push(`首杀 ×4 ${firstKillThisWave ? '已用' : '未用'}`);
+  if (readouts.length) {
+    // 注意：CSS 默认是 display:none，清空 inline 样式会回落成 none——必须显式写 block。
+    // v6.6 首次截图实测踩过这个坑（面板一直是隐藏的，断言却因读 inline 值而假绿）。
+    lbEl.style.display = 'block';
+    lbEl.textContent = readouts.join(' · ');
+  } else {
+    lbEl.style.display = 'none';
+  }
+  document.getElementById('start-btn').style.display = phase === PHASE.PREP ? 'inline-block' : 'none';
+  document.getElementById('pause-btn').style.display = phase === PHASE.WAVE ? 'inline-block' : 'none';
+  const sb = document.getElementById('start-btn');
+  if (draft) { sb.disabled = true; sb.textContent = '路径未连到出生点 ✗'; }
+  else {
+    sb.disabled = false;
+    const sp = activatedSpawns().length, tw = activeTowers().length;
+    if (sp > 0 && tw === 0) sb.textContent = `开始出怪 ▶ · ${sp} 份编队 · 没有开火塔`;
+    else if (sp >= 2) sb.textContent = `开始出怪 ▶ · ${sp} 份编队`;
+    else sb.textContent = '开始出怪 ▶';
+  }
+}
+function setStatus(t) { document.getElementById('status-text').textContent = t; }
+function showRestart(show) { document.getElementById('restart-btn').style.display = show ? 'block' : 'none'; }
+
+window.__ringTest = {
+  ringR, hpScale, spawnRingRadius, lostZonesAt, warningActive,
+  spawnWanderer, awardNewSpawnBonuses, applyRingLoss, startWave, spawnMonster,
+  waveComposition, bossSpawnId, relicPool, shopPrice, ensureEngineOffer, applyVenom, killMonster,
+  executeDmgMul, buckleExecuteMul, pick3, draw, refreshUI, updateWave,
+  openShop, openNextShop, closeShop,
+  visibleToTower, tagDamageMul, takeOpeningShot, damageForTarget, revealBySlow, arriveMonster,
+  revealByBuckle, takeIdleCharge, adjacentCooldownMul, splashRadius, openTowerMenu,
+  zoneConnectionCount, ringProtectionText, removePathAfter, waveIntel, buckleHooks, zoneCovered, warnedZoneNames,
+  skipRings, skipTaxMul, skipTaxNote, announcePrep,
+  initGame, enterTitle, togglePause, showResult, starsFor, readStats, nextSeed, mulberry32, rnd, reachableFrom,
+  playSound, setSound, finishTutorial, advanceTutorial,
+  camInfo: () => ({ x: cam.x, y: cam.y, z: cam.z, W, H }),
+  worldToScreen: (wx, wy) => ({ x: (wx - cam.x) * cam.z, y: (wy - cam.y) * cam.z }),
+  setCam: (x, y, z) => { cam.x = x; cam.y = y; if (z != null) cam.z = z; },
+  hasGlobal, shopPicks, weightedPick, mutexWeight, expeditionDmgMul, bastionDmgMul,
+  focusDmgMul, applyPoison, applyMirrorAtWaveStart, clearMirrors, explode, finishWave, zoneOf, gHook,
+  // v6.3 新遗物钩子
+  gHookAdd, activeTowers, swarmCdMul, endureDmgMul, tideDmgMul, resonanceDmgMul, markChill, takeBurstShot,
+  // v6.4 资源运营层
+  shouldOfferEvent, rollEvents, eventUsable, applyEvent, openEvent, closeEvent,
+  // v6.7.6 1a-2 收尾：种子审计/空域租金/能量过载
+  unconnectedSpawns, pickAirRentSpawn, eventVisible, waveSpeedCdMul,
+  // v6.8.2：事件花费行 / 抽卡权重 / 基础件货架 / 任务视野外箭头
+  eventCostText, eventWeight, shelfPicks, questEdgeIndicator,
+  getEventState: () => ({ activeEvent, pendingDebt, deposit, airRent, waveAtkSpeedBonus, eventLog: eventLog.slice(), pityCounter, baseMaxHp }),
+  // v6.5 统一"相邻"判据 + 少塔流三件
+  isSacrificeNode, isTowerAtPathIndex, pathNeighborTowers, pathAdjacentNodes, isLonelyTower,
+  idleDmgMul, lonelyDmgMul, hubAdjDmgMul,
+  // v6.7.7 塔群/塔型结构 + 资源转换
+  hoardDmgMul, mainTypeDmgMul, activeTowerTypeStats, lonelyCount, convertEnergyGold,
+  // v6.7.5 1a-2：残血 / 双生 / 拐角 / 条件卡扣
+  pathTurnIndices, pathTurnCount, isTowerNearTurn, cornerDmgMul, twinDmgMul, twinPairCount,
+  missingHp, lastDmgMul, healMul, buckleConditionalDmgMul, idleEnergyCdMul, towerShotDamage,
+  // v6.8.0 1b-1a：三色均衡 / 走廊协议 / 首杀赏金 / 群塔卡扣
+  tricolorStats, tricolorDmgMul, longestStraightRun, longestStraightRunRange, corridorDmgMul, denseNeighborCount,
+  getFirstKill: () => firstKillThisWave,
+  // v6.8.1 1b-1b：可叠普通件（层数/加法聚合/有效价/池子）
+  stackCount, stackSum, relicStackLimit, stackDmgMul, stackCdMul, stackRangeMul,
+  stackPriceMul, shopPrice, pawnRefund, relicPool, openShop, closeShop,
+  constants: { PHASE, RING_R0, RING_STEP, RING_LOST_MODE, SPAWN_BONUS, SPAWN_RINGS, ZONES, MON, TOWER, RELICS, DATA, BUILD_ID, PLAYTEST_PID },
+  // v6.7.10 试玩导出
+  getPlaytestExport: () => lastRunExport || playtestExport(),
+  getRunLog: () => runLog,
+  playtestExport, copyText,
+  getState: () => ({ phase, wave, path: path.slice(), monsters, gold, baseHP, baseMaxHp, kills, everConnected, queue, spawnTimer, paused, currentSeed, tutorialStep, ringLostHpMul, waveHpMul, draft: draft ? draft.slice() : null, energy, nodes, ownedGlobals, ownedBuckles, lockedOffers: Array.from(lockedOffers), hoardSnapshot, paidShopCount, enemyLeakDamage, intelShops, pendingMalus, quest: quest ? { ...quest } : null }),
+  setState: s => {
+    if ('wave' in s) wave = s.wave;
+    if ('path' in s) path = s.path.slice();
+    if ('gold' in s) gold = s.gold;
+    if ('baseHP' in s) baseHP = s.baseHP;
+    if ('baseMaxHp' in s) baseMaxHp = s.baseMaxHp;
+    if ('kills' in s) kills = s.kills;
+    if ('monsters' in s) monsters = s.monsters;
+    if ('draft' in s) draft = s.draft ? s.draft.slice() : null;
+    if ('energy' in s) energy = s.energy;
+    if ('phase' in s) phase = s.phase;
+    if ('queue' in s) queue = s.queue;
+    if ('spawnTimer' in s) spawnTimer = s.spawnTimer;
+    if ('paused' in s) paused = s.paused;
+    if ('ownedBuckles' in s) ownedBuckles = s.ownedBuckles;
+    if ('ownedGlobals' in s) ownedGlobals = s.ownedGlobals;
+    if ('lockedOffers' in s) lockedOffers = new Set(s.lockedOffers);
+    if ('shopQueue' in s) shopQueue = s.shopQueue.slice();
+    if ('hoardSnapshot' in s) hoardSnapshot = s.hoardSnapshot;
+    if ('paidShopCount' in s) paidShopCount = s.paidShopCount;
+    if ('enemyLeakDamage' in s) enemyLeakDamage = s.enemyLeakDamage;
+    if ('airRent' in s) airRent = s.airRent;
+    if ('waveAtkSpeedBonus' in s) waveAtkSpeedBonus = s.waveAtkSpeedBonus;
+    if ('firstKillThisWave' in s) firstKillThisWave = s.firstKillThisWave;
+    if ('pendingDebt' in s) pendingDebt = s.pendingDebt;
+    if ('deposit' in s) deposit = s.deposit;
+    if ('intelShops' in s) intelShops = s.intelShops;
+    if ('pendingMalus' in s) pendingMalus = s.pendingMalus;
+    if ('quest' in s) quest = s.quest ? { ...s.quest } : null;
+  },
+  nodes: () => ({ nodes, byId, spawnIds, adj }),
+};
+
+// ===== 主循环 =====
+function loop() {
+  if (phase === PHASE.WAVE && !paused) { updateWave(); refreshUI(); }
+  else if (phase === PHASE.PREP) { updateFx(); refreshUI(); }   // PREP 期也刷新：草稿态实时驱动按钮灰化与警示脉冲
+  draw();
+  requestAnimationFrame(loop);
+}
+
+setSound(soundOn);
+initGame(DATA.seedPool[0]);
+enterTitle();
+loop();
+</script>
+</body>
+</html>
