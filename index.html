@@ -16,8 +16,7 @@
                     <a href="#portfolio" class="sidebar-link">作品集</a>
                     <ul class="sidebar-submenu">
                         <li><a href="#worldview" class="sidebar-link">世界观</a></li>
-                        <li><a href="#games" class="sidebar-link">游戏策划案</a></li>
-                        <li><a href="#demos" class="sidebar-link">试玩 Demo</a></li>
+                        <li><a href="#games" class="sidebar-link">游戏作品</a></li>
                         <li><a href="#stories" class="sidebar-link">短篇小说</a></li>
                         <li><a href="#content" class="sidebar-link">内容创作</a></li>
                     </ul>
@@ -121,168 +120,217 @@
                 </div>
             </div>
 
-            <!-- 游戏策划案 -->
+            <!-- 游戏作品：按设计方向分组，组内可玩在前、纯文档在后 -->
             <div id="games" class="portfolio-category">
-                <h3 class="category-title">游戏策划案</h3>
-                <div class="portfolio-grid">
-                    <div class="portfolio-item">
-                        <div class="item-header">
-                            <h4>地府访客投资指南</h4>
-                            <span class="item-tag">Roguelike</span>
-                        </div>
-                        <p class="item-desc">5类资产地块+邻接效应+十殿爬塔+技能书Build+生死簿</p>
-                        <a href="files/地府访客投资指南（地块）.pdf" class="btn" target="_blank">查看策划案</a>
+                <span id="demos" class="anchor-alias" aria-hidden="true"></span>
+                <h3 class="category-title">游戏作品</h3>
+                <p class="category-lead">浏览器卡片点击即玩，标 Windows 的需下载解压后运行 .exe。</p>
+                <nav class="direction-index" aria-label="设计方向">
+                    <a href="#dir-system">系统与数值</a>
+                    <a href="#dir-task">任务与关卡</a>
+                    <a href="#dir-ai">AI 与规则</a>
+                    <a href="#dir-mechanic">玩法机制</a>
+                    <a href="#dir-narrative">互动叙事</a>
+                </nav>
+
+                <section class="direction-block" id="dir-system">
+                    <div class="direction-head">
+                        <h4 class="direction-title">系统与数值</h4>
+                        <p class="direction-desc">数值、构筑、经济循环与规则裁决</p>
                     </div>
+                    <div class="portfolio-grid">
+                        <article class="portfolio-item">
+                            <div class="item-tags">
+                                <span class="chip">Roguelike 塔防</span>
+                                <span class="chip play">在线试玩</span>
+                                <span class="chip dev">开发中</span>
+                            </div>
+                            <h5 class="card-title">一笔画塔防</h5>
+                            <p class="item-desc">用一笔连线决定防线走向，连上的出生点越多，每波怪越肥；环层越外越险也越赏。68 件遗物与卡扣构筑、12 张种子地图、12 波两个 Boss，浏览器点击即玩。</p>
+                            <div class="btn-group">
+                                <a href="files/one-stroke-td.html" class="btn" target="_blank">在线试玩</a>
+                            </div>
+                        </article>
 
-                    <div class="portfolio-item">
-                        <div class="item-header">
-                            <h4>梦生残夏</h4>
-                            <span class="item-tag">叙事探索</span>
-                        </div>
-                        <p class="item-desc">反战主题叙事探索游戏，双线梦境+现实检索</p>
-                        <div class="btn-group">
-                            <a href="files/梦生残夏大纲.pdf" class="btn" target="_blank">大纲</a>
-                            <a href="files/梦生残夏玩法文本.pdf" class="btn" target="_blank">玩法</a>
-                        </div>
+                        <article class="portfolio-item">
+                            <div class="item-tags">
+                                <span class="chip">Roguelike 经济</span>
+                                <span class="chip doc">仅文档</span>
+                            </div>
+                            <h5 class="card-title">地府访客投资指南</h5>
+                            <p class="item-desc">5 类资产地块、邻接效应、十殿爬塔、技能书 Build 与生死簿。以地块经营和路线选择构成一局 Roguelike。</p>
+                            <div class="btn-group">
+                                <a href="files/地府访客投资指南（地块）.pdf" class="btn" target="_blank">查看策划案</a>
+                            </div>
+                        </article>
                     </div>
+                </section>
 
-                    <div class="portfolio-item">
-                        <div class="item-header">
-                            <h4>赛博烧烤摊</h4>
-                            <span class="item-tag">叙事经营</span>
-                        </div>
-                        <p class="item-desc">对标 VA-11 Hall-A，赛博朋克世界观下的经营叙事</p>
-                        <a href="files/赛博烧烤摊游戏文本.pdf" class="btn" target="_blank">查看文本</a>
+                <section class="direction-block" id="dir-task">
+                    <div class="direction-head">
+                        <h4 class="direction-title">任务与关卡</h4>
+                        <p class="direction-desc">关卡语言、空间叙事、解谜与房间设计</p>
                     </div>
+                    <div class="portfolio-grid">
+                        <article class="portfolio-item">
+                            <div class="item-tags">
+                                <span class="chip">空间叙事 / 关卡语言</span>
+                                <span class="chip play">在线试玩</span>
+                            </div>
+                            <h5 class="card-title">借雨</h5>
+                            <p class="item-desc">雨的大小改变街区连通性，四档天气再加几条只认「你已经知道什么」的路，把 15 个场景接成 2 个结局。浏览器点击即玩。</p>
+                            <div class="btn-group">
+                                <a href="https://hukaidi1224-cloud.github.io/jieyu/" class="btn" target="_blank">在线试玩</a>
+                                <a href="https://b23.tv/xBr7LzM" class="btn" target="_blank">试玩视频</a>
+                                <a href="files/jieyu-guide.html" class="btn" target="_blank">通关指南</a>
+                            </div>
+                        </article>
 
-                    <div class="portfolio-item">
-                        <div class="item-header">
-                            <h4>字节劳资拉扯模拟器</h4>
-                            <span class="item-tag">AI项目</span>
-                        </div>
-                        <p class="item-desc">纯AI Agent编程项目，叙事驱动的经营模拟</p>
-                        <a href="files/劳资拉扯模拟器.pdf" class="btn" target="_blank">查看策划案</a>
+                        <article class="portfolio-item">
+                            <div class="item-tags">
+                                <span class="chip">策略探索</span>
+                                <span class="chip">GGJ 2026</span>
+                                <span class="chip download">Windows 下载</span>
+                            </div>
+                            <h5 class="card-title">面具之家</h5>
+                            <p class="item-desc">微恐怖策略探索，双面具切换加 7 种邪祟 AI，GGJ 2026 现场作品。含策划案、可下载 Demo 与试玩视频。</p>
+                            <div class="btn-group">
+                                <a href="https://easylink.cc/8z89qa" class="btn" target="_blank">下载 Demo</a>
+                                <a href="files/面具之家策划案（26ggj作品）/" class="btn" target="_blank">策划案</a>
+                                <a href="https://b23.tv/eSBFj6O" class="btn" target="_blank">试玩视频</a>
+                            </div>
+                        </article>
+
+                        <article class="portfolio-item">
+                            <div class="item-tags">
+                                <span class="chip">解谜关卡</span>
+                                <span class="chip doc">仅文档</span>
+                            </div>
+                            <h5 class="card-title">看海的猫</h5>
+                            <p class="item-desc">类锈湖剧情点击解谜，5 关完整关卡，用互动物品状态表和关卡文档记录设计。开发存档试玩视频记录了当前版本。</p>
+                            <div class="btn-group">
+                                <a href="files/看海的猫策划案/" class="btn" target="_blank">查看策划案</a>
+                                <a href="https://www.bilibili.com/video/BV1LR4M6QERR/" class="btn" target="_blank">开发存档视频</a>
+                            </div>
+                        </article>
                     </div>
+                </section>
 
-                    <div class="portfolio-item">
-                        <div class="item-header">
-                            <h4>看海的猫</h4>
-                            <span class="item-tag">解谜</span>
-                        </div>
-                        <p class="item-desc">锈湖风解谜游戏，5关完整关卡</p>
-                        <a href="files/看海的猫策划案/" class="btn" target="_blank">查看策划案</a>
+                <section class="direction-block" id="dir-ai">
+                    <div class="direction-head">
+                        <h4 class="direction-title">AI 与规则</h4>
+                        <p class="direction-desc">AI 只做表达，裁决交给规则</p>
                     </div>
-                </div>
-            </div>
-
-            <!-- 试玩 Demo -->
-            <div id="demos" class="portfolio-category">
-                <h3 class="category-title">试玩 Demo</h3>
-                <div class="demo-instructions" data-page-node-id="demoUnifiedGuide">
-                    <p class="instruction-title">试玩说明</p>
-                    <p class="instruction-note">「下载 Demo」的项目下载 zip 后解压，运行其中的 .exe（仅支持 Windows）；标注「在线试玩」的点击即玩</p>
-                </div>
-                <div class="portfolio-grid">
-                    <div class="portfolio-item">
-                        <div class="item-header">
-                            <h4>面具之家</h4>
-                            <span class="item-tag">GGJ 2026</span>
-                        </div>
-                        <p class="item-desc">微恐怖策略探索，双面具+7种邪祟AI</p>
-                        <div class="btn-group">
-                            <a href="files/面具之家策划案（26ggj作品）/" class="btn" target="_blank">策划案</a>
-                            <a href="https://easylink.cc/8z89qa" class="btn" target="_blank">下载 Demo</a>
-                            <a href="https://b23.tv/eSBFj6O" class="btn" target="_blank">试玩视频</a>
-                        </div>
+                    <div class="portfolio-grid">
+                        <article class="portfolio-item">
+                            <div class="item-tags">
+                                <span class="chip">对话模拟</span>
+                                <span class="chip play">在线试玩</span>
+                            </div>
+                            <h5 class="card-title">谈薪模拟器（原《劳资拉扯模拟器》）</h5>
+                            <p class="item-desc">8 轮谈薪对话，5 个话术陷阱；HR 的话由 AI 或本地话术生成，报价、满意度、胜负全部由规则计算。默认不联网，同一串输入得到同一结果。</p>
+                            <div class="btn-group">
+                                <a href="files/salary-battle.html" class="btn" target="_blank">在线试玩</a>
+                                <a href="files/salary-battle-design.html" class="btn" target="_blank">设计说明</a>
+                                <a href="files/劳资拉扯模拟器.pdf" class="btn" target="_blank">原始概念稿</a>
+                            </div>
+                        </article>
                     </div>
+                </section>
 
-                    <div class="portfolio-item">
-                        <div class="item-header">
-                            <h4>一笔画塔防</h4>
-                            <span class="item-tag">Roguelike 塔防 · 开发中</span>
-                        </div>
-                        <p class="item-desc">核心作品：一笔画连线决定防线走向——连上的出生点越多，每波怪越肥；环层越外越险也越赏。68 件遗物与卡扣构筑、12 张种子地图、12 波两个 Boss，浏览器点击即玩</p>
-                        <div class="btn-group">
-                            <a href="files/one-stroke-td.html" class="btn" target="_blank">在线试玩</a>
-                        </div>
+                <section class="direction-block" id="dir-mechanic">
+                    <div class="direction-head">
+                        <h4 class="direction-title">玩法机制</h4>
+                        <p class="direction-desc">感知、潜行与操作规则原型</p>
                     </div>
+                    <div class="portfolio-grid">
+                        <article class="portfolio-item">
+                            <div class="item-tags">
+                                <span class="chip">声呐潜行</span>
+                                <span class="chip play">在线试玩</span>
+                            </div>
+                            <h5 class="card-title">声音回路</h5>
+                            <p class="item-desc">发声即视之，发声即危之：回波点云是唯一的视野，也是引鬼的钩。三关三条声学规则，灯声扩展版加入光区回声与会望灯的鬼。</p>
+                            <div class="btn-group">
+                                <a href="files/sound-loop.html" class="btn" target="_blank">在线试玩（原版）</a>
+                                <a href="files/light-echo.html" class="btn" target="_blank">在线试玩（灯声扩展）</a>
+                                <a href="files/game-g006-design.html" class="btn" target="_blank">查看策划案</a>
+                            </div>
+                        </article>
 
-                    <div class="portfolio-item">
-                        <div class="item-header">
-                            <h4>借雨</h4>
-                            <span class="item-tag">关卡语言 · 空间叙事</span>
-                        </div>
-                        <p class="item-desc">「雨底之东」世界观第一款可玩：雨的大小改变街区的连通性，四档天气再加几条只认「你已经知道什么」的路，把 15 个场景接成 2 个结局，浏览器点击即玩</p>
-                        <div class="btn-group">
-                            <a href="https://hukaidi1224-cloud.github.io/jieyu/" class="btn" target="_blank">在线试玩</a>
-                            <a href="https://b23.tv/xBr7LzM" class="btn" target="_blank">试玩视频</a>
-                            <a href="files/jieyu-guide.html" class="btn" target="_blank">通关指南</a>
-                        </div>
+                        <article class="portfolio-item">
+                            <div class="item-tags">
+                                <span class="chip">听觉潜行</span>
+                                <span class="chip play">在线试玩</span>
+                            </div>
+                            <h5 class="card-title">心跳</h5>
+                            <p class="item-desc">心跳即声呐，也即猎物标记：离怪越近心跳越响，听得越清也暴露得越彻底。屏息可隐身但失去感知，双资源互相绞紧。</p>
+                            <div class="btn-group">
+                                <a href="files/heartbeat.html" class="btn" target="_blank">在线试玩</a>
+                                <a href="files/heartbeat-design.html" class="btn" target="_blank">设计策划案</a>
+                            </div>
+                        </article>
                     </div>
+                </section>
 
-                    <div class="portfolio-item">
-                        <div class="item-header">
-                            <h4>遗忘者手记·完全版</h4>
-                            <span class="item-tag">叙事设计 · 多周目</span>
-                        </div>
-                        <p class="item-desc">多周目罗生门叙事：代入场洪水之夜的四份讲述（妹妹/哥哥/学徒/知微），单一视角永远看不到全貌。36 枚碎片跨周目互证，两条旧信息生成第三条真相；11 结局收束于真结局《写名》。v6 定稿文本 + 雨幕/水位/溶解词演出层</p>
-                        <div class="btn-group">
-                            <a href="files/forgetters-journal.html" class="btn" target="_blank">在线试玩</a>
-                            <a href="files/game-g003-design.html" class="btn" target="_blank">查看策划案</a>
-                        </div>
+                <section class="direction-block" id="dir-narrative">
+                    <div class="direction-head">
+                        <h4 class="direction-title">互动叙事</h4>
+                        <p class="direction-desc">多周目、对话、分支与文本演出</p>
                     </div>
+                    <div class="portfolio-grid">
+                        <article class="portfolio-item">
+                            <div class="item-tags">
+                                <span class="chip">多周目叙事</span>
+                                <span class="chip play">在线试玩</span>
+                            </div>
+                            <h5 class="card-title">遗忘者手记·完全版</h5>
+                            <p class="item-desc">洪水之夜的四份讲述，单一视角永远看不到全貌。36 枚碎片跨周目互证，11 个结局收束于真结局《写名》。</p>
+                            <div class="btn-group">
+                                <a href="files/forgetters-journal.html" class="btn" target="_blank">在线试玩</a>
+                                <a href="files/game-g003-design.html" class="btn" target="_blank">查看策划案</a>
+                            </div>
+                        </article>
 
-                    <div class="portfolio-item">
-                        <div class="item-header">
-                            <h4>声音回路</h4>
-                            <span class="item-tag">玩法设计 · 声呐潜行</span>
-                        </div>
-                        <p class="item-desc">中式怪谈声呐解谜：发声即视之，发声即危之——回波点云即是你唯一的视野，也是引鬼的钩。三关三条声学规则（回波延迟/走马灯假回波），"信息剥夺→事件暴露→再度失位"的压迫感设计；无 build 纯玩法技巧向，网页直接可玩。扩展版「灯声回路」（第二夜·出殡前夜）在声呐框架上加入灯——光区内的回声驻留加倍，灯焰照亮局部也会暴露自己；鬼会望灯，也会循声而来。六进关卡 + 8 张纸钱双结局，具备扩展为完整独立游戏的潜质</p>
-                        <div class="btn-group">
-                            <a href="files/sound-loop.html" class="btn" target="_blank">在线试玩（原版）</a>
-                            <a href="files/light-echo.html" class="btn" target="_blank">在线试玩（灯声扩展）</a>
-                            <a href="files/game-g006-design.html" class="btn" target="_blank">查看策划案</a>
-                        </div>
+                        <article class="portfolio-item">
+                            <div class="item-tags">
+                                <span class="chip">对话博弈</span>
+                                <span class="chip play">在线试玩</span>
+                            </div>
+                            <h5 class="card-title">夜班电台</h5>
+                            <p class="item-desc">1938 年美国电台怪谈：无形之物占线学人说话，先听半截线路杂音判断真假。三夜 25 通来电、五种结局，对真人是安抚，对它是侵蚀。</p>
+                            <div class="btn-group">
+                                <a href="files/nightradio.html" class="btn" target="_blank">在线试玩</a>
+                                <a href="files/nightradio-design.html" class="btn" target="_blank">设计策划案</a>
+                            </div>
+                        </article>
+
+                        <article class="portfolio-item">
+                            <div class="item-tags">
+                                <span class="chip">视觉小说</span>
+                                <span class="chip play">在线试玩</span>
+                            </div>
+                            <h5 class="card-title">余埠</h5>
+                            <p class="item-desc">厂办学校与厂区共用一套汽笛，教育系统的词整批换成工业用语。黑白木刻、两种颜色、24 个场景 36 屏，双击即玩。</p>
+                            <div class="btn-group">
+                                <a href="files/yubu.html" class="btn" target="_blank">在线试玩</a>
+                                <a href="files/yubu-art-spec.html" class="btn" target="_blank">选题与美术规范</a>
+                            </div>
+                        </article>
+
+                        <article class="portfolio-item">
+                            <div class="item-tags">
+                                <span class="chip">叙事经营</span>
+                                <span class="chip doc">仅文档</span>
+                            </div>
+                            <h5 class="card-title">赛博烧烤摊</h5>
+                            <p class="item-desc">对标《VA-11 Hall-A》，赛博朋克世界观下的烧烤摊经营与对话叙事。游戏文本记录顾客线与夜晚结构。</p>
+                            <div class="btn-group">
+                                <a href="files/赛博烧烤摊游戏文本.pdf" class="btn" target="_blank">查看文本</a>
+                            </div>
+                        </article>
                     </div>
-
-                    <div class="portfolio-item">
-                        <div class="item-header">
-                            <h4>心跳</h4>
-                            <span class="item-tag">玩法设计 · 听觉潜行</span>
-                        </div>
-                        <p class="item-desc">中式怪谈感知潜行：心跳即声呐，也即猎物标记——离怪越近你越怕、越怕心跳越响、听得越清也暴露越彻底；屏息可隐身但失去感知，睁眼看得真却积蓄雪盲会强制致盲。双资源绞紧 + 六态 AI（巡逻/聆听/警觉/追猎/搜寻/困惑），任务关（刻印站定）+ 逃脱关，网页直接可玩</p>
-                        <div class="btn-group">
-                            <a href="files/heartbeat.html" class="btn" target="_blank">在线试玩</a>
-                            <a href="files/heartbeat-design.html" class="btn" target="_blank">设计策划案</a>
-                        </div>
-                    </div>
-
-                    <div class="portfolio-item">
-                        <div class="item-header">
-                            <h4>余埠</h4>
-                            <span class="item-tag">黑白木刻</span>
-                        </div>
-                        <p class="item-desc">厂办学校与厂区共享一套汽笛，于是教育系统的词整批换成工业用语——出厂考、判废、回炉、序位、静置期。一个被判过两次不合格的人，决定在第三次考试那天，去给一座没人再用得上的汽笛上油。全片只有两个颜色（墨与纸），灰是排线密度不是透明度；全片只有三样东西会动，界面上一个数字都没有。24 个场景、36 屏、零外部资源、双击即玩</p>
-                        <div class="btn-group">
-                            <a href="files/yubu.html" class="btn" target="_blank">在线试玩</a>
-                            <a href="files/yubu-art-spec.html" class="btn" target="_blank">选题与美术规范</a>
-                        </div>
-                    </div>
-
-                    <div class="portfolio-item">
-                        <div class="item-header">
-                            <h4>夜班电台</h4>
-                            <span class="item-tag">叙事设计 · 接线员博弈</span>
-                        </div>
-                        <p class="item-desc">1938 美国电台黄金时代怪谈：无形之物占线学人说话——接起后先听半截线路杂音判断真假，先开口是迎接也是喂食；每句回应对真人是安抚、对它是侵蚀（镜像定价），质问可疑措辞逼它复述你的话露破绽。三夜 25 通来电，六页交班记录，五种结局（交班/接班/哑火/揭露/换班）。静电噪点、渗字回声、信号波条全套文字演出</p>
-                        <div class="btn-group">
-                            <a href="files/nightradio.html" class="btn" target="_blank">在线试玩</a>
-                            <a href="files/nightradio-design.html" class="btn" target="_blank">设计策划案</a>
-                        </div>
-                    </div>
-
-
-                </div>
+                </section>
             </div>
 
             <!-- 短篇小说 -->

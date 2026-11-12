@@ -243,6 +243,121 @@ body {
     border-left: 3px solid #ffffff;
 }
 
+.portfolio-category,
+.direction-block {
+    scroll-margin-top: 90px;
+}
+
+.category-lead {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
+    margin: -1.1rem 0 1.6rem 1rem;
+}
+
+.anchor-alias {
+    display: block;
+    height: 0;
+    scroll-margin-top: 90px;
+}
+
+/* 方向索引与分组 */
+.direction-index {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-bottom: 2.6rem;
+}
+
+.direction-index a {
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    font-size: 0.82rem;
+    padding: 0.35rem 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 20px;
+    transition: all 0.3s;
+}
+
+.direction-index a:hover {
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.direction-block {
+    margin-bottom: 3.2rem;
+}
+
+.direction-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-bottom: 1.4rem;
+}
+
+.direction-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #ffffff;
+    padding-left: 0.8rem;
+    border-left: 3px solid rgba(255, 255, 255, 0.8);
+}
+
+.direction-desc {
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 0.84rem;
+}
+
+/* 卡片标签与标题 */
+.item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.8rem;
+}
+
+.chip {
+    font-size: 0.74rem;
+    line-height: 1.5;
+    padding: 0.18rem 0.62rem;
+    border-radius: 20px;
+    color: rgba(255, 255, 255, 0.62);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.chip.play {
+    color: #6ee7b7;
+    background: rgba(52, 211, 153, 0.08);
+    border-color: rgba(52, 211, 153, 0.32);
+}
+
+.chip.download {
+    color: #93c5fd;
+    background: rgba(96, 165, 250, 0.08);
+    border-color: rgba(96, 165, 250, 0.3);
+}
+
+.chip.doc {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.chip.dev {
+    color: #fcd34d;
+    background: rgba(251, 191, 36, 0.07);
+    border-color: rgba(251, 191, 36, 0.28);
+}
+
+.card-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #ffffff;
+    margin-bottom: 0.7rem;
+}
+
 .portfolio-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));

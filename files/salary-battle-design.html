@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>谈薪模拟器 - 设计说明 | 胡凯迪</title>
+<style>
+  :root {
+    --bg: #000000;
+    --panel: rgba(255,255,255,0.04);
+    --line: rgba(255,255,255,0.12);
+    --text: #ffffff;
+    --muted: rgba(255,255,255,0.68);
+    --dim: rgba(255,255,255,0.45);
+    --accent: #34d399;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.75;
+    color: var(--text);
+    background: var(--bg);
+    padding: 3rem 1.5rem 5rem;
+  }
+  .doc { max-width: 920px; margin: 0 auto; }
+  .back {
+    display: inline-block;
+    color: var(--dim);
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 2.5rem;
+  }
+  .back:hover { color: #fff; }
+  .kicker {
+    color: var(--accent);
+    font-size: 0.85rem;
+    letter-spacing: 0.14em;
+    margin-bottom: 0.7rem;
+  }
+  h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.7rem; }
+  .subtitle { color: var(--muted); font-size: 1.05rem; max-width: 720px; margin-bottom: 1.4rem; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 2rem; }
+  .tag {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.85);
+    padding: 0.3rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.82rem;
+  }
+  .tag.accent { background: rgba(52,211,153,0.14); color: var(--accent); }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 3.2rem; }
+  .btn {
+    display: inline-block;
+    padding: 0.65rem 1.2rem;
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 8px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #04231a; font-weight: 600; }
+  .btn:hover { border-color: rgba(255,255,255,0.45); }
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 3.2rem 0 1.2rem;
+    padding-left: 0.9rem;
+    border-left: 3px solid #fff;
+  }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.8rem 0 0.6rem; color: rgba(255,255,255,0.95); }
+  p { color: var(--muted); margin-bottom: 1rem; }
+  ul, ol { color: var(--muted); margin: 0 0 1rem 1.4rem; }
+  li { margin-bottom: 0.4rem; }
+  strong { color: rgba(255,255,255,0.94); font-weight: 600; }
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.9rem; margin: 1.4rem 0 1.8rem; }
+  .metric { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.1rem; }
+  .metric b { display: block; font-size: 1.7rem; line-height: 1.2; color: #fff; }
+  .metric span { display: block; color: var(--dim); font-size: 0.82rem; margin-top: 0.3rem; }
+  .loop { display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.5rem; margin: 1rem 0 1.4rem; }
+  .step {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.6rem 0.4rem;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--dim);
+  }
+  .step b { display: block; color: #fff; font-size: 0.95rem; margin-bottom: 0.2rem; }
+  .step.trap { border-color: rgba(251,191,36,0.55); background: rgba(251,191,36,0.08); }
+  .step.trap b { color: #fbbf24; }
+  .step.end { border-color: rgba(52,211,153,0.55); background: rgba(52,211,153,0.08); }
+  .step.end b { color: var(--accent); }
+  .note { color: var(--dim); font-size: 0.82rem; margin-top: -0.4rem; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.2rem 0 1.6rem; }
+  figure { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 0.7rem; }
+  figure img { width: 100%; display: block; border-radius: 6px; }
+  figcaption { color: var(--dim); font-size: 0.78rem; padding-top: 0.5rem; text-align: center; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.2rem 0 1.6rem; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1.1rem 1.3rem; }
+  .panel h4 { font-size: 1rem; margin-bottom: 0.5rem; }
+  .panel ul { margin-bottom: 0; }
+  .table-wrap { overflow-x: auto; margin: 1.2rem 0 1.6rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 620px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 0.7rem 0.7rem; text-align: left; vertical-align: top; }
+  th { color: rgba(255,255,255,0.9); font-weight: 600; background: rgba(255,255,255,0.04); }
+  td { color: var(--muted); }
+  td strong { color: #fff; }
+  .path { counter-reset: step; list-style: none; margin-left: 0; }
+  .path li { position: relative; padding: 0.55rem 0 0.55rem 2.4rem; border-bottom: 1px dashed var(--line); }
+  .path li::before {
+    counter-increment: step;
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 0.6rem;
+    width: 1.6rem;
+    height: 1.6rem;
+    line-height: 1.6rem;
+    text-align: center;
+    border-radius: 50%;
+    background: rgba(52,211,153,0.15);
+    color: var(--accent);
+    font-size: 0.78rem;
+  }
+  .path li:last-child { border-bottom: none; }
+  .footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); color: var(--dim); font-size: 0.82rem; }
+  code { background: rgba(255,255,255,0.09); padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.85em; }
+  @media (max-width: 720px) {
+    body { padding: 2rem 1rem 3.5rem; }
+    h1 { font-size: 1.9rem; }
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .loop { grid-template-columns: repeat(4, 1fr); }
+    .shots, .two-col { grid-template-columns: 1fr; }
+    .table-wrap { overflow-x: visible; }
+    table { min-width: 0; }
+    thead { display: none; }
+    tbody, tr, td { display: block; }
+    tr {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0.5rem 0.8rem;
+      margin-bottom: 0.7rem;
+      background: rgba(255,255,255,0.02);
+    }
+    td { border: none; padding: 0.22rem 0; }
+    td::before {
+      content: attr(data-label);
+      display: inline-block;
+      width: 7.5em;
+      margin-right: 0.4em;
+      color: rgba(255,255,255,0.42);
+      font-size: 0.76rem;
+      font-weight: 400;
+    }
+    td:first-child { font-weight: 600; color: #fff; }
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+  <a class="back" href="../index.html">← 返回作品集</a>
+
+  <div class="kicker">AI 接入 · 规则裁决</div>
+  <h1>谈薪模拟器</h1>
+  <p class="subtitle">8 轮谈薪对话，5 个话术陷阱。HR 的话由 AI 或本地话术生成，报价、满意度、胜负和评分全部由规则计算。默认不联网，同一串输入得到同一结果。</p>
+  <div class="meta">
+    <span class="tag accent">在线试玩</span>
+    <span class="tag">单场景约束版</span>
+    <span class="tag">对话模拟</span>
+    <span class="tag">2026-11</span>
+  </div>
+  <div class="actions">
+    <a class="btn primary" href="salary-battle.html" target="_blank">开始试玩</a>
+    <a class="btn" href="劳资拉扯模拟器.pdf" target="_blank">原始概念稿（2026-05）</a>
+  </div>
+
+  <h2>一、要解决的问题</h2>
+  <p>应届生谈薪时，信息是单向透明的。HR 知道岗位预算、知道公司底牌，也知道哪些话能把候选人绕进去；候选人只知道一个初始报价。这个项目把一场不对称谈判压成 8 轮、3–5 分钟，让玩家在真实开口之前先踩一遍坑。</p>
+  <p>演示要证明三件事：我做过 AI 驱动的玩法；我知道 AI 该放在哪一层；我撞过成本、不可复现、语音识别三个坑，并且有具体的修正方案。</p>
+
+  <h2>二、核心循环</h2>
+  <div class="metrics">
+    <div class="metric"><b>8</b><span>轮对话</span></div>
+    <div class="metric"><b>5</b><span>个固定陷阱</span></div>
+    <div class="metric"><b>6</b><span>类玩家意图</span></div>
+    <div class="metric"><b>4</b><span>维结算</span></div>
+  </div>
+  <p>HR 开局给 15K，岗位真实预算 22K。桌面上三条线：<strong>HR 满意度</strong>、<strong>信息暴露度</strong>、<strong>当前报价</strong>。满意度归零，offer 撤回；暴露度过高，结算扣分。玩家每轮从强势、迂回、妥协、反问、法条、识破六类话术里选一种。</p>
+  <div class="loop">
+    <div class="step trap"><b>1</b>诱导报价</div>
+    <div class="step trap"><b>2</b>期权画饼</div>
+    <div class="step trap"><b>3</b>加班费打包</div>
+    <div class="step trap"><b>4</b>社保模糊</div>
+    <div class="step"><b>5</b>预算试探</div>
+    <div class="step trap"><b>6</b>试用期承诺</div>
+    <div class="step"><b>7</b>点破与落条款</div>
+    <div class="step end"><b>8</b>成交或谈崩</div>
+  </div>
+  <p class="note">陷阱固定在第 1、2、3、4、6 轮抛出，第几轮说什么话不随机。</p>
+  <p>结算四个维度：成交质量 DQ 35%、陷阱识别 TD 25%、工时目标 WH 20%、社保匹配 SI 20%，再加最多 10 分加分。识破陷阱或引用法条会逼 HR 把一条合同条款写进纸面，按顺序解锁加班费、双休、工时、社保全额、公积金比例。</p>
+
+  <div class="shots">
+    <figure>
+      <img src="salary-battle-shots/02-game.png" alt="谈薪模拟器对局界面：满意度、暴露度、报价与陷阱提示">
+      <figcaption>对局：三条线 + 陷阱提示 + 六类话术</figcaption>
+    </figure>
+    <figure>
+      <img src="salary-battle-shots/03-settlement.png" alt="谈薪模拟器结算页：四维分数、总分红与陷阱复盘">
+      <figcaption>结算：四维分数、总分红与陷阱复盘</figcaption>
+    </figure>
+  </div>
+
+  <h2>三、陷阱怎么判</h2>
+  <p>陷阱不是“玩家提到关键词就加分”。只有 HR 上一句确实设了陷阱、玩家在下一轮点破对应话术，才算识破；指错记一次误判，TD 每次扣 5 分，钳制在 0–100。</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>轮次</th><th>陷阱</th><th>HR 的说法</th><th>玩家的点破方向</th></tr>
+      </thead>
+      <tbody>
+        <tr><td data-label="轮次">第 1 轮</td><td data-label="陷阱"><strong>诱导先报价</strong></td><td data-label="HR 的说法">“你心里的期望薪资大概是多少？先给我一个数字。”</td><td data-label="玩家的点破方向">指出对方在套底牌，要求先给预算区间</td></tr>
+        <tr><td data-label="轮次">第 2 轮</td><td data-label="陷阱"><strong>期权画饼</strong></td><td data-label="HR 的说法">“期权 0.5%，公司明年 B 轮，至少值 50 万。”</td><td data-label="玩家的点破方向">期权不能当现金，先把现金谈清楚</td></tr>
+        <tr><td data-label="轮次">第 3 轮</td><td data-label="陷阱"><strong>加班费打包</strong></td><td data-label="HR 的说法">“加班费已经含在 14 薪里了，我们看总包。”</td><td data-label="玩家的点破方向">加班费应单独计算，写进合同</td></tr>
+        <tr><td data-label="轮次">第 4 轮</td><td data-label="陷阱"><strong>社保模糊</strong></td><td data-label="HR 的说法">“五险一金都按标准来，你放心。”</td><td data-label="玩家的点破方向">追问缴纳基数，是否按最低标准</td></tr>
+        <tr><td data-label="轮次">第 6 轮</td><td data-label="陷阱"><strong>试用期承诺</strong></td><td data-label="HR 的说法">“试用期六个月打八折，过了再根据表现调整。”</td><td data-label="玩家的点破方向">口头承诺不算，要求写进合同</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>四、AI 放在哪一层</h2>
+  <div class="two-col">
+    <div class="panel">
+      <h4>AI 做</h4>
+      <ul>
+        <li>把 HR 的回应说得像真人</li>
+        <li>接住玩家没被规则识别的表达</li>
+        <li>按当前满意度、报价、轮次调整语气</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h4>规则做</h4>
+      <ul>
+        <li>报价、让步、满意度、暴露度</li>
+        <li>陷阱判定、识破与误判</li>
+        <li>胜负、四维评分、复盘建议</li>
+      </ul>
+    </div>
+  </div>
+  <p>当前版本默认不接模型：HR 的话由 6 类意图、每类 5 条的本地话术，按种子和轮次拼装；填入 OpenAI 兼容接口后，话术改由模型生成，裁决仍然走规则。</p>
+  <p>接口层的约束：key 只存在页面内存，刷新即丢；请求 15 秒超时；回复要做句数 2–4 句、角色不跳出、报价不超过 22K、无 Markdown 四项校验；任何一项不过，本轮回退到本地话术并给出提示。演示默认不联网。</p>
+
+  <h2>五、三个坑与修正</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>问题</th><th>当时的表现</th><th>修正</th></tr>
+      </thead>
+      <tbody>
+        <tr><td data-label="问题"><strong>语音识别</strong></td><td data-label="当时的表现">环境噪声与口音让识别率不稳定，一句话错两个字，意图就变了</td><td data-label="修正">砍掉语音，改文字输入；语音列为未来项</td></tr>
+        <tr><td data-label="问题"><strong>API 成本与越权</strong></td><td data-label="当时的表现">长对话 token 上涨，回复变慢，偶尔跳出 HR 角色或泄露预算上限</td><td data-label="修正">默认本地话术；LLM 每次只生成一句；后置校验长度、角色、报价</td></tr>
+        <tr><td data-label="问题"><strong>不可复现</strong></td><td data-label="当时的表现">效果值和话术池都用随机数，同一串输入跑三次分数不同</td><td data-label="修正">种子驱动的伪随机数；效果表、陷阱日程、条款顺序固定</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>六、验收</h2>
+  <p>规则引擎放在单文件的 <code>ENGINE START/END</code> 之间，测试脚本直接抽出这段代码，在 Node 的 <code>vm</code> 里跑，不 mock 规则。</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>固定序列</th><th>结束方式</th><th>总分</th><th>关键结果</th></tr>
+      </thead>
+      <tbody>
+        <tr><td data-label="固定序列"><strong>完美局</strong></td><td data-label="结束方式">接受 offer</td><td data-label="总分"><strong>100</strong></td><td data-label="关键结果">5/5 陷阱、0 误判、22K、四维各 100</td></tr>
+        <tr><td data-label="固定序列"><strong>误判局</strong></td><td data-label="结束方式">接受 offer</td><td data-label="总分">36</td><td data-label="关键结果">误判 1 次，TD 扣到 0</td></tr>
+        <tr><td data-label="固定序列"><strong>一路强硬</strong></td><td data-label="结束方式">第 6 轮被撤回</td><td data-label="总分">4</td><td data-label="关键结果">满意度归零，DQ 0</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>同一序列跑 3 次，分数、报价、结局完全一致；换种子不改变规则结算。无头浏览器验证 390×844 与 1440×900 无横向溢出、console 无报错；假 key 下 15.0 秒超时回退到本地话术，key 不写入 localStorage。</p>
+
+  <h2>七、8 句演示路径</h2>
+  <p>按顺序输入，可稳定拿到 5/5 陷阱、22K、总分 100。</p>
+  <ol class="path">
+    <li>15K 太低了，我有别的 offer，市场价至少 18K。</li>
+    <li>你这是在套我先报价吧，先把你们的预算区间说清楚。</li>
+    <li>期权画饼就算了，我只谈现金。</li>
+    <li>加班费含在 14 薪里不合法，应该单独算。</li>
+    <li>五险一金按标准来，是按最低基数缴吗？</li>
+    <li>预算上限到底多少？能给到 20K 吗？</li>
+    <li>试用期口头承诺不算，能写进合同吗？</li>
+    <li>行，我接受这个 offer。</li>
+  </ol>
+
+  <h2>八、没做的部分</h2>
+  <ul>
+    <li>语音识别与语音合成。</li>
+    <li>中型企业、大厂两个场景，保持锁定占位。</li>
+    <li>后端、账号、排行榜与分享。</li>
+    <li>真实公司名与真实 HR 话术库，全部保持虚构。</li>
+  </ul>
+
+  <div class="footer">
+    <p>单文件实现，无构建步骤。试玩与规则说明均在浏览器内运行。</p>
+    <p><a class="back" href="../index.html" style="margin:0;">← 返回作品集</a></p>
+  </div>
+</div>
+</body>
+</html>

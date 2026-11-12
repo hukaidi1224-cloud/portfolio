@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>谈薪模拟器</title>
+<style>
+  :root {
+    --boss-blue: #00c2a2;
+    --boss-blue-dark: #00967c;
+    --boss-bg: #f6f6f6;
+    --boss-white: #fff;
+    --boss-text: #1a1a1a;
+    --boss-text-secondary: #999;
+    --boss-border: #f0f0f0;
+    --boss-danger: #ff4757;
+    --boss-warning: #ffa502;
+    --boss-salary: #fa6b3d;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 2px 12px rgba(0,0,0,0.06);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.1);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--boss-bg);
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    max-width: 520px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+
+  /* ============ LANDING SCREEN ============ */
+  #landing-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+  }
+  #game-screen { display: none; flex-direction: column; height: 100%; }
+  #game-screen.active { display: flex; }
+
+  .landing-header {
+    background: linear-gradient(135deg, #00c2a2 0%, #00a38a 50%, #00856e 100%);
+    color: #fff;
+    padding: 36px 24px 32px;
+    text-align: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .landing-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 12px;
+    background: linear-gradient(180deg, transparent, var(--boss-bg));
+  }
+  .landing-logo {
+    width: 56px; height: 56px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 14px;
+    margin: 0 auto 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+  }
+  .landing-header h1 {
+    font-size: 24px; font-weight: 800;
+    margin-bottom: 2px; letter-spacing: 1px;
+  }
+  .landing-header p {
+    font-size: 12px; opacity: 0.8; font-weight: 400;
+    letter-spacing: 0.5px;
+  }
+
+  .landing-body {
+    flex: 1;
+    padding: 8px 14px 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .landing-body .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 2px 4px;
+  }
+  .landing-body .section-title {
+    font-size: 13px; font-weight: 700; color: var(--boss-text);
+  }
+  .landing-body .section-subtitle {
+    font-size: 11px; color: var(--boss-text-secondary);
+  }
+
+  .scene-card {
+    background: var(--boss-white);
+    border-radius: var(--radius-md);
+    padding: 0;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    box-shadow: var(--shadow-sm);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+  .scene-card:active { transform: scale(0.985); }
+  .scene-card.unlocked:hover { box-shadow: var(--shadow-md); }
+  .scene-card.locked {
+    cursor: not-allowed;
+    opacity: 0.6;
+    filter: grayscale(0.3);
+  }
+  .scene-card.locked:active { transform: none; }
+
+  .scene-card-accent {
+    width: 4px;
+    flex-shrink: 0;
+    border-radius: 4px 0 0 4px;
+    margin: 14px 0 14px 0;
+  }
+  .scene-card-accent.s1 { background: linear-gradient(180deg, #667eea, #764ba2); }
+  .scene-card-accent.s2 { background: linear-gradient(180deg, #f093fb, #f5576c); }
+  .scene-card-accent.s3 { background: linear-gradient(180deg, #4facfe, #00f2fe); }
+
+  .scene-card-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 14px 14px 14px 12px;
+    gap: 12px;
+    min-width: 0;
+  }
+  .scene-logo {
+    width: 48px; height: 48px;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .scene-logo.s1 { background: linear-gradient(135deg, #f0e6ff, #e0d4ff); }
+  .scene-logo.s2 { background: linear-gradient(135deg, #ffe0e8, #ffd0dc); }
+  .scene-logo.s3 { background: linear-gradient(135deg, #e0f4ff, #d0ecff); }
+
+  .scene-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .scene-title {
+    font-size: 15px; font-weight: 700; color: var(--boss-text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .scene-meta {
+    display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+    font-size: 11px; color: var(--boss-text-secondary);
+  }
+  .scene-meta .dot { color: #ddd; }
+
+  .scene-right {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+    flex-shrink: 0;
+    min-width: 56px;
+    text-align: right;
+  }
+  .scene-company {
+    font-size: 11px; color: var(--boss-text-secondary);
+    white-space: nowrap;
+  }
+  .scene-best-tag {
+    font-size: 11px; color: var(--boss-salary); font-weight: 700;
+    white-space: nowrap;
+  }
+  .scene-difficulty {
+    font-size: 10px; color: var(--boss-warning);
+    letter-spacing: 1px; white-space: nowrap;
+  }
+  .scene-btn {
+    padding: 6px 14px;
+    border-radius: 14px;
+    font-size: 12px; font-weight: 600;
+    border: none; cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .scene-btn.play { background: var(--boss-blue); color: #fff; }
+  .scene-btn.play:hover { background: var(--boss-blue-dark); }
+  .scene-btn.locked-tag { background: #e8e8e8; color: #999; cursor: default; }
+
+  .landing-footer {
+    padding: 12px 16px;
+    text-align: center;
+    font-size: 10px;
+    color: #ccc;
+    flex-shrink: 0;
+    border-top: 1px solid var(--boss-border);
+    line-height: 1.6;
+  }
+
+  /* ============ GAME SCREEN ============ */
+  .boss-header {
+    background: linear-gradient(135deg, #00c2a2 0%, #00967c 100%);
+    padding: 8px 14px 10px;
+    color: #fff;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .boss-header-left { width: 48px; display: flex; align-items: center; }
+  .boss-back {
+    font-size: 22px;
+    cursor: pointer;
+    opacity: 0.9;
+    line-height: 1;
+    width: 32px;
+    text-align: center;
+    background: none; border: none; color: #fff; padding: 0;
+    font-weight: 300;
+  }
+  .boss-header-center { text-align: center; flex: 1; min-width: 0; }
+  .boss-header-name {
+    font-size: 16px; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .boss-header-subtitle {
+    font-size: 10px; opacity: 0.75; margin-top: 1px;
+  }
+  .boss-header-right { width: 48px; text-align: right; }
+  .boss-header-dots {
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0.9;
+    background: none; border: none; color: #fff; padding: 0;
+    letter-spacing: 2px;
+  }
+
+  .boss-company-card {
+    background: var(--boss-white);
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--boss-border);
+    flex-shrink: 0;
+  }
+  .boss-company-logo {
+    width: 42px; height: 42px;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .boss-company-logo.s1 { background: linear-gradient(135deg, #f0e6ff, #e0d4ff); }
+  .boss-company-logo.s2 { background: linear-gradient(135deg, #ffe0e8, #ffd0dc); }
+  .boss-company-logo.s3 { background: linear-gradient(135deg, #e0f4ff, #d0ecff); }
+
+  .boss-company-info { flex: 1; min-width: 0; }
+  .boss-company-name { font-size: 14px; font-weight: 600; color: var(--boss-text); }
+  .boss-company-meta {
+    font-size: 10px; color: var(--boss-text-secondary);
+    display: flex; gap: 6px; margin-top: 1px; align-items: center;
+  }
+  .boss-company-meta .dot { color: #ddd; }
+  .boss-company-salary {
+    font-size: 15px; font-weight: 700;
+    color: var(--boss-salary);
+    flex-shrink: 0;
+  }
+
+  .boss-hud {
+    background: var(--boss-white);
+    border-bottom: 1px solid var(--boss-border);
+    flex-shrink: 0;
+  }
+  .boss-hud-bar-row {
+    padding: 8px 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .boss-hud-label {
+    font-size: 11px; color: #666;
+    display: flex; align-items: center; gap: 4px;
+    white-space: nowrap;
+    min-width: fit-content;
+  }
+  .boss-hud-track {
+    flex: 1; height: 6px;
+    background: #e8e8e8;
+    border-radius: 3px; overflow: hidden;
+  }
+  .boss-hud-fill {
+    height: 100%; border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+  .boss-hud-fill.satisfaction {
+    background: linear-gradient(90deg, #ff4757, #ffa502, #00c2a2);
+  }
+  .boss-hud-fill.exposure {
+    background: linear-gradient(90deg, #00c2a2, #ffa502, #ff4757);
+  }
+  .boss-hud-val {
+    font-size: 12px; font-weight: 700; color: #333;
+    min-width: 24px; text-align: right;
+  }
+  .boss-hud-stats {
+    display: flex; gap: 14px;
+    padding: 4px 14px 8px;
+    font-size: 10px; color: var(--boss-text-secondary);
+  }
+  .boss-hud-stats span { color: #333; font-weight: 600; }
+
+  #chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--boss-bg);
+  }
+
+  .msg {
+    display: flex;
+    gap: 8px;
+    max-width: 85%;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .msg.hr { align-self: flex-start; }
+  .msg.me { align-self: flex-end; flex-direction: row-reverse; }
+
+  .msg-avatar {
+    width: 34px; height: 34px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    align-self: flex-start;
+  }
+  .msg.hr .msg-avatar { background: #e8f5e9; }
+  .msg.me .msg-avatar { background: #e0f4f0; }
+
+  .msg-content { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .msg-name { font-size: 10px; color: var(--boss-text-secondary); padding: 0 4px; }
+  .msg.me .msg-name { text-align: right; }
+
+  .msg-bubble {
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 14px; line-height: 1.55;
+    word-break: break-word;
+    position: relative;
+  }
+  .msg.hr .msg-bubble {
+    background: var(--boss-white);
+    border-top-left-radius: 2px;
+    box-shadow: var(--shadow-sm);
+  }
+  .msg.me .msg-bubble {
+    background: var(--boss-blue);
+    color: #fff;
+    border-top-right-radius: 2px;
+  }
+
+  .msg-system {
+    align-self: center;
+    font-size: 11px; color: var(--boss-text-secondary);
+    padding: 4px 12px;
+    background: rgba(0,0,0,0.03);
+    border-radius: 4px;
+    max-width: 85%;
+    text-align: center;
+  }
+  .msg-trap-badge {
+    display: inline-block;
+    background: #fff3cd; color: #856404;
+    font-size: 10px; padding: 1px 6px;
+    border-radius: 3px; margin-top: 4px;
+  }
+
+  #input-area {
+    padding: 8px 12px 10px;
+    background: var(--boss-bg);
+    border-top: 1px solid #eee;
+    display: flex; gap: 8px; align-items: center;
+    flex-shrink: 0;
+  }
+  #input-area input {
+    flex: 1;
+    height: 36px;
+    border: none; background: #fff;
+    border-radius: 18px;
+    padding: 0 14px;
+    font-size: 14px; outline: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  #input-area input:focus { box-shadow: 0 1px 3px rgba(0,194,162,0.12); }
+  #input-area button {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--boss-blue);
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; color: #fff;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.15s;
+  }
+  #input-area button:disabled { background: #ccc; cursor: not-allowed; }
+  #input-area button:active:not(:disabled) { transform: scale(0.92); }
+
+  .typing-msg { align-self: flex-start; display: flex; gap: 8px; }
+  .typing-msg .msg-avatar { background: #e8f5e9; }
+  .typing { display: flex; gap: 4px; padding: 10px 14px; background: var(--boss-white); border-radius: var(--radius-sm); border-top-left-radius: 2px; }
+  .typing span {
+    width: 6px; height: 6px; background: #ccc;
+    border-radius: 50%; animation: bounce 1.2s infinite ease;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-6px); }
+  }
+
+  /* ============ SETTLEMENT ============ */
+  #settlement-overlay {
+    display: none;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5); z-index: 100;
+    justify-content: center; align-items: center; padding: 20px;
+  }
+  #settlement-overlay.show { display: flex; }
+  #settlement {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    padding: 24px 20px;
+    max-width: 400px; width: 100%;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    max-height: 88vh;
+    overflow-y: auto;
+  }
+  #settlement h2 { font-size: 34px; margin-bottom: 2px; }
+  #settlement .outcome-title { font-size: 20px; font-weight: 700; margin: 6px 0; color: var(--boss-text); }
+  #settlement .outcome-narrative { font-size: 13px; color: #666; margin: 10px 0; line-height: 1.5; }
+  #settlement .breakdown { text-align: left; margin: 14px 0; font-size: 12px; }
+  #settlement .breakdown .row {
+    display: flex; justify-content: space-between; gap: 12px;
+    padding: 4px 0; border-bottom: 1px dotted #eee;
+  }
+  #settlement .breakdown .row span:last-child { text-align: right; }
+  #settlement .total {
+    font-size: 40px; font-weight: 900; color: var(--boss-blue);
+    margin: 6px 0;
+  }
+  #settlement .rank { font-size: 18px; font-weight: 700; margin: 4px 0; }
+  #settlement .new-record {
+    display: inline-block;
+    background: linear-gradient(135deg, #ff6b6b, #ff4757);
+    color: #fff;
+    padding: 3px 14px; border-radius: 12px;
+    font-size: 12px; font-weight: 700; margin: 4px 0;
+    animation: pulse 0.6s ease infinite alternate;
+  }
+  @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.06); } }
+  #settlement button {
+    margin: 4px;
+    padding: 10px 24px;
+    border: none; border-radius: 20px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: transform 0.15s;
+  }
+  #settlement button:active { transform: scale(0.95); }
+  #settlement button.primary { background: var(--boss-blue); color: #fff; }
+  #settlement button.secondary { background: #f0f0f0; color: #555; }
+
+  #settlement .review {
+    text-align: left;
+    margin-top: 14px;
+    border-top: 1px solid #eee;
+    padding-top: 8px;
+    font-size: 12px;
+  }
+  #settlement .review summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: #333;
+    padding: 7px 0;
+    list-style: none;
+  }
+  #settlement .review summary::-webkit-details-marker { display: none; }
+  #settlement .review summary::before { content: '▸ '; color: #bbb; }
+  #settlement .review details[open] summary::before { content: '▾ '; }
+
+  #settlement .trap-list, #settlement .round-list, #settlement .advice ol {
+    list-style: none;
+    margin: 4px 0 10px;
+  }
+  #settlement .trap-list li {
+    display: flex; justify-content: space-between; gap: 8px;
+    padding: 5px 8px; border-radius: 6px; margin-bottom: 4px;
+    background: #f7f7f7;
+  }
+  #settlement .trap-list li.hit { background: #e8f8f2; color: #0a7a5c; }
+  #settlement .trap-list li.miss { background: #fff4e5; color: #a35b00; }
+  #settlement .round-item {
+    border-bottom: 1px dotted #eee;
+    padding: 7px 0;
+    line-height: 1.5;
+  }
+  #settlement .round-head {
+    display: flex; justify-content: space-between;
+    font-weight: 700; color: #333;
+    margin-bottom: 3px;
+  }
+  #settlement .round-line { color: #666; word-break: break-word; }
+  #settlement .round-line.me { color: #0a7a5c; }
+  #settlement .round-effects {
+    color: #aaa; font-size: 10px; margin-top: 2px;
+  }
+  #settlement .round-trap { font-size: 11px; margin-top: 2px; }
+  #settlement .round-trap.hit { color: #0a7a5c; }
+  #settlement .round-trap.miss { color: #a35b00; }
+  #settlement .advice { text-align: left; margin-top: 12px; }
+  #settlement .advice h4 { font-size: 12px; color: #333; margin-bottom: 4px; }
+  #settlement .advice li {
+    position: relative;
+    padding-left: 14px;
+    margin-bottom: 6px;
+    color: #555;
+    line-height: 1.5;
+  }
+  #settlement .advice li::before {
+    content: '·';
+    position: absolute; left: 2px; color: var(--boss-blue);
+    font-weight: 900;
+  }
+  #settlement .seed-line {
+    margin-top: 12px;
+    font-size: 10px;
+    color: #bbb;
+    line-height: 1.5;
+  }
+
+  /* ============ SETTINGS ============ */
+  #settings-toggle {
+    position: fixed;
+    bottom: 80px; right: 12px; z-index: 50;
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.9);
+    border: 1px solid #e0e0e0; border-radius: 50%;
+    font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-sm);
+  }
+  #settings-panel {
+    display: none;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4); z-index: 90;
+    justify-content: center; align-items: center; padding: 20px;
+  }
+  #settings-panel.show { display: flex; }
+  #settings-panel > div {
+    background: #fff; border-radius: var(--radius-md);
+    padding: 20px; max-width: 340px; width: 100%;
+    box-shadow: var(--shadow-lg);
+  }
+  #settings-panel h3 { margin-bottom: 8px; font-size: 16px; color: var(--boss-text); }
+  #settings-panel label { display: block; font-size: 11px; font-weight: 600; margin: 10px 0 4px; color: #555; }
+  #settings-panel input {
+    width: 100%; padding: 8px 10px;
+    border: 1px solid #ddd; border-radius: var(--radius-sm);
+    font-size: 13px; outline: none;
+  }
+  #settings-panel input:focus { border-color: var(--boss-blue); }
+  #settings-panel button {
+    margin-top: 16px; width: 100%; padding: 10px;
+    background: var(--boss-blue); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  #settings-panel .hint {
+    font-size: 10px; color: var(--boss-text-secondary);
+    margin-top: 8px; text-align: center; line-height: 1.6;
+  }
+
+  #chat::-webkit-scrollbar, .landing-body::-webkit-scrollbar,
+  #settlement::-webkit-scrollbar { width: 4px; }
+  #chat::-webkit-scrollbar-track, .landing-body::-webkit-scrollbar-track,
+  #settlement::-webkit-scrollbar-track { background: transparent; }
+  #chat::-webkit-scrollbar-thumb, .landing-body::-webkit-scrollbar-thumb,
+  #settlement::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div id="landing-screen">
+  <div class="landing-header">
+    <div class="landing-logo">💰</div>
+    <h1>谈薪模拟器</h1>
+    <p>练习薪资谈判 · 识别 HR 话术陷阱 · 拿下更好的 offer</p>
+  </div>
+  <div class="landing-body">
+    <div class="section-header">
+      <span class="section-title">选择谈判场景</span>
+      <span class="section-subtitle">1/3 已开放</span>
+    </div>
+    <div id="scene-list"></div>
+  </div>
+  <div class="landing-footer">
+    Salary Negotiation Simulator · v3.0<br>
+    默认模拟模式，不联网可玩 · 规则结算，同一串输入同一结果
+  </div>
+</div>
+
+<div id="game-screen">
+  <div class="boss-header">
+    <div class="boss-header-left">
+      <button class="boss-back" onclick="backToMenu()" title="返回">‹</button>
+    </div>
+    <div class="boss-header-center">
+      <div class="boss-header-name" id="hud-scene-name">张敏 · HR负责人</div>
+      <div class="boss-header-subtitle" id="hud-scene-subtitle">灵创科技 · A轮</div>
+    </div>
+    <div class="boss-header-right">
+      <button class="boss-header-dots" onclick="toggleSettings()" title="API 设置">⋯</button>
+    </div>
+  </div>
+
+  <div class="boss-company-card">
+    <div class="boss-company-logo s1" id="company-logo">🚀</div>
+    <div class="boss-company-info">
+      <div class="boss-company-name" id="company-name">灵创科技</div>
+      <div class="boss-company-meta">
+        <span id="company-stage">A轮</span><span class="dot">·</span>
+        <span id="company-industry">AI/大模型</span><span class="dot">·</span>
+        <span id="company-size">50-100人</span>
+      </div>
+    </div>
+    <div class="boss-company-salary" id="offer-display">15K·14薪</div>
+  </div>
+
+  <div class="boss-hud">
+    <div class="boss-hud-bar-row">
+      <div class="boss-hud-label">😊 满意度</div>
+      <div class="boss-hud-track">
+        <div class="boss-hud-fill satisfaction" id="sat-bar" style="width:80%"></div>
+      </div>
+      <div class="boss-hud-val" id="sat-val">80</div>
+    </div>
+    <div class="boss-hud-bar-row">
+      <div class="boss-hud-label">🔍 暴露度</div>
+      <div class="boss-hud-track">
+        <div class="boss-hud-fill exposure" id="exp-bar" style="width:20%"></div>
+      </div>
+      <div class="boss-hud-val" id="exp-val">20</div>
+    </div>
+    <div class="boss-hud-stats">
+      <div>轮次 <span id="round-num">0</span>/8</div>
+      <div>🪤 识破 <span id="trap-count">0</span>/5</div>
+      <div id="stat-law" style="display:none">📖 法条 <span id="law-count">0</span></div>
+    </div>
+  </div>
+
+  <div id="chat"></div>
+
+  <div id="input-area">
+    <input type="text" id="user-input" placeholder="输入你的话..." autocomplete="off" aria-label="你的回复">
+    <button id="send-btn" onclick="sendMessage()" title="发送">↑</button>
+  </div>
+</div>
+
+<div id="settlement-overlay">
+  <div id="settlement"></div>
+</div>
+
+<button id="settings-toggle" onclick="toggleSettings()">⚙️</button>
+<div id="settings-panel">
+  <div>
+    <h3>API 设置（可选）</h3>
+    <label>Base URL</label>
+    <input id="api-base" value="https://api.openai.com/v1" placeholder="https://api.openai.com/v1" autocomplete="off">
+    <label>API Key</label>
+    <input id="api-key" type="password" placeholder="sk-..." autocomplete="off">
+    <label>模型</label>
+    <input id="api-model" value="gpt-4o" placeholder="gpt-4o" autocomplete="off">
+    <button onclick="saveSettings()">保存并关闭</button>
+    <div class="hint">
+      Key 只存在本次页面的内存里，刷新即清空，不写 localStorage。<br>
+      不填 Key 用内置模拟 HR，默认演示就是这一档。
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== ENGINE START =====
+const DEFAULT_SEED = 20261112;
+
+const SCENES = [
+  {
+    id: 'tech-startup',
+    emoji: '🚀',
+    title: '初创公司·后端开发岗',
+    company: '灵创科技',
+    companyMeta: { stage: 'A轮', industry: 'AI/大模型', size: '50-100人' },
+    hrName: '张敏',
+    hrTitle: 'HR负责人',
+    hrStyle: '画饼型',
+    hrEmoji: '👩‍💼',
+    difficulty: 2,
+    difficultyLabel: '中等',
+    unlocked: true,
+    initialOffer: 15000,
+    initialOfferLabel: '15K·14薪',
+    hrBudget: 22000,
+    marketRate: 18000,
+    legalFloor: 8000,
+    idealDeal: 22000,
+    totalTraps: 5,
+    maxRounds: 8,
+    desc: 'HR 热情亲和、圆滑老练，擅长用期权画饼和成长空间替代现金。识破她的 5 个话术陷阱是高分关键。',
+    workDefaults: {
+      socialInsurance: { explicit: false, contributionBase: 'minimum', housingFund: false, housingFundRatio: 0 },
+      workingHours: { dailyAgreed: false, weeklyAgreed: false, overtimeExplicit: false }
+    },
+    hrSystemPrompt: `你正在扮演一位HR——张敏，某A轮AI初创公司的HR负责人。你正在与一位求职者（后端开发岗）进行薪资谈判。
+
+## 你的身份
+- 姓名：张敏，HR负责人
+- 性格：热情亲和、圆滑老练、擅长打太极
+- 核心策略：用期权、成长空间、公司前景替代现金
+- 口头禅风格："我们虽然薪水不是最高的，但..."
+
+## 谈判背景
+- 你已给出初始offer：月薪15K，14薪（年包21万）
+- 市场公允薪资：18K/月（1-3年经验后端）
+- 你的实际预算上限：22K/月（需要CEO特批）
+- 期权池：0.3%-0.5%，四年归属
+- 五险一金默认按"最低基数"缴纳（你不主动说明这点，用"按标准来"模糊带过）
+- 加班费默认说法是"含在总包中"（实际上这不合法，你模糊处理）
+
+## 当前谈判状态（非常重要！请严格遵守）
+- HR满意度：{satisfaction}/100（归零你会撤回offer）
+- 信息暴露度：{exposure}/100（越低代表求职者保护得越好）
+- 当前报价：{offer}元/月
+- 当前轮次：第{round}轮/{maxRounds}轮
+
+## 对话行为准则
+1. 初始报价15K，可在压力下逐步让步到22K，但每一步让步都要显得"困难"
+2. 不要轻易透露真实预算上限22K。被追问时先给模糊区间（如"12K-18K"）
+3. 耐心有限。满意度≤30时语气明显冷淡，≤10时发出最后通牒
+4. 第4轮起，如果求职者已接近20K+，应主动推进成交
+5. 第5轮起，必须加入时间压力（"需要本周五前答复"）
+6. 对求职者的反应：
+   - 求职者强硬 → 略显惊讶/防守
+   - 求职者迂回 → 放松配合
+   - 求职者妥协 → 亲和友善，趁机推进议程
+   - 求职者引用法律条款 → 认真对待，不敢敷衍
+7. 你可以在对话中自然设置以下陷阱（但不标注这是陷阱）：
+   - 诱导求职者先说期望薪资
+   - 用期权画饼替代现金
+   - 将加班费模糊打包
+   - 社保模糊化（"按标准来"=最低基数）
+   - 试用期口头承诺
+
+## 回复要求
+1. 回复必须自然、口语化，像真人微信聊天，不要像AI生成的文本
+2. 每次回复控制在2-4句话，不要太长
+3. 始终保持在HR角色中，不要跳出角色
+4. 不要评价求职者的策略
+5. 不要一次性让出所有条件
+6. 任何报价数字不得超过22K/月
+
+## 当前对话历史
+{history}
+
+现在求职者说了上面最后一句话。请以张敏的身份回复。只输出你的回复内容，不要加任何前缀或说明。`,
+    openingMessage: '你好！感谢你参加了我们的面试，团队对你印象很好。我们想给你发一个后端开发的offer：月薪15K，14薪。公司现在A轮，发展很快，你觉得怎么样？',
+    hrResponsePool: {
+      aggressive: [
+        '我理解你的想法。不过我们这个岗位的薪酬是有体系的，现金部分能调整的空间确实有限。',
+        '你的能力我们认可，但你要的这个水平，在我们这个阶段确实有点吃力。',
+        '坦率说，A轮公司现金没法跟大厂比，我们能给的是更快的成长和更直接的决策权。',
+        '（停顿了一下）我尽量帮你争取，但你要知道，这个数已经是我能谈的边界了。',
+        '你说的市场价我了解，不过每个公司的口径不太一样，我们看的是总包。'
+      ],
+      indirect: [
+        '你问得很细，这挺好。薪资结构这边，15K 是 base，年底双薪，绩效按季度发。你比较在意哪一块？',
+        '（点头）我先回答你的问题，期权池是 0.3% 到 0.5%，四年归属，公司明年准备 B 轮。',
+        '福利方面我们有免费午晚餐、打车报销、弹性上下班，这些加起来一个月也值不少。',
+        '团队现在 12 个人，后端就 3 个，你来了直接对接业务，成长会很快。',
+        '我理解你想多了解一些。这样，你还有什么顾虑，一次说清楚，我尽量给你答案。'
+      ],
+      compromise: [
+        '很高兴你能认可我们。薪资我试着往上争取，不过公司的薪酬体系还在，得一步一步来。',
+        '（微笑）谢谢你理解。如果现金确实没法大调，我可以在其他部分帮你多争取一些。',
+        '跟你聊得很愉快。我这边再努力一下，应该还能往前挪一点。',
+        '你这个态度我欣赏。这样吧，我下午就去找老板聊，尽量给你一个满意的答复。',
+        '我们都是实在人。你能接受现在的条件，我也会在入职后帮你把该争取的都争取到。'
+      ],
+      counter_ask: [
+        '这个岗位的预算区间，大概在 12K 到 18K 之间，具体看最终的综合 package。',
+        '（愣了一下）我直说了，如果你有别的 offer 在比较，我可以跟老板申请到 {offer}。',
+        '你一直在问预算，我坦白讲，最高能批到 {offer}，但需要 CEO 特批。',
+        '预算这个东西不是我不说，是确实要按人定，我得拿着你的情况去老板那儿申请。',
+        '我现在能给你的数字是 {offer}，再往上就要走特批流程了，时间会拖。'
+      ],
+      law_ref: [
+        '（认真起来）你做了功课，这很好。加班费我们一直按法定标准执行，这个可以写进合同。',
+        '法律层面的东西我们不会含糊。该有的都会有，五险一金按实际工资缴，你放心。',
+        '你提的这些都没问题，我们是正规经营的公司。合同里可以写清楚，社保公积金都按规矩来。',
+        '这些我们都可以落到纸面上。你现在更关心哪一条，我一条一条跟你确认。',
+        '你说得对，这些确实应该提前说清楚。我让法务把条款整理好，一起写进合同。'
+      ],
+      trap_detection: [
+        '（略显尴尬）好吧，被你看出来了。那我坦诚一点，现金部分我可以再争取。',
+        '嗯，你确实做了功课。我不绕弯子了，这个岗位最高能给到 {offer}，但要走特批。',
+        '（苦笑）行，你是专业的。我们直接在合同里写清楚：社保按实际工资、加班费单独算、公积金 7%。',
+        '被你问住了。这样吧，我按你说的来，条件写进合同，薪资再往上申请一档。',
+        '好，我认。你要的这些本来就该有，我这边不跟你绕了，我们谈 {offer}。'
+      ]
+    }
+  },
+  {
+    id: 'mid-company',
+    emoji: '🏢',
+    title: '中型企业·运营岗',
+    company: '云帆科技',
+    companyMeta: { stage: 'B轮', industry: '电商/SaaS', size: '200-500人' },
+    hrName: '待定', hrTitle: 'HRBP', hrStyle: '压价型', hrEmoji: '👨‍💼',
+    difficulty: 3, difficultyLabel: '较难',
+    unlocked: false,
+    initialOffer: 0, initialOfferLabel: '', hrBudget: 0, marketRate: 0,
+    legalFloor: 0, idealDeal: 0, totalTraps: 0, maxRounds: 0,
+    desc: 'HR 经验丰富，擅长制造紧迫感和利用信息不对称压价。正在紧张开发中...',
+    workDefaults: null, hrSystemPrompt: '', openingMessage: '', hrResponsePool: null
+  },
+  {
+    id: 'big-corp',
+    emoji: '🏛️',
+    title: '大厂·管培生',
+    company: '星辰集团',
+    companyMeta: { stage: '已上市', industry: '互联网/平台', size: '10000+人' },
+    hrName: '待定', hrTitle: '校招HR', hrStyle: '流程型', hrEmoji: '👩‍💻',
+    difficulty: 4, difficultyLabel: '困难',
+    unlocked: false,
+    initialOffer: 0, initialOfferLabel: '', hrBudget: 0, marketRate: 0,
+    legalFloor: 0, idealDeal: 0, totalTraps: 0, maxRounds: 0,
+    desc: 'HR 按流程办事、话术严谨，福利体系成熟但议价空间有限。正在紧张开发中...',
+    workDefaults: null, hrSystemPrompt: '', openingMessage: '', hrResponsePool: null
+  }
+];
+
+// 回合倍率只作用在满意度的损失上：越往后施压，HR 越不耐烦
+const ROUND_MULT = [0, 1, 1, 1, 1.2, 1.5, 1.8, 2.2, 2.8];
+
+// 固定效果表：同类意图每回合收益一致，保证可复现
+const EFFECTS = {
+  aggressive:     { sat: -12, exp:  10, offer: 1200 },
+  indirect:       { sat:  -3, exp:   2, offer:  600 },
+  compromise:     { sat:   8, exp:  14, offer:  200 },
+  counter_ask:    { sat:  -8, exp:  -8, offer: 1800 },
+  law_ref:        { sat:  -4, exp:  -1, offer: 1000 },
+  trap_detection: { sat:  -3, exp:  -6, offer:  800 }
+};
+
+const INTENT_LABELS = {
+  aggressive: '💪 强势施压',
+  indirect: '🤔 迂回试探',
+  compromise: '😊 配合妥协',
+  counter_ask: '🎯 反问逼牌',
+  law_ref: '📖 法条引用',
+  trap_detection: '🪤 识破陷阱',
+  accept: '🤝 接受 offer'
+};
+
+const TRAPS = [
+  {
+    id: 'bait_expectation',
+    label: '诱导你先报价',
+    hrLine: '对了，你心里的期望薪资大概是多少？先给我一个数字，我好去帮你申请。',
+    hrPattern: /先(?:说说|给|报)[^。]{0,10}(?:期望|数字)|期望[^。]{0,8}多少|心里[^。]{0,6}预期/,
+    playerPattern: /套|底牌|先报价|先说期望|不先报|锚定|你怎么不先/
+  },
+  {
+    id: 'option_pie',
+    label: '期权画饼',
+    hrLine: '期权这块我可以帮你争取到 0.5%，公司明年准备 B 轮，到时候至少值 50 万。',
+    hrPattern: /期权[^。]{0,12}(?:值|价值|B轮|估值|万)/,
+    playerPattern: /画饼|期权[^。]{0,10}(?:现金|钱|不能当|不确定|风险|值多少)|别拿期权|期权[^。]{0,6}不算/
+  },
+  {
+    id: 'overtime_bundle',
+    label: '加班费打包',
+    hrLine: '加班费这块其实已经含在 14 薪里了，我们整体看的是总包。',
+    hrPattern: /含在[^。]{0,8}(?:总包|薪)|14薪[^。]{0,8}加班|加班[^。]{0,8}(?:考虑进去|打包)/,
+    playerPattern: /打包|含在总包|加班费[^。]{0,20}(?:单独|另算|怎么算|计算)|加班[^。]{0,8}白干|单独算/
+  },
+  {
+    id: 'si_vague',
+    label: '社保模糊化',
+    hrLine: '五险一金我们都按标准来，你放心，不会少你的。',
+    hrPattern: /按标准来|正常交|五险一金[^。]{0,8}放心/,
+    playerPattern: /最低基数|按标准[^。]{0,6}(?:最低|基数)|社保[^。]{0,8}(?:基数|怎么缴|按什么)|全额缴|五险一金[^。]{0,10}(?:基数|明细)/
+  },
+  {
+    id: 'probation_promise',
+    label: '试用期口头承诺',
+    hrLine: '试用期六个月打八折，过了之后根据表现再调整，这个你放心。',
+    hrPattern: /试用期[^。]{0,12}(?:根据表现|调整|八折|打折)/,
+    playerPattern: /口头|试用期[^。]{0,12}(?:书面|合同|标准|考核|条款|八折|打折)|别口头/
+  }
+];
+
+// 5 个陷阱固定在第 1、2、3、4、6 轮抛出
+const TRAP_ROUNDS = { 1: 0, 2: 1, 3: 2, 4: 3, 6: 4 };
+
+// 玩家一旦按住法条或识破，HR 会被迫把条款落到纸面，按顺序解锁
+const COMMITMENTS = [
+  '加班费我们按法定标准单独算，写进合同里。',
+  '工作时间是双休，每周不超过 40 小时，周末不强制加班。',
+  '上下班不打卡，弹性工作，每天八小时。',
+  '五险一金按实际工资全额缴，基数不按最低标准。',
+  '公积金按 7% 缴，合同里写清楚比例。'
+];
+
+function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function classifyIntent(text) {
+  const t = String(text).toLowerCase();
+
+  if (/劳动法|劳动合同法|社会保险法|第\d+条|法定|仲裁/.test(t)) return 'law_ref';
+  if (/(?:预算|上限|最高|范围|能给到|定位|级别)[^。！？]{0,8}(?:多少|什么|怎样|如何)/.test(t) ||
+      /(?:贵司|公司|你们)[^。！？]{0,8}(?:预算|上限|范围)/.test(t) ||
+      /(?:先说|先报|先给)/.test(t)) return 'counter_ask';
+  if (/太低了?|不满意|不够|有(?:其他|别的|竞品)[^。！？]{0,6}offer|市场价|值(?:得)?更多|远低于/.test(t)) return 'aggressive';
+  if (/(?:可以接受|可以考虑|还行|挺好的|不错)[^。！？]{0,8}(?:不过|但是|如果|能不能|希望)/.test(t) ||
+      /(?:理解|明白)[^。！？]{0,8}(?:公司|创业|限制)/.test(t) ||
+      /(?:好的?|行吧|OK|ok)[^。！？]{0,6}(?:那|不过)/.test(t)) return 'compromise';
+  if (/(?:说说|详细|具体|怎么|什么|哪些|多少)[^。！？]{0,8}(?:结构|绩效|bonus|期权|福利|补贴|年终)/.test(t) ||
+      /(?:能|可以)[^。！？]{0,6}(?:说说|介绍|详细)/.test(t) ||
+      /[?？]/.test(t)) return 'indirect';
+
+  return 'indirect';
+}
+
+function isAcceptance(text, round) {
+  if (round < 3) return false;
+  if (/[?？]|但是|不过|可是|如果|还没|再考虑|呢/.test(text)) return false;
+  if (text.length > 25) return false;
+  return /(?:我接受|接受这个|我同意|成交|就这么定|就按这个|就这个|没问题|同意|签吧|入职)/.test(text);
+}
+
+function isQuit(text) {
+  const t = String(text || '').trim();
+  if (!t || t.length >= 20) return false;
+  return /^(?:那)?算了|^算了吧|不考?虑了|我放弃|放弃吧|再见|打扰了|不谈了|不聊了/.test(t);
+}
+
+function findTrapInText(text) {
+  return TRAPS.find(t => t.hrPattern.test(text)) || null;
+}
+
+function createGame(sceneId, opts) {
+  opts = opts || {};
+  const scene = SCENES.find(s => s.id === sceneId && s.unlocked);
+  if (!scene) throw new Error('场景不可用：' + sceneId);
+  const seed = Number.isFinite(opts.seed) ? (opts.seed >>> 0) : DEFAULT_SEED;
+  const rng = mulberry32(seed);
+
+  const state = {
+    hrSatisfaction: 80,
+    infoExposure: 20,
+    currentOffer: scene.initialOffer,
+    round: 0,
+    maxRounds: scene.maxRounds,
+    trapsDetected: 0,
+    totalTraps: scene.totalTraps,
+    falsePositives: 0,
+    lawRefs: 0,
+    usedStrategies: [],
+    workingHours: { dailyAgreed: false, weeklyAgreed: false, overtimeExplicit: false },
+    socialInsurance: { explicit: false, contributionBase: 'minimum', housingFund: false, housingFundRatio: 0 },
+    commitmentsUsed: 0,
+    over: false,
+    endReason: null,
+    accepted: false,
+    pendingTrap: null,
+    trapLog: [],
+    log: [],
+    conversation: [{ role: 'hr', content: scene.openingMessage }],
+    settlement: null
+  };
+
+  let lastTurn = null;
+
+  function fmtK(n) {
+    return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  }
+
+  function applyCommitments(text) {
+    const wh = state.workingHours;
+    const si = state.socialInsurance;
+
+    if (/加班费[^。；]{0,20}(?:单独|另算|按法定|写进合同|计算)|按法定标准执行/.test(text)) wh.overtimeExplicit = true;
+    if (/双休|每周[^。；]{0,8}(?:五天|40|四十)|周末[^。；]{0,6}(?:休息|不加班)/.test(text)) wh.weeklyAgreed = true;
+    if (/不打卡|弹性(?:上下班|工作)|每天八小时|8\s*小时/.test(text)) wh.dailyAgreed = true;
+
+    if (/(?:五险一金|社保)[^。；]{0,14}(?:按实际工资|全额|实际基数)|按实际工资[缴交]|全额缴/.test(text)) {
+      si.contributionBase = 'full';
+      si.explicit = true;
+    }
+    if (/公积金[^。；]{0,14}[5-9]\s*%|[5-9]\s*%[^。；]{0,8}公积金/.test(text)) {
+      const m = text.match(/([5-9])\s*%/);
+      si.housingFund = true;
+      si.housingFundRatio = m ? parseInt(m[1], 10) : 5;
+      si.explicit = true;
+    }
+    if (/五险一金|社保/.test(text)) si.explicit = true;
+  }
+
+  function scheduledTrap() {
+    const idx = TRAP_ROUNDS[state.round];
+    if (idx === undefined) return null;
+    const trap = TRAPS[idx];
+    if (state.trapLog.some(t => t.id === trap.id)) return null;
+    return trap;
+  }
+
+  function emitTrap(trap) {
+    state.pendingTrap = { id: trap.id, label: trap.label, round: state.round, status: 'pending' };
+    state.trapLog.push(state.pendingTrap);
+  }
+
+  function buildMockResponse(intent) {
+    const pool = scene.hrResponsePool[intent] || scene.hrResponsePool.indirect;
+    const line = pool[Math.floor(rng() * pool.length)];
+    const parts = [line.replace(/\{offer\}/g, fmtK(state.currentOffer))];
+
+    if ((intent === 'law_ref' || intent === 'trap_detection') && state.commitmentsUsed < COMMITMENTS.length) {
+      const clause = COMMITMENTS[state.commitmentsUsed];
+      state.commitmentsUsed++;
+      parts.push(clause);
+    }
+
+    const trap = scheduledTrap();
+    if (trap) {
+      parts.push(trap.hrLine);
+      emitTrap(trap);
+    }
+
+    const text = parts.join('');
+    applyCommitments(text);
+    return { text, trap: trap ? { id: trap.id, label: trap.label } : null };
+  }
+
+  function attachExternalText(externalText) {
+    const text = String(externalText || '').trim();
+    if (!text) throw new Error('HR 回应为空');
+    applyCommitments(text);
+
+    const trap = findTrapInText(text);
+    if (trap && !state.trapLog.some(t => t.id === trap.id)) emitTrap(trap);
+
+    return { text, trap: trap ? { id: trap.id, label: trap.label } : null };
+  }
+
+  function buildAdvice(scores) {
+    const out = [];
+    const missed = state.trapLog.filter(t => t.status === 'missed');
+
+    if (missed.length) {
+      out.push('错过了 ' + missed.length + ' 个陷阱：' +
+        missed.map(t => '第' + t.round + '轮「' + t.label + '」').join('、') +
+        '。HR 模糊带过时，追问一句“这条能写进合同吗”，比直接说“太低了”更有效。');
+    }
+    if (state.falsePositives > 0) {
+      out.push('有 ' + state.falsePositives + ' 次误判：你指出的陷阱，HR 上一句并没有出现，每次扣 5 分。先看清她刚说了什么，再点破。');
+    }
+    if (scores.WH < 60) {
+      out.push('工时条件没谈成：加班费怎么算、是否双休、每天几小时，这三条至少要有一条写进合同。');
+    }
+    if (scores.SI < 60) {
+      out.push('社保停在口头：问清缴纳基数和公积金比例。按最低基数缴和按实际工资缴，差的是实打实的钱。');
+    }
+    if (scores.DQ < 80 && !scores.withdrawn) {
+      out.push('成交薪资 ' + fmtK(state.currentOffer) + '，离这个岗位的预算上限 ' + fmtK(scene.hrBudget) +
+        ' 还有空间。中段多用反问和法条，比一直强硬更容易拿到数字。');
+    }
+    if (state.hrSatisfaction <= 30 && !scores.withdrawn) {
+      out.push('满意度掉得太低。强势施压放在中段，开场先问清结构，HR 的耐心才够用。');
+    }
+
+    const filler = [
+      '下一局试试：先用迂回问题摸清结构，再用识破陷阱换具体条款，最后再谈数字。',
+      '演示模式下同一串输入会得到同一结果，可以固定一套话术反复练到满分。',
+      '把每一步的“HR 说了什么、我回了什么”记下来，复盘比重开更有用。'
+    ];
+    for (const line of filler) {
+      if (out.length >= 3) break;
+      out.push(line);
+    }
+    return out.slice(0, 3);
+  }
+
+  function settle(reason) {
+    if (state.over && state.settlement) return state.settlement;
+
+    if (state.pendingTrap && state.pendingTrap.status === 'pending') {
+      state.pendingTrap.status = 'missed';
+      state.pendingTrap = null;
+    }
+    state.over = true;
+    state.endReason = reason;
+
+    const withdrawn = reason === 'withdrawn' || reason === 'quit';
+    const DQ = withdrawn ? 0 : clamp(
+      ((state.currentOffer - scene.legalFloor) / (scene.idealDeal - scene.legalFloor)) * 100, 0, 100
+    );
+    const TD = clamp(
+      (state.trapsDetected / state.totalTraps) * 100 - state.falsePositives * 5, 0, 100
+    );
+
+    const wh = state.workingHours;
+    const WH = (wh.dailyAgreed ? 30 : 0) + (wh.weeklyAgreed ? 30 : 0) + (wh.overtimeExplicit ? 40 : 0);
+
+    const si = state.socialInsurance;
+    const SI = clamp(
+      (si.explicit ? 20 : 0) + (si.contributionBase === 'full' ? 40 : 0) +
+      (si.housingFund ? 25 : 0) + (si.housingFundRatio >= 5 ? 15 : 0),
+      0, 100
+    );
+
+    let bonus = 0;
+    let penalty = 0;
+    if (state.hrSatisfaction > 0) bonus += 5;
+    if (state.usedStrategies.length >= 3) bonus += 5;
+    if (state.infoExposure > 80) penalty -= 10;
+
+    const score = clamp(Math.round(DQ * 0.35 + TD * 0.25 + WH * 0.20 + SI * 0.20 + bonus + penalty), 0, 100);
+
+    let rank;
+    if (score >= 95) rank = '🥇 谈判大师';
+    else if (score >= 80) rank = '🥈 老练求职者';
+    else if (score >= 60) rank = '🥉 可造之材';
+    else if (score >= 40) rank = '职场小白';
+    else rank = '💀 谈崩了';
+
+    let outcomeTitle, outcomeEmoji, outcomeNarrative;
+    if (withdrawn) {
+      outcomeTitle = '💀 谈崩了'; outcomeEmoji = '💀';
+      outcomeNarrative = '谈判破裂，offer 被撤回。要么策略太激进踩了 HR 底线，要么在关键问题上僵持不下。谈崩也是一课——识别不能碰的红线，下次换个方式绕过去。';
+    } else if (state.accepted && state.currentOffer >= scene.hrBudget && state.hrSatisfaction > 30 && state.infoExposure < 60) {
+      outcomeTitle = '🏆 高位成交 + HR尊重'; outcomeEmoji = '🏆';
+      outcomeNarrative = '你精准地把握了谈判节奏——保护了自己的底牌，施压而不过界。薪资、社保、加班费全部到位，这是这个场景能拿到的最佳结果。';
+    } else if (state.currentOffer >= scene.marketRate && state.hrSatisfaction > 20) {
+      outcomeTitle = '🥈 老练求职者'; outcomeEmoji = '🥈';
+      outcomeNarrative = '你在谈判中展现了不错的技巧，拿到了市场公允水平。整体是个可以接受的 offer。下局试试识破更多陷阱？';
+    } else if (state.currentOffer >= scene.marketRate && state.hrSatisfaction <= 20) {
+      outcomeTitle = '⚠️ 强势过头'; outcomeEmoji = '⚠️';
+      outcomeNarrative = '你拿到了不错的薪资，但过程中 HR 耐心几乎耗尽。offer 虽然还在，关系紧张可能会影响入职后的体验。';
+    } else if (state.currentOffer < scene.marketRate && state.hrSatisfaction > 40) {
+      outcomeTitle = '😔 被压价但关系好'; outcomeEmoji = '😔';
+      outcomeNarrative = '你是个好相处的人——也许太好了。HR 把你当朋友聊天，顺便把 offer 往下压了不少。下次记住：nice 不等于让步。';
+    } else {
+      outcomeTitle = '🥉 可造之材'; outcomeEmoji = '🥉';
+      outcomeNarrative = '谈判有亮点也有不足。有些方面做得不错，但还有提升空间。看看复盘面板，想想哪里可以改进。';
+    }
+
+    const advice = buildAdvice({ DQ, TD, WH, SI, withdrawn });
+
+    const result = {
+      reason,
+      withdrawn,
+      accepted: state.accepted,
+      score,
+      DQ: Math.round(DQ),
+      TD: Math.round(TD),
+      WH,
+      SI,
+      bonus,
+      penalty,
+      rank,
+      outcomeTitle,
+      outcomeEmoji,
+      outcomeNarrative,
+      advice,
+      traps: state.trapLog.map(t => ({ id: t.id, label: t.label, round: t.round, status: t.status })),
+      log: state.log.map(e => ({ ...e })),
+      offer: state.currentOffer,
+      satisfaction: state.hrSatisfaction,
+      exposure: state.infoExposure,
+      falsePositives: state.falsePositives,
+      trapsDetected: state.trapsDetected,
+      totalTraps: state.totalTraps,
+      seed: game.seed,
+      apiMode: false
+    };
+
+    state.settlement = result;
+    return result;
+  }
+
+  const game = {
+    scene,
+    seed,
+    state,
+    fmtK,
+    isOver() { return state.over; },
+    beginTurn(text) {
+      if (state.over) throw new Error('本局已结束');
+      const clean = String(text || '').trim();
+      if (!clean) throw new Error('输入为空');
+
+      state.round++;
+      state.conversation.push({ role: 'user', content: clean });
+
+      // 1. 结算上一个 HR 陷阱：指对了算识破，指错了算误判
+      const accused = TRAPS.filter(t => t.playerPattern.test(clean)).map(t => t.id);
+      let trapResult = null;
+      if (state.pendingTrap) {
+        if (accused.includes(state.pendingTrap.id)) {
+          state.pendingTrap.status = 'detected';
+          state.trapsDetected++;
+          trapResult = { type: 'detected', id: state.pendingTrap.id, label: state.pendingTrap.label };
+        } else {
+          state.pendingTrap.status = 'missed';
+          trapResult = { type: 'missed', id: state.pendingTrap.id, label: state.pendingTrap.label };
+        }
+        state.pendingTrap = null;
+      }
+      if (accused.length && (!trapResult || trapResult.type !== 'detected')) {
+        state.falsePositives++;
+        trapResult = {
+          type: trapResult ? 'missed_and_false_positive' : 'false_positive',
+          id: trapResult ? trapResult.id : accused[0],
+          accused: accused[0]
+        };
+      }
+
+      // 2. 接受与退出
+      if (isAcceptance(clean, state.round)) {
+        state.accepted = true;
+        const closeText = state.hrSatisfaction > 30
+          ? '太好了，那我马上走审批流程，欢迎加入我们！'
+          : '好，那我这边走流程，期待你的加入。';
+        state.conversation.push({ role: 'hr', content: closeText });
+        state.log.push({
+          round: state.round, player: clean, intent: 'accept', intentLabel: INTENT_LABELS.accept,
+          hr: closeText, trapId: null, trapLabel: null,
+          satDelta: 0, expDelta: 0, offerDelta: 0
+        });
+        return { kind: 'end', text: closeText, settlement: settle('accepted') };
+      }
+      if (isQuit(clean)) {
+        const line = '好的，我理解。那这个 offer 我就先收回去了，祝你找到合适的机会。';
+        state.hrSatisfaction = 0;
+        state.conversation.push({ role: 'hr', content: line });
+        state.log.push({
+          round: state.round, player: clean, intent: 'quit', intentLabel: '🚪 退出谈判',
+          hr: line, trapId: null, trapLabel: null,
+          satDelta: 0, expDelta: 0, offerDelta: 0
+        });
+        return { kind: 'end', text: line, settlement: settle('quit') };
+      }
+
+      // 3. 固定效果表
+      const intent = accused.length ? 'trap_detection' : classifyIntent(clean);
+      const effect = EFFECTS[intent];
+      const mult = ROUND_MULT[Math.min(state.round, 8)] || 1;
+      const satDelta = effect.sat < 0 ? Math.round(effect.sat * mult) : effect.sat;
+      const expDelta = effect.exp;
+      const beforeOffer = state.currentOffer;
+
+      state.hrSatisfaction = clamp(state.hrSatisfaction + satDelta, 0, 100);
+      state.infoExposure = clamp(state.infoExposure + expDelta, 0, 100);
+      state.currentOffer = Math.min(scene.hrBudget, state.currentOffer + effect.offer);
+      if (intent === 'law_ref') state.lawRefs++;
+      if (!state.usedStrategies.includes(intent)) state.usedStrategies.push(intent);
+
+      const offerDelta = state.currentOffer - beforeOffer;
+
+      // 4. 把人逼走
+      if (state.hrSatisfaction <= 10) {
+        const line = '我很抱歉，但目前来看我们在薪资上的差距确实比较大。这个 offer 我需要收回了。祝你找到更适合的机会。';
+        state.hrSatisfaction = 0;
+        state.conversation.push({ role: 'hr', content: line });
+        state.log.push({
+          round: state.round, player: clean, intent, intentLabel: INTENT_LABELS[intent],
+          hr: line, trapId: null, trapLabel: null,
+          satDelta, expDelta, offerDelta
+        });
+        return { kind: 'end', text: line, settlement: settle('withdrawn') };
+      }
+
+      lastTurn = { text: clean, intent, satDelta, expDelta, offerDelta };
+      return { kind: 'respond', intent, trapResult };
+    },
+    finishTurn(externalText) {
+      if (state.over) throw new Error('本局已结束');
+      if (!lastTurn) throw new Error('没有待回应的回合');
+
+      const built = externalText == null
+        ? buildMockResponse(lastTurn.intent)
+        : attachExternalText(externalText);
+
+      state.conversation.push({ role: 'hr', content: built.text });
+      state.log.push({
+        round: state.round,
+        player: lastTurn.text,
+        intent: lastTurn.intent,
+        intentLabel: INTENT_LABELS[lastTurn.intent],
+        hr: built.text,
+        trapId: built.trap ? built.trap.id : null,
+        trapLabel: built.trap ? built.trap.label : null,
+        satDelta: lastTurn.satDelta,
+        expDelta: lastTurn.expDelta,
+        offerDelta: lastTurn.offerDelta
+      });
+      lastTurn = null;
+
+      if (state.round >= state.maxRounds) {
+        return { text: built.text, trap: built.trap, settlement: settle('max_rounds') };
+      }
+      return { text: built.text, trap: built.trap, settlement: null };
+    }
+  };
+
+  return game;
+}
+// ===== ENGINE END =====
+
+// ============ UI ============
+let currentGame = null;
+let busy = false;
+
+const apiConfig = {
+  baseUrl: localStorage.getItem('sn_api_base') || 'https://api.openai.com/v1',
+  model: localStorage.getItem('sn_api_model') || 'gpt-4o',
+  apiKey: ''
+};
+
+// 旧版本把 key 写进过 localStorage，这里清掉
+try { localStorage.removeItem('sn_api_key'); } catch (e) {}
+
+const chat = document.getElementById('chat');
+const input = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+function urlSeed() {
+  try {
+    const raw = new URLSearchParams(location.search).get('seed');
+    const n = raw === null ? NaN : Number(raw);
+    return Number.isFinite(n) ? (n >>> 0) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function getBestScore(sceneId) {
+  try {
+    const val = localStorage.getItem('sn_best_' + sceneId);
+    return val !== null ? parseFloat(val) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveBestScore(sceneId, score) {
+  const prev = getBestScore(sceneId);
+  if (prev === null || score > prev) {
+    try { localStorage.setItem('sn_best_' + sceneId, score.toFixed(0)); } catch (e) {}
+    return true;
+  }
+  return false;
+}
+
+// ============ LANDING PAGE ============
+function renderSceneCards() {
+  const list = document.getElementById('scene-list');
+  list.innerHTML = '';
+
+  SCENES.forEach((scene, idx) => {
+    const card = document.createElement('div');
+    card.className = 'scene-card ' + (scene.unlocked ? 'unlocked' : 'locked');
+
+    const bestScore = getBestScore(scene.id);
+    const accentClass = ['s1', 's2', 's3'][idx];
+
+    card.innerHTML = `
+      <div class="scene-card-accent ${accentClass}"></div>
+      <div class="scene-card-body">
+        <div class="scene-logo ${accentClass}">${scene.emoji}</div>
+        <div class="scene-info">
+          <div class="scene-title">${scene.title}</div>
+          <div class="scene-meta">
+            <span>${scene.company}</span><span class="dot">·</span>
+            <span>${scene.hrStyle}</span><span class="dot">·</span>
+            <span>HR ${scene.hrName}</span>
+          </div>
+        </div>
+        <div class="scene-right">
+          ${bestScore !== null
+            ? `<div class="scene-best-tag">🏆 ${bestScore.toFixed(0)}分</div>`
+            : `<div class="scene-company">${scene.companyMeta.stage}</div>`}
+          <div class="scene-difficulty">${'★'.repeat(scene.difficulty)}${'☆'.repeat(4 - scene.difficulty)}</div>
+          ${scene.unlocked
+            ? '<div class="scene-btn play">开始</div>'
+            : '<div class="scene-btn locked-tag">🔒 即将开放</div>'}
+        </div>
+      </div>
+    `;
+
+    if (scene.unlocked) card.onclick = () => startGame(scene.id);
+    list.appendChild(card);
+  });
+}
+
+// ============ GAME FLOW ============
+function startGame(sceneId, seed) {
+  const useSeed = Number.isFinite(seed) ? seed : (urlSeed() !== null ? urlSeed() : DEFAULT_SEED);
+  currentGame = createGame(sceneId, { seed: useSeed });
+  const scene = currentGame.scene;
+  const idx = SCENES.indexOf(scene);
+
+  document.getElementById('landing-screen').style.display = 'none';
+  document.getElementById('game-screen').classList.add('active');
+  document.getElementById('settings-toggle').style.display = 'flex';
+
+  document.getElementById('hud-scene-name').textContent = scene.hrName + ' · ' + scene.hrTitle;
+  document.getElementById('hud-scene-subtitle').textContent = scene.company + ' · ' + scene.companyMeta.stage;
+
+  const logoEl = document.getElementById('company-logo');
+  logoEl.textContent = scene.emoji;
+  logoEl.className = 'boss-company-logo s' + (idx + 1);
+  document.getElementById('company-name').textContent = scene.company;
+  document.getElementById('company-stage').textContent = scene.companyMeta.stage;
+  document.getElementById('company-industry').textContent = scene.companyMeta.industry;
+  document.getElementById('company-size').textContent = scene.companyMeta.size;
+
+  document.getElementById('chat').innerHTML = '';
+  document.getElementById('settlement-overlay').classList.remove('show');
+
+  updateHUD();
+  setInputEnabled(true);
+  addMessage('hr', scene.openingMessage);
+}
+
+function backToMenu() {
+  if (currentGame && currentGame.state.round > 0 && !currentGame.isOver()) {
+    if (!confirm('确定返回吗？当前进度将丢失。')) return;
+  }
+  currentGame = null;
+  document.getElementById('landing-screen').style.display = 'flex';
+  document.getElementById('game-screen').classList.remove('active');
+  document.getElementById('settlement-overlay').classList.remove('show');
+  document.getElementById('settings-toggle').style.display = 'none';
+  renderSceneCards();
+}
+
+function restart() {
+  if (!currentGame) return;
+  startGame(currentGame.scene.id, currentGame.seed);
+}
+
+function updateHUD() {
+  if (!currentGame) return;
+  const s = currentGame.state;
+  document.getElementById('sat-bar').style.width = s.hrSatisfaction + '%';
+  document.getElementById('sat-val').textContent = s.hrSatisfaction;
+  document.getElementById('exp-bar').style.width = s.infoExposure + '%';
+  document.getElementById('exp-val').textContent = s.infoExposure;
+  document.getElementById('round-num').textContent = s.round;
+  document.getElementById('trap-count').textContent = s.trapsDetected;
+  document.getElementById('offer-display').textContent = (s.currentOffer / 1000).toFixed(0) + 'K·14薪';
+
+  const lawEl = document.getElementById('stat-law');
+  if (s.lawRefs > 0) {
+    lawEl.style.display = 'block';
+    document.getElementById('law-count').textContent = s.lawRefs;
+  } else {
+    lawEl.style.display = 'none';
+  }
+
+  const satVal = document.getElementById('sat-val');
+  if (s.hrSatisfaction <= 30) satVal.style.color = '#ff4757';
+  else if (s.hrSatisfaction <= 50) satVal.style.color = '#ffa502';
+  else satVal.style.color = '#333';
+}
+
+function addMessage(role, text, extra) {
+  const scene = currentGame ? currentGame.scene : null;
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+
+  const avatarEmoji = role === 'hr' ? (scene ? scene.hrEmoji : '👩‍💼') : '🧑';
+  const avatarBg = role === 'hr' ? '#e8f5e9' : '#e0f4f0';
+  const name = role === 'hr' ? (scene ? scene.hrName : 'HR') : '我';
+
+  div.innerHTML = `
+    <div class="msg-avatar" style="background:${avatarBg}">${avatarEmoji}</div>
+    <div class="msg-content">
+      <div class="msg-name">${name}</div>
+      <div class="msg-bubble">${esc(text).replace(/\n/g, '<br>')}</div>
+    </div>
+  `;
+
+  if (extra) {
+    const badge = document.createElement('div');
+    badge.className = 'msg-trap-badge';
+    badge.textContent = extra;
+    div.querySelector('.msg-content').appendChild(badge);
+  }
+
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function addSystemMsg(text) {
+  const div = document.createElement('div');
+  div.className = 'msg-system';
+  div.textContent = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function showTyping() {
+  const scene = currentGame ? currentGame.scene : null;
+  const div = document.createElement('div');
+  div.className = 'typing-msg';
+  div.id = 'typing-indicator';
+  div.innerHTML = `
+    <div class="msg-avatar" style="background:#e8f5e9">${scene ? scene.hrEmoji : '👩‍💼'}</div>
+    <div class="typing"><span></span><span></span><span></span></div>
+  `;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function setInputEnabled(enabled) {
+  input.disabled = !enabled;
+  sendBtn.disabled = !enabled;
+  if (enabled) input.focus();
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ============ API ============
+function buildSystemPrompt() {
+  const s = currentGame.state;
+  const scene = currentGame.scene;
+  let template = scene.hrSystemPrompt;
+
+  template = template
+    .replace(/{satisfaction}/g, s.hrSatisfaction)
+    .replace(/{exposure}/g, s.infoExposure)
+    .replace(/{offer}/g, s.currentOffer)
+    .replace(/{round}/g, s.round)
+    .replace(/{maxRounds}/g, s.maxRounds);
+
+  const history = s.conversation.slice(-6).map(m =>
+    `${m.role === 'hr' ? scene.hrName : '求职者'}：${m.content}`
+  ).join('\n');
+  return template.replace(/{history}/g, history || '(对话刚开始)');
+}
+
+function validateHRText(raw) {
+  if (typeof raw !== 'string') return { ok: false, reason: '返回为空' };
+  const text = raw.replace(/```[\s\S]*?```/g, '').replace(/[ \t]+/g, ' ').replace(/\n{2,}/g, '\n').trim();
+  if (!text) return { ok: false, reason: '返回为空' };
+  if (text.length > 240) return { ok: false, reason: '回复过长' };
+  if (/作为(?:一个)?(?:AI|人工智能)|语言模型|我是(?:AI|助手)|system prompt|系统提示/i.test(text)) {
+    return { ok: false, reason: '脱离角色' };
+  }
+  if (/^\s*[-*#]\s|```/m.test(text)) return { ok: false, reason: '格式异常' };
+
+  const sentences = text.split(/[。！？!?]+/).map(x => x.trim()).filter(Boolean);
+  if (sentences.length < 2 || sentences.length > 4) {
+    return { ok: false, reason: '句数不在 2-4 句' };
+  }
+
+  const budgetK = currentGame.scene.hrBudget / 1000;
+  const kMatches = text.match(/(\d+(?:\.\d+)?)\s*[Kk]/g) || [];
+  for (const token of kMatches) {
+    const n = parseFloat(token);
+    if (Number.isFinite(n) && n > budgetK) return { ok: false, reason: '报价超过预算上限' };
+  }
+  const monthly = text.match(/(?:月薪|base|底薪)[^。！？]{0,6}(\d{4,6})/);
+  if (monthly && Number(monthly[1]) > currentGame.scene.hrBudget) {
+    return { ok: false, reason: '报价超过预算上限' };
+  }
+
+  return { ok: true, text };
+}
+
+async function fetchHRText() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+
+  try {
+    const base = apiConfig.baseUrl.replace(/\/+$/, '');
+    const messages = [{ role: 'system', content: buildSystemPrompt() }];
+    for (const m of currentGame.state.conversation.slice(-8)) {
+      messages.push({ role: m.role === 'hr' ? 'assistant' : 'user', content: m.content });
+    }
+
+    const resp = await fetch(base + '/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + apiConfig.apiKey },
+      body: JSON.stringify({
+        model: apiConfig.model,
+        messages,
+        temperature: 0.8,
+        max_tokens: 300
+      }),
+      signal: controller.signal
+    });
+
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+    const data = await resp.json();
+    const raw = data && data.choices && data.choices[0] &&
+      data.choices[0].message && data.choices[0].message.content;
+    const checked = validateHRText(raw);
+    if (!checked.ok) return { text: null, reason: checked.reason };
+    return { text: checked.text, reason: null };
+  } catch (e) {
+    return { text: null, reason: e.name === 'AbortError' ? '超时 15 秒' : '网络错误' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function sendMessage() {
+  if (busy || !currentGame || currentGame.isOver()) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  const game = currentGame;
+  input.value = '';
+  setInputEnabled(false);
+  busy = true;
+
+  addMessage('me', text);
+
+  const turn = game.beginTurn(text);
+  if (turn.kind === 'end') {
+    addMessage('hr', turn.text);
+    updateHUD();
+    finishWithSettlement(turn.settlement);
+    busy = false;
+    return;
+  }
+
+  showTyping();
+
+  let hrText = null;
+  if (apiConfig.apiKey) {
+    const r = await fetchHRText();
+    if (currentGame !== game) { busy = false; return; }
+    if (r.text) {
+      hrText = r.text;
+    } else {
+      addSystemMsg('⚠️ LLM ' + r.reason + '，本轮回退到模拟模式');
+    }
+  } else {
+    await sleep(700);
+    if (currentGame !== game) { busy = false; return; }
+  }
+
+  hideTyping();
+  const result = game.finishTurn(hrText);
+  addMessage('hr', result.text, result.trap ? '🪤 陷阱：' + result.trap.label : null);
+  updateHUD();
+
+  if (result.settlement) {
+    finishWithSettlement(result.settlement);
+  } else {
+    setInputEnabled(true);
+  }
+  busy = false;
+}
+
+function finishWithSettlement(settlement) {
+  settlement.apiMode = Boolean(apiConfig.apiKey);
+  const isNewRecord = saveBestScore(currentGame.scene.id, settlement.score);
+  renderSettlement(settlement, isNewRecord);
+  setInputEnabled(false);
+}
+
+// ============ SETTLEMENT ============
+function renderSettlement(s, isNewRecord) {
+  const trapRows = s.traps.map(t => `
+    <li class="${t.status === 'detected' ? 'hit' : 'miss'}">
+      <span>第${t.round}轮 · ${esc(t.label)}</span>
+      <span>${t.status === 'detected' ? '已识破' : '错过'}</span>
+    </li>
+  `).join('') || '<li class="miss"><span>这一局没有陷阱被触发</span><span>—</span></li>';
+
+  const trapStatus = (id) => {
+    const t = s.traps.find(x => x.id === id);
+    if (!t) return null;
+    return t.status === 'detected' ? '已识破' : '错过';
+  };
+
+  const roundRows = s.log.map(e => {
+    const trapText = e.trapId
+      ? `<div class="round-trap ${trapStatus(e.trapId) === '已识破' ? 'hit' : 'miss'}">🪤 ${esc(e.trapLabel)} · ${trapStatus(e.trapId)}</div>`
+      : '';
+    const effects = `满意度 ${e.satDelta > 0 ? '+' : ''}${e.satDelta} · 暴露度 ${e.expDelta > 0 ? '+' : ''}${e.expDelta} · 报价 ${e.offerDelta > 0 ? '+' : ''}${e.offerDelta}`;
+    return `
+      <div class="round-item">
+        <div class="round-head"><span>第${e.round}轮</span><span>${e.intentLabel}</span></div>
+        <div class="round-line me">我：${esc(e.player)}</div>
+        <div class="round-line hr">HR：${esc(e.hr)}</div>
+        <div class="round-effects">${effects}</div>
+        ${trapText}
+      </div>
+    `;
+  }).join('');
+
+  const adviceRows = s.advice.map(a => `<li>${esc(a)}</li>`).join('');
+
+  const offerLine = s.withdrawn
+    ? '未成交（offer 已撤回）'
+    : `${(s.offer / 1000).toFixed(0)}K/月（初始 ${(currentGame.scene.initialOffer / 1000).toFixed(0)}K → 最终 ${(s.offer / 1000).toFixed(0)}K）`;
+
+  const wrongNote = s.falsePositives > 0 ? `，误判 ${s.falsePositives}` : '';
+
+  document.getElementById('settlement').innerHTML = `
+    <h2>${s.outcomeEmoji}</h2>
+    <div class="outcome-title">${s.outcomeTitle}</div>
+    <div class="outcome-narrative">${s.outcomeNarrative}</div>
+    ${isNewRecord ? '<div class="new-record">🏆 新纪录！</div>' : ''}
+
+    <div class="breakdown">
+      <div class="row"><span>💰 成交薪资</span><span><strong>${offerLine}</strong></span></div>
+      <div class="row"><span>📊 成交质量 DQ</span><span>${s.DQ} 分</span></div>
+      <div class="row"><span>🪤 陷阱识别 TD</span><span>${s.trapsDetected}/${s.totalTraps}${wrongNote}（${s.TD} 分）</span></div>
+      <div class="row"><span>⏰ 工时目标 WH</span><span>${s.WH} 分</span></div>
+      <div class="row"><span>🏥 社保匹配 SI</span><span>${s.SI} 分</span></div>
+      <div class="row"><span>🎁 加分</span><span>${s.bonus > 0 ? '+' + s.bonus : '0'}</span></div>
+      ${s.penalty < 0 ? `<div class="row"><span>⚠️ 扣分</span><span>${s.penalty}</span></div>` : ''}
+      <div class="row"><span>📈 策略类型</span><span>${new Set(s.log.map(e => e.intent)).size} 种</span></div>
+      <div class="row"><span>📖 法条引用</span><span>${currentGame.state.lawRefs} 次</span></div>
+    </div>
+
+    <div class="total">${s.score}</div>
+    <div class="rank">${s.rank}</div>
+
+    <div class="review">
+      <details open>
+        <summary>🪤 陷阱复盘（${s.trapsDetected}/${s.totalTraps} 识破${wrongNote}）</summary>
+        <ul class="trap-list">${trapRows}</ul>
+      </details>
+
+      <details>
+        <summary>📝 逐轮记录（${s.log.length} 轮）</summary>
+        <div class="round-list">${roundRows}</div>
+      </details>
+
+      <div class="advice">
+        <h4>下一步建议</h4>
+        <ol>${adviceRows}</ol>
+      </div>
+    </div>
+
+    <div class="seed-line">
+      随机种子 ${s.seed} · ${s.apiMode ? 'API 模式（不保证可复现）' : '模拟模式（同一串输入同一结果）'}<br>
+      结算由规则计算，HR 的话只负责表达
+    </div>
+
+    <button class="primary" onclick="restart()">🔄 再来一局</button>
+    <button class="secondary" onclick="backToMenu()">📋 返回场景</button>
+  `;
+
+  document.getElementById('settlement-overlay').classList.add('show');
+}
+
+// ============ SETTINGS ============
+function toggleSettings() {
+  document.getElementById('settings-panel').classList.toggle('show');
+}
+
+function saveSettings() {
+  apiConfig.baseUrl = document.getElementById('api-base').value.trim() || 'https://api.openai.com/v1';
+  apiConfig.model = document.getElementById('api-model').value.trim() || 'gpt-4o';
+  apiConfig.apiKey = document.getElementById('api-key').value.trim();
+
+  try {
+    localStorage.setItem('sn_api_base', apiConfig.baseUrl);
+    localStorage.setItem('sn_api_model', apiConfig.model);
+  } catch (e) {}
+
+  document.getElementById('settings-panel').classList.remove('show');
+  if (currentGame) {
+    addSystemMsg(apiConfig.apiKey
+      ? '✅ API 已启用（Key 只在本次页面内存里）。失败或超时会自动回模拟模式。'
+      : '✅ 当前为模拟模式，不联网也能完整玩一局。');
+  }
+}
+
+// ============ INIT ============
+document.getElementById('api-base').value = apiConfig.baseUrl;
+document.getElementById('api-model').value = apiConfig.model;
+document.getElementById('settings-toggle').style.display = 'none';
+
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+renderSceneCards();
+</script>
+</body>
+</html>
