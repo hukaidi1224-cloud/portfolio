@@ -54,12 +54,28 @@
   .flow { background: rgba(255,255,255,0.03); border: 1px solid var(--line); border-radius: 10px; padding: 1.1rem 1.3rem; margin: 1.2rem 0 1.6rem; color: var(--muted); font-size: 0.9rem; line-height: 1.95; }
   .flow b { color: #fff; font-weight: 600; }
   .note { color: var(--dim); font-size: 0.85rem; }
+  .fig { margin: 1.4rem 0 2.4rem; }
+  .fig-frame {
+    background: #f4f5f7;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem;
+    overflow: auto;
+    max-height: 76vh;
+    overscroll-behavior: contain;
+  }
+  .fig-frame img { display: block; width: auto; max-width: none; }
+  .fig-cap { color: var(--dim); font-size: 0.82rem; padding-top: 0.6rem; display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .fig-cap a { color: var(--accent); text-decoration: none; }
+  .fig-cap a:hover { text-decoration: underline; }
   .footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); color: var(--dim); font-size: 0.82rem; }
   @media (max-width: 720px) {
     body { padding: 2rem 1rem 3.5rem; }
     h1 { font-size: 1.8rem; }
     .table-wrap { overflow-x: visible; }
     table { min-width: 0; }
+    .fig-frame { max-height: 70vh; }
+    .fig-frame img { width: auto; }
   }
 </style>
 </head>
@@ -110,6 +126,11 @@
         <tr><td class="lbl">尾段</td><td>第三章庞镇，击败「雷枪」长鸿后</td><td>进正前方的玉儿家，与其父交谈</td><td>—</td><td>—</td><td>奖杯<strong>「杏林有继」</strong>在此刻跳出，要求三条全通</td></tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="fig">
+    <div class="fig-frame"><img src="img/yzl-quest-flow.svg" alt="玉儿线任务流程与失效闸门图"></div>
+    <div class="fig-cap"><span>列＝任务构件（接取 → 推进 → 闸门 → 交付 → 汇流），行＝一条异闻。红框＝不可逆写入点，红虚线框＝失效闸门，橙字＝截止条件。① 那条虚线是全图的重点：它把下一行的接取动作接到上一行的失效上。</span><a href="img/yzl-quest-flow.svg" target="_blank" rel="noopener">打开原图 →</a></div>
   </div>
 
   <h2>二、目的：它在第一章干五件主线不做的事</h2>
