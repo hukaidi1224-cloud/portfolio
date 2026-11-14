@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brotato 拆解 · 系统与关卡 | 胡凯迪</title>
+<style>
+  :root {
+    --bg: #000000;
+    --panel: rgba(255,255,255,0.04);
+    --line: rgba(255,255,255,0.12);
+    --text: #ffffff;
+    --muted: rgba(255,255,255,0.68);
+    --dim: rgba(255,255,255,0.45);
+    --accent: #34d399;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.75;
+    color: var(--text);
+    background: var(--bg);
+    padding: 3rem 1.5rem 5rem;
+  }
+  .doc { max-width: 980px; margin: 0 auto; }
+  .back { display: inline-block; color: var(--dim); text-decoration: none; font-size: 0.9rem; margin-bottom: 2.5rem; }
+  .back:hover { color: #fff; }
+  .kicker { color: var(--accent); font-size: 0.85rem; letter-spacing: 0.14em; margin-bottom: 0.7rem; }
+  h1 { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.7rem; }
+  .subtitle { color: var(--muted); font-size: 1.05rem; max-width: 760px; margin-bottom: 1.4rem; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 2rem; }
+  .tag { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.85); padding: 0.3rem 0.9rem; border-radius: 20px; font-size: 0.82rem; }
+  .tag.accent { background: rgba(52,211,153,0.14); color: var(--accent); }
+  h2 { font-size: 1.45rem; font-weight: 600; margin: 3.2rem 0 1.2rem; padding-left: 0.9rem; border-left: 3px solid #fff; }
+  h3 { font-size: 1.08rem; font-weight: 600; margin: 1.8rem 0 0.6rem; color: rgba(255,255,255,0.95); }
+  p { color: var(--muted); margin-bottom: 1rem; }
+  ul, ol { color: var(--muted); margin: 0 0 1rem 1.4rem; }
+  li { margin-bottom: 0.4rem; }
+  strong { color: rgba(255,255,255,0.94); font-weight: 600; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.2rem 0 1.6rem; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1.1rem 1.3rem; }
+  .panel h4 { font-size: 1rem; margin-bottom: 0.5rem; }
+  .panel ul { margin-bottom: 0; }
+  .fig { margin: 1.4rem 0 2.4rem; }
+  .fig-frame {
+    background: #f4f5f7;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem;
+    overflow: auto;
+    max-height: 76vh;
+    overscroll-behavior: contain;
+  }
+  .fig-frame img { display: block; width: auto; max-width: none; }
+  .fig-cap { color: var(--dim); font-size: 0.82rem; padding-top: 0.6rem; display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .fig-cap a { color: var(--accent); text-decoration: none; }
+  .fig-cap a:hover { text-decoration: underline; }
+  .note { color: var(--dim); font-size: 0.85rem; }
+  .footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); color: var(--dim); font-size: 0.82rem; }
+  @media (max-width: 720px) {
+    body { padding: 2rem 1rem 3.5rem; }
+    h1 { font-size: 1.8rem; }
+    .two-col { grid-template-columns: 1fr; }
+    .fig-frame { max-height: 70vh; }
+    .fig-frame img { width: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+  <a class="back" href="../../index.html">← 返回作品集</a>
+
+  <div class="kicker">游戏拆解 · 系统与关卡</div>
+  <h1>《Brotato》：从对象表到波次意图</h1>
+  <p class="subtitle">俯视角类幸存者 Roguelite 弹幕射击生存游戏。这次拆解按六层走：体验 → 玩法 → 核心循环 → 核心系统 → 交互链 → 关卡流程，系统层以「对象」为基本单位，逐个拆它的数据、行为与状态。</p>
+
+  <div class="meta">
+    <span class="tag accent">拆解对象：Brotato</span>
+    <span class="tag">六层框架</span>
+    <span class="tag">对象 = 数据 / 行为 / 状态</span>
+    <span class="tag">20 波逐波标注测试目的</span>
+  </div>
+
+  <p class="note">四张图纸均为矢量导出，按原始比例显示：图框内可上下左右拖动，文字不会糊；点每张图右下角的「打开原图」可在新窗口自由缩放。</p>
+
+  <h2>一、体验与玩法分层</h2>
+  <div class="two-col">
+    <div class="panel">
+      <h4>核心体验</h4>
+      <ul>
+        <li>Roguelike 体验</li>
+        <li>成长策略</li>
+        <li>生存策略</li>
+        <li>生存体验</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h4>其他体验</h4>
+      <ul>
+        <li>动作挑战</li>
+        <li>冒险体验</li>
+        <li>弹幕射击</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h4>核心玩法</h4>
+      <ul>
+        <li>移动操控、躲避反应</li>
+        <li>资源获取、资源分配、资源消耗</li>
+        <li>物品获取</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h4>其他玩法</h4>
+      <ul>
+        <li>策略选择</li>
+        <li>时间管理</li>
+        <li>战斗规划</li>
+      </ul>
+    </div>
+  </div>
+  <p>四条核心体验里，成长策略与生存策略是决策侧，Roguelike 体验与生存体验是结果侧；玩法层把决策拆成「获取—分配—消耗」三段资源动作，加上移动与躲避两个操作动作。玩家在一局里实际只在操作与资源两条线上做选择，其余体验都是这两条线的产物。</p>
+
+  <h2>二、核心循环</h2>
+  <div class="fig">
+    <div class="fig-frame"><img src="img/brotato-core-loop.svg" alt="Brotato 核心循环流程图"></div>
+    <div class="fig-cap"><span>波次内外两层循环：局内「进入地图 → 波次战斗 → 结算升级 → 商店」，波次内「生成 → 移动操控 → 击杀 → 掉落 → 拾取」。</span><a href="img/brotato-core-loop.svg" target="_blank">打开原图</a></div>
+  </div>
+  <p>循环上有两个判定节点控制节奏：是否还有下一波、时间是否结束。左侧「全局」框把玩家在一局里能做的全部行为列成一张清单（40s 暂停、查看目标属性、查看当前波次、查看武器与道具详情、查看属性详情、查看血量与材料数），下面「游戏内全部信息」是同一份清单的状态侧版本。行为清单与信息清单分开列，是为了检查每个界面到底暴露了哪些状态。</p>
+
+  <h2>三、核心系统：以对象为单位</h2>
+  <div class="fig">
+    <div class="fig-frame"><img src="img/brotato-core-systems.svg" alt="Brotato 核心系统对象树"></div>
+    <div class="fig-cap"><span>根节点分「类别」与「可交互对象」两支，每个对象展开数据与行为。</span><a href="img/brotato-core-systems.svg" target="_blank">打开原图</a></div>
+  </div>
+  <p>拆解口径写在图头：拆解核心是对象，以对象为基本单位，拆它的<strong>数据</strong>、<strong>行为</strong>和<strong>状态</strong>。落到这张图上：</p>
+  <ul>
+    <li><strong>GameManager</strong> 分「角色」与「其他」两组行为。角色组管 buff 调整、状态改变、道具持有与回收、武器等级提升、生命检测与游戏结束；其他组管计时、记录波次、武器与树木的生成销毁、材料生成，以及权重侧数据（波次、每波次时间、各类型敌人权重、树木间隔、箱子掉落概率）。</li>
+    <li><strong>可交互对象</strong> 列出操控系统、角色（含碰撞框的体积与类型）、敌人、武器、树木、材料、箱子、投射物、商店。每一项都按「行为 / 数据」两栏展开，例如武器有调取等级信息、创建投射物、检测敌人、投射物伤害、射击范围；投射物有计时销毁、调用属性计算伤害、碰撞体积。</li>
+    <li><strong>类别</strong> 一支是内容库：道具库（id、稀有度、贴图、名称）、角色状态（血量、经验、材料、箱子、属性、持有道具、buff）、敌人库（id、血量、行为逻辑、生成逻辑、碰撞框、部分敌人的射击逻辑、贴图）、武器库（id、基础数值、基础加成、贴图）、弹匣内容库。</li>
+  </ul>
+  <p class="note">这张对象表的价值在于它能直接转成实现清单：数据栏就是字段，行为栏就是接口，两个对象之间出现同一条行为（例如「销毁」在箱子、材料、投射物上各写一次）就说明该抽公共逻辑。</p>
+
+  <h2>四、交互链：目标—障碍—决策—奖励</h2>
+  <div class="fig">
+    <div class="fig-frame"><img src="img/brotato-interaction-chain.svg" alt="Brotato 交互链"></div>
+    <div class="fig-cap"><span>图例分行为、信息、好判定、坏判定四类，链条从通关目标推到玩家的应对手段。</span><a href="img/brotato-interaction-chain.svg" target="_blank">打开原图</a></div>
+  </div>
+  <p>顶层目标是「通关游戏」，拆成存活过 20 波与击杀最终 Boss。障碍有两类：生命值清零（伤害不够、操作走位有问题、当前构筑血量与回复不足）与伤害不够（武器不适配、找不到好武器、找不到好道具、运气太差）。每条障碍后面接的是玩家能采取的决策，而不是设计者的期望：运气太差 → 加点时多堆幸运或拿加幸运的道具；走位困难 → 练习、躲避子弹；对属性和效果不了解 → 选择有用属性、拿更好的道具。</p>
+  <p>链条末端能读出这个游戏的奖励结构：击杀带来爽感与更多资源，资源带来更好的武器与更强的掌控度，而「点数有限」在提升伤害与提升血量回复之间制造了取舍——这就是成长策略体验的来源。</p>
+
+  <h2>五、关卡流程：20 波逐波目的</h2>
+  <div class="fig">
+    <div class="fig-frame"><img src="img/brotato-level-flow.svg" alt="Brotato 二十波关卡流程图，每波标注设计目的"></div>
+    <div class="fig-cap"><span>每一波写清怪物构成与这一波要测什么，第 20 波 Boss 拆远程与近战两条三阶段。</span><a href="img/brotato-level-flow.svg" target="_blank">打开原图</a></div>
+  </div>
+  <p>逐波写「目的」之后，难度曲线变成可核对的东西。几个节点：</p>
+  <ul>
+    <li>第 1 波：每 5 秒三个普通怪，共 20s。目的三条——第一桶金、熟悉操作与武器角色性能、基础操作考验。</li>
+    <li>第 2 波：弱化怪每 3 秒四个。第一次测试攻击频率与处理怪群能力，同时削弱玩家经济，逼玩家建立清群怪意识。</li>
+    <li>第 5 波：分散大量普通怪 + 集群弱化怪，20s 后加集群远程怪。加入 DPS 测试与走位限制。</li>
+    <li>第 9 波：唯一的奖励关，大量弱化怪集群 + 少量冲刺与强壮冲刺怪，目的是提升经济水平、拿到更好的升级战力。</li>
+    <li>第 10 波：冲刺怪与普通怪混合，走位、生存、输出三项综合，难度大幅提升——这是中段的一道坎，前面 9 波攒的构筑在这里验收。</li>
+    <li>第 19 波：大量冲刺类怪，测瞬时爆发输出；第 20 波 Boss 分远程与近战两套阶段（远程 Boss 三阶段从成片小范围子弹到大范围子弹再到圈状子弹限制走位；近战 Boss 用环绕子弹加冲刺与散射）。</li>
+  </ul>
+  <p>把每波的目的排成一列，能看出测试项是叠加而非替换：群怪处理（第 2、3 波）→ 投射物与走位（第 5、7 波）→ 单体 DPS（第 8、19 波）→ 范围 DPS 与击退（第 17 波）→ 追击（第 14 波），最后一关同时考所有已引入的维度。</p>
+
+  <h2>六、交互逻辑：玩家操作与界面信息优先级</h2>
+  <p>玩家操作只有三种：<strong>移动操控、点击选择、悬浮查看</strong>。操作种类少，意味着信息呈现的压力全部落在界面上，所以四个界面各自按优先级排了一遍。</p>
+  <div class="two-col">
+    <div class="panel">
+      <h4>战斗界面</h4>
+      <ol>
+        <li>当前自身位置</li>
+        <li>造成伤害物标识</li>
+        <li>地图生成敌人位置、掉落材料、物品、即将生成树木位置</li>
+        <li>已生成敌人</li>
+        <li>当前生命值</li>
+        <li>当前等级</li>
+        <li>当前拥有材料</li>
+        <li>当前波数与时间</li>
+        <li>地图</li>
+      </ol>
+    </div>
+    <div class="panel">
+      <h4>商店界面</h4>
+      <ol>
+        <li>物品图标、名称、价格</li>
+        <li>物品稀有度</li>
+        <li>刷新价格</li>
+        <li>物品介绍</li>
+        <li>当前属性</li>
+        <li>当前使用角色</li>
+        <li>当前武器与道具（含武器等级、道具稀有度）</li>
+      </ol>
+    </div>
+    <div class="panel">
+      <h4>发现道具界面</h4>
+      <ol>
+        <li>发现道具：等级（颜色）、名字、介绍、跳过按钮</li>
+        <li>当前属性：正负、具体数值</li>
+        <li>当前血量信息</li>
+        <li>拿取 / 跳过按钮</li>
+      </ol>
+    </div>
+    <div class="panel">
+      <h4>升级界面</h4>
+      <ol>
+        <li>可选升级项：稀有度、具体数值</li>
+        <li>刷新按钮</li>
+        <li>当前属性</li>
+        <li>当前血量信息</li>
+        <li>当前波数</li>
+        <li>当前剩余升级次数</li>
+      </ol>
+    </div>
+  </div>
+  <p>战斗界面把「自身位置」和「造成伤害物标识」压在前两位，与它作为弹幕游戏的操作压力一致；地图排在最后。商店与升级界面都把「当前属性」放在候选项之后，玩家在决策位上先看选项、再看被改变的状态。</p>
+
+  <h2>七、这次拆解留下的可复用件</h2>
+  <ul>
+    <li><strong>对象表模板</strong>：任何一款游戏都可以按「数据 / 行为 / 状态」三栏重走一遍，重复行为即抽象点。</li>
+    <li><strong>波次目的表</strong>：关卡难度曲线用「这一波测什么」来写，比写「第 N 波怪物数量 ×1.5」更容易发现测试项缺失或重复。</li>
+    <li><strong>界面信息优先级</strong>：把四个界面各自排序，能直接对照自己项目里 HUD 该留哪些读数。</li>
+    <li><strong>交互链</strong>：障碍后面接玩家的真实决策手段，用来检查奖励与惩罚是否闭环。</li>
+  </ul>
+
+  <div class="footer">
+    拆解图纸由飞书画板导出为矢量图，文字与连线在浏览器里可无限放大。同类拆解见作品集「游戏拆解」组。
+  </div>
+</div>
+</body>
+</html>

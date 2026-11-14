@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>街头霸王 6 拆解 · 战斗系统 | 胡凯迪</title>
+<style>
+  :root {
+    --bg: #000000;
+    --panel: rgba(255,255,255,0.04);
+    --line: rgba(255,255,255,0.12);
+    --text: #ffffff;
+    --muted: rgba(255,255,255,0.68);
+    --dim: rgba(255,255,255,0.45);
+    --accent: #34d399;
+    --accent-soft: rgba(52,211,153,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.75;
+    color: var(--text);
+    background: var(--bg);
+    padding: 3rem 1.5rem 5rem;
+  }
+  .doc { max-width: 980px; margin: 0 auto; }
+  .back { display: inline-block; color: var(--dim); text-decoration: none; font-size: 0.9rem; margin-bottom: 2.5rem; }
+  .back:hover { color: #fff; }
+  .kicker { color: var(--accent); font-size: 0.85rem; letter-spacing: 0.14em; margin-bottom: 0.7rem; }
+  h1 { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.7rem; }
+  .subtitle { color: var(--muted); font-size: 1.05rem; max-width: 800px; margin-bottom: 1.4rem; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 2rem; }
+  .tag { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.85); padding: 0.3rem 0.9rem; border-radius: 20px; font-size: 0.82rem; }
+  .tag.accent { background: rgba(52,211,153,0.14); color: var(--accent); }
+  h2 { font-size: 1.45rem; font-weight: 600; margin: 3.2rem 0 1.2rem; padding-left: 0.9rem; border-left: 3px solid #fff; }
+  h3 { font-size: 1.08rem; font-weight: 600; margin: 1.8rem 0 0.6rem; color: rgba(255,255,255,0.95); }
+  p { color: var(--muted); margin-bottom: 1rem; }
+  ul, ol { color: var(--muted); margin: 0 0 1rem 1.4rem; }
+  li { margin-bottom: 0.4rem; }
+  strong { color: rgba(255,255,255,0.94); font-weight: 600; }
+  .quote { border-left: 2px solid var(--line); padding: 0.2rem 0 0.2rem 1.1rem; margin: 1rem 0 1.4rem; color: var(--dim); font-style: normal; }
+  .table-wrap { overflow-x: auto; margin: 1.2rem 0 1.6rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 620px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 0.62rem 0.7rem; text-align: left; vertical-align: top; }
+  th { color: rgba(255,255,255,0.9); font-weight: 600; background: rgba(255,255,255,0.04); }
+  td { color: var(--muted); }
+  td strong { color: #fff; }
+  td.num { color: var(--dim); font-variant-numeric: tabular-nums; }
+  .rule { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 0.9rem 1.1rem; border-radius: 0 8px 8px 0; margin: 1.2rem 0 1.6rem; color: var(--muted); }
+  .rule strong { color: #fff; }
+  .fig { margin: 1.4rem 0 2.4rem; }
+  .fig-frame {
+    background: #f4f5f7;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem;
+    overflow: auto;
+    max-height: 76vh;
+    overscroll-behavior: contain;
+  }
+  .fig-frame img { display: block; width: auto; max-width: none; }
+  .fig-cap { color: var(--dim); font-size: 0.82rem; padding-top: 0.6rem; display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .fig-cap a { color: var(--accent); text-decoration: none; }
+  .fig-cap a:hover { text-decoration: underline; }
+  .note { color: var(--dim); font-size: 0.85rem; }
+  .footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); color: var(--dim); font-size: 0.82rem; }
+  @media (max-width: 720px) {
+    body { padding: 2rem 1rem 3.5rem; }
+    h1 { font-size: 1.8rem; }
+    .fig-frame { max-height: 70vh; }
+    .fig-frame img { width: auto; }
+    .table-wrap { overflow-x: visible; }
+    table { min-width: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+  <a class="back" href="../../index.html">← 返回作品集</a>
+
+  <div class="kicker">游戏拆解 · 战斗系统</div>
+  <h1>《街头霸王 6》：一张循环图，和它背后的资源账</h1>
+  <p class="subtitle">这次拆解走四层：<strong>战斗核心循环 → 博弈系统 → 战斗资源 → 角色设计差异</strong>。四层不是并列的章节，是同一条链——循环图规定了对局的形状，博弈系统是这个形状里的选择题，资源决定你有几个选项，角色差异则是对这四层各答一次卷。</p>
+
+  <div class="meta">
+    <span class="tag accent">拆解对象：街头霸王 6</span>
+    <span class="tag">四层框架</span>
+    <span class="tag">循环图 26 条边全列</span>
+    <span class="tag">关键数值经游戏内实测</span>
+  </div>
+
+  <p class="note">两张图纸为矢量导出，按原始比例显示：图框内可上下左右拖动，文字不会糊；点图右下角的「打开原图」可在新窗口自由缩放。</p>
+
+  <h2>一、战斗核心循环</h2>
+
+  <div class="fig">
+    <div class="fig-frame"><img src="img/sf6-loop.svg" alt="街头霸王 6 战斗核心循环图"></div>
+    <div class="fig-cap"><span>战斗核心循环图：19 个节点、26 条边</span><a href="img/sf6-loop.svg" target="_blank" rel="noopener">打开原图 →</a></div>
+  </div>
+
+  <h3>1.1 节点分色就是分工</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>颜色</th><th>性质</th><th>节点</th></tr></thead>
+      <tbody>
+        <tr><td>绿</td><td>起点</td><td>起始</td></tr>
+        <tr><td>黄</td><td><strong>阶段</strong>（对局所处的状态，不是某一次动作）</td><td>footsie 立回阶段、确反阶段／收益阶段、压制阶段、被压制阶段</td></tr>
+        <tr><td>蓝</td><td><strong>我方选项</strong>（主动交出去的行为）</td><td>观察距离、远程道具牵制、前后走观察对手反应、突进技能打破立回、我方行为、防御、反击／无敌技、不利、道具设置／斗气压制／加帧技能</td></tr>
+        <tr><td>红</td><td><strong>判定与结果</strong></td><td>对手行为（菱形判定口）、挥空／破绽招式／差合、拉开距离／试探招式／无敌技起身、打中／衔接打中收益、对手倒地／被压制</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>四个黄色节点是全文的骨架。后面所有分析——博弈、资源、角色差异——都在回答同一件事：<strong>怎么进某个黄格、怎么出某个黄格、进去值多少、出不去赔多少</strong>。</p>
+
+  <h3>1.2 完整边表</h3>
+  <p>连线不是肉眼从图上数出来的：画板的原始节点数据里每条连线都自带起止节点 id，导出来就是一张边表。这一步的价值在第四节会看到——<strong>图的性质（几个判定口、几条逃逸边）只能从边表读，从图上看不出来</strong>。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>起</th><th>止</th><th>含义</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td>起始</td><td>footsie 立回阶段</td><td>回合从立回开始</td></tr>
+        <tr><td class="num">2</td><td>footsie 立回阶段</td><td>观察距离</td><td>立回的第一步是量距离，不是出招</td></tr>
+        <tr><td class="num">3</td><td>观察距离</td><td>远程道具牵制</td><td>出题选项 A</td></tr>
+        <tr><td class="num">4</td><td>观察距离</td><td>前后走观察对手反应</td><td>出题选项 B（不出招也算出题）</td></tr>
+        <tr><td class="num">5</td><td>观察距离</td><td>突进技能打破立回</td><td>出题选项 C</td></tr>
+        <tr><td class="num">6</td><td>远程道具牵制</td><td>对手行为</td><td></td></tr>
+        <tr><td class="num">7</td><td>前后走观察对手反应</td><td>对手行为</td><td></td></tr>
+        <tr><td class="num">8</td><td>对手行为</td><td>挥空／破绽招式／差合</td><td>判定出口 ①：对手露帧</td></tr>
+        <tr><td class="num">9</td><td>对手行为</td><td>打中／衔接打中收益</td><td>判定出口 ②：对手吃到</td></tr>
+        <tr><td class="num">10</td><td>对手行为</td><td>拉开距离／试探招式／无敌技起身</td><td>判定出口 ③：双方重置</td></tr>
+        <tr><td class="num">11</td><td>挥空／破绽招式／差合</td><td>确反阶段／收益阶段</td><td>收益入口 ①</td></tr>
+        <tr><td class="num">12</td><td>确反阶段／收益阶段</td><td>对手倒地／被压制</td><td>收益的落地形式</td></tr>
+        <tr><td class="num">13</td><td>对手倒地／被压制</td><td>压制阶段</td><td>起攻开始</td></tr>
+        <tr><td class="num">14</td><td>压制阶段</td><td>道具设置／斗气压制／加帧技能</td><td>压制期出的题</td></tr>
+        <tr><td class="num">15</td><td>道具设置／斗气压制／加帧技能</td><td>对手行为</td><td><strong>压制重新汇入同一个判定口</strong></td></tr>
+        <tr><td class="num">16</td><td>突进技能打破立回</td><td>压制阶段</td><td>突进成功即进压制</td></tr>
+        <tr><td class="num">17</td><td>打中／衔接打中收益</td><td>被压制阶段</td><td></td></tr>
+        <tr><td class="num">18</td><td>被压制阶段</td><td>我方行为</td><td></td></tr>
+        <tr><td class="num">19</td><td>我方行为</td><td>防御</td><td></td></tr>
+        <tr><td class="num">20</td><td>防御</td><td>反击／无敌技</td><td>逃逸出口</td></tr>
+        <tr><td class="num">21</td><td>防御</td><td>不利</td><td>防御失败</td></tr>
+        <tr><td class="num">22</td><td>不利</td><td>被压制阶段</td><td>循环锁死</td></tr>
+        <tr><td class="num">23</td><td>不利</td><td>打中／衔接打中收益</td><td>被读到就吃收益</td></tr>
+        <tr><td class="num">24</td><td>反击／无敌技</td><td>footsie 立回阶段</td><td>回到立回</td></tr>
+        <tr><td class="num">25</td><td>反击／无敌技</td><td>确反阶段／收益阶段</td><td><strong>收益入口 ②：防守成功直接转成自己的收益</strong></td></tr>
+        <tr><td class="num">26</td><td>拉开距离／试探招式／无敌技起身</td><td>footsie 立回阶段</td><td>回到立回</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>1.3 图的骨架：两个出题口、一个判定口、两个收益入口、一条逃逸边</h3>
+  <p>把 26 条边压成四句话，这张图就读完了：</p>
+  <ul>
+    <li><strong>两个出题口</strong>：立回期的三选项（远程道具／前后走／突进）和压制期的出题（道具设置／斗气压制／加帧技能）。</li>
+    <li><strong>一个判定口</strong>：两个出题口都汇进同一个「对手行为」。整张图只有这一处判定。</li>
+    <li><strong>两个收益入口</strong>：「确反／收益阶段」的入边是「挥空／破绽／差合」和「反击／无敌技」——打中对手的破绽能进收益，防住对手的进攻同样能进收益。</li>
+    <li><strong>一条逃逸边</strong>：「被压制阶段」只有一条路出去，<em>我方行为 → 防御 → 反击／无敌技</em>。</li>
+  </ul>
+  <div class="rule"><strong>这个形状是有道理的。</strong>判定口只有一个，意味着无论你在立回还是在中压人，读的是同一件事：对手面对我的题会答什么——玩家不需要在两套阅读规则之间切换。收益入口有两个，意味着防守不是纯损耗，防得好直接接自己的收益段，攻防是同一枚硬币。逃逸边只有一条，是被压制的代价来源，也是全部资源压力汇聚的那一点（见第三节）。</div>
+
+  <h3>1.4 四个阶段的定义、进出条件与失败代价</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>阶段</th><th>进入条件</th><th>本阶段做什么</th><th>退出条件</th><th>待着的代价</th></tr></thead>
+      <tbody>
+        <tr><td><strong>立回</strong></td><td>回合开始；双方重置；防守成功后退回</td><td>量距离、出小题、逼对手先动</td><td>判定口给出结果</td><td>时间；不动也在消耗自然回复</td></tr>
+        <tr><td><strong>确反／收益</strong></td><td>抓到对手挥空、破绽招、差合；或防成后反击</td><td>打一套连段，决定投多少斗气兑现</td><td>对手被打倒／被防住／被反制</td><td>投进去的斗气不可回收；打不满就是白给</td></tr>
+        <tr><td><strong>压制</strong></td><td>对手倒地或被逼入防御状态</td><td>持续出题：设置道具、斗气压制、加帧技能</td><td>对手答对（逃逸）或自己被打断</td><td>每轮出题都要花槽；被读到直接转成被压制</td></tr>
+        <tr><td><strong>被压制</strong></td><td>我方在判定口失败（被打中／衔接打中）</td><td>只剩防御与逃逸两个选择</td><td>防御 → 反击／无敌技</td><td>槽空时逃逸选项消失，只剩硬吃 → 不利 → 继续被压制</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>循环持续至一方生命值被打空或时间结束。<strong>这里藏着一个设计决定</strong>：斗气槽每回合重置为满。资源是<strong>回合级</strong>而不是<strong>局级</strong>的，攒槽没有跨回合价值，所以系统一直在催你花。这和超必杀槽形成对照（见 3.5）：一个「不花就亏」，一个「花早了也亏」。两个槽的激励形状相反，玩家同时被两股力拉扯——这就是本作节奏感的来源。</p>
+
+  <h2>二、博弈系统</h2>
+  <p>分两块：<strong>打投防</strong>、<strong>距离与发生速度</strong>。这两块不是并列关系——打投防是「答哪道题」，距离与发生速度是「这道题来不来得及答」。</p>
+
+  <h3>2.1 打投防：本作做的一件事是给克制关系定价</h3>
+  <div class="quote">防御可以有限地克制打击（消耗斗气）／蓝防可以无限克制打击（回复斗气）／投技克制防御（蓝防惩罚更大）／投技自我拆解（几乎无法反应，只能猜拳或策略，拆投有弱收益）／打击克制投技与拆投（确反康）</div>
+  <div class="rule"><strong>街霸 6 把传统「防御」这一个节点拆成了两个成本方向相反的答案</strong>——普通防御消耗斗气，蓝防回复斗气。于是原来的三角升级成四角，而且每条克制边都带一个资源符号。克制关系不再只是「谁赢谁」，而是「赢一次要花多少槽、输一次要赔多少槽」。</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>手段</th><th>克制</th><th>被克制</th><th>斗气账</th><th>收益</th></tr></thead>
+      <tbody>
+        <tr><td>普通防御</td><td>打击</td><td>投技</td><td><strong>持续扣槽</strong></td><td>不掉血（槽未空时），但槽是隐性支出</td></tr>
+        <tr><td>蓝防 Drive Parry</td><td>打击（含道具）</td><td>投技</td><td>起手与按住持续扣槽；<strong>招架成功回复槽</strong></td><td>帧优势等同防御，击退减半；完美招架（命中前 2 帧内）把对手弹成可确反</td></tr>
+        <tr><td>投技</td><td>防御、蓝防</td><td>打击（确反康）、拆投</td><td>—</td><td>蓝防状态下被投赔得更多：白烧槽＋起手／恢复帧吃惩罚</td></tr>
+        <tr><td>拆投</td><td>投技</td><td>打击（确反康）</td><td>—</td><td>只有弱收益</td></tr>
+        <tr><td>打击（含差合、确反康）</td><td>投技、拆投、突进恢复帧</td><td>防御</td><td>—</td><td>确反康额外给有利帧并抽对手槽（触发情形见 2.2）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>「蓝防无限克制打击」要加一个限定</strong>：无限，指的是<strong>面对打击时</strong>蓝防是净赚的；一旦对手把答案换成投技，同一个动作立刻变成净亏。所以蓝防的「无限」不是数值给的，是<strong>对手的选择给的</strong>——牵制方不需要打赢蓝防，只需要让对手相信蓝防安全，然后投他。</p>
+
+  <p><strong>「投技自我拆解」是这一节最锋利的一条观察</strong>。投技的克制关系里包含它自己：攻方投、守方拆，两者用的是同一个动作窗口，结果由猜拳决定，而拆投成功只有弱收益。设计上这等于<strong>给攻方一个下限保底</strong>——猜拳输了不过是被推开来、掉一点伤害，猜拳赢了直接进压制。所以投技在图上承担的角色不是伤害手段，是<strong>判定口的强制器</strong>：它把对手从「用反应答」逼到「用预判答」。</p>
+
+  <h3>2.2 距离与发生速度：收益阶段是这里生成的</h3>
+  <div class="quote">招式具有发生速度／同样可命中区域内，发生快的招式先命中／发生快的招式往往范围更小，距离远的招式往往发生慢／距离博弈＝在别人打不到的位置用长距攻击打中别人，或在双方能互打到距离用更快的招式</div>
+  <p>把它接回循环图：边 8 → 11（<em>对手行为 → 挥空／破绽／差合 → 确反阶段／收益阶段</em>）是立回侧进入收益的<strong>唯一入口</strong>。也就是说，<strong>收益阶段不是打出来的，是「距离＋发生速度」这两条约束的差额算出来的</strong>。谁先把对手推进「打不到我又来不及收」的区间，谁就拿到收益段。这条单列成「距离与发生速度」是对的，它是收益阶段的生成器，不是打投防的补充说明。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>层</th><th>判据</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td>发生速度差</td><td>短于人类反应阈值的招式（阈值帧数待实测）</td><td>守方只能预判，不能反应</td></tr>
+        <tr><td>有效距离差</td><td>招式射程与突进位移量的分布</td><td>决定谁有资格出题</td></tr>
+        <tr><td>判定优先级</td><td>同一区域内发生快的先命中</td><td>让「更快」成为独立于「更远」的收益来源</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>确反康（Punish Counter）是这套比较的资源加成。</strong>游戏内确认的触发情形：<strong>蓝防的恢复帧；投技与打击技能挥空后的恢复帧；斗气迸放的恢复帧；以及反迸（两个迸放对撞）</strong>。这份列表的价值在于它把「抓恢复帧」做成了一个统一奖励——<strong>蓝防失败、投技落空、迸放被防住或撞掉，三件性质不同的事拿到的是同一种惩罚</strong>。所以「让对手白用一次斗气技」和「让对手空一个投」在收益结构上是等价的，差合因此不只是掉血，而是掉血＋改变对方的资源档位。</p>
+
+  <h3>2.3 三层博弈，对应「几乎无法反应，只能猜拳或策略」这句话</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>层</th><th>判据</th><th>玩家靠什么</th><th>图上位置</th></tr></thead>
+      <tbody>
+        <tr><td><strong>反应层</strong></td><td>发生速度差 &gt; 反应阈值</td><td>预判、读习惯</td><td>判定口「对手行为」</td></tr>
+        <tr><td><strong>预判层</strong></td><td>2–3 个选项的猜拳（投／拆／打；中段／下段；防／蓝防／不动）</td><td>上一轮的记忆</td><td>压制期的出题节点</td></tr>
+        <tr><td><strong>策略层</strong></td><td>不需要当帧反应的决定</td><td>槽量、位置（版边／中央）、已倒地次数、剩余时间</td><td>全部节点，主要在「我方行为」</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>这三层的分界线就是那句话本身。<strong>「几乎无法反应」不是抱怨，是设计意图</strong>：把投技从反应层挪到预判层，猜拳才成立；猜拳成立，压制阶段才有内容。</p>
+
+  <h2>三、战斗资源</h2>
+
+  <div class="fig">
+    <div class="fig-frame"><img src="img/sf6-resources.svg" alt="街头霸王 6 战斗资源图"></div>
+    <div class="fig-cap"><span>战斗资源：生命值／斗气槽／超必杀槽／特殊资源，斗气槽再分来源与去向</span><a href="img/sf6-resources.svg" target="_blank" rel="noopener">打开原图 →</a></div>
+  </div>
+
+  <h3>3.1 斗气槽是核心资源：理由是它同时挂在攻防两侧</h3>
+  <p>同一格槽既是进攻燃料（绿冲、斗爆、迸放），又是防御货币（蓝防、反转），还在被动时被抽走（防御扣槽）。因此：</p>
+  <div class="rule"><strong>你在立回期花掉的槽，直接决定被压制时还剩几个逃逸选项。</strong></div>
+  <p>这一句话把资源层和循环层焊在一起。第一节表里「被压制」那一行的代价（槽空 → 逃逸消失 → 不利 → 继续被压制），全部来自这个耦合。图上把「防御」与「进攻投资获取更高收益」并列成斗气的两个去向，正是在说这件事。</p>
+
+  <h3>3.2 来源与去向：各漏了一半</h3>
+  <p><strong>去向</strong>（图上写了防御、进攻投资）还漏了两条抽取路径：</p>
+  <ul>
+    <li><strong>被抽走</strong>：让对手普通防御，会持续磨掉他的斗气。防御方每挡一下都在付费。</li>
+    <li><strong>惩罚性抽取</strong>：成立确反康、用斗气迸放或超必杀命中，都会直接扣对方槽。归纳起来，抽干对手槽有三条途径——<strong>让对方通常防御、成立确反康、用迸放／超必杀命中</strong>。</li>
+  </ul>
+  <p>含义：<strong>斗气不是自我管理的预算，是可争夺的资源</strong>。</p>
+  <p><strong>来源</strong>（图上写了蓝防获得、时间自然积累）还漏了一条，而且自然回复有个前提常被忽略：</p>
+  <ul>
+    <li><strong>主动行为也回槽</strong>：命中对手等方式同样取得斗气，逐项数值待实测。</li>
+    <li><strong>自然回复只在槽未满时产生价值</strong>：满槽之后随时间回复的部分等于浪费，所以高分段的做法是把槽维持在中位，而不是攒满。</li>
+  </ul>
+  <p>来源侧同样有博弈。<strong>蓝防是唯一「防守即赚钱」的来源</strong>，所以围绕它的反制（投技）才那么贵。</p>
+
+  <h3>3.3 数值基线</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>动作</th><th>官方名</th><th>消耗</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td>蓝防</td><td>Drive Parry</td><td>起手扣槽、按住持续消耗；<strong>成功招架回复槽</strong></td><td>自动格挡打击与道具，击退减半</td></tr>
+        <tr><td>完美招架</td><td>Perfect Parry</td><td>命中前 2 帧内蓝防</td><td>对手被弹开、陷入可确反，慢镜给足反击时间</td></tr>
+        <tr><td>绿冲</td><td>Drive Rush</td><td><strong>裸出（蓝防派生）1 格／拳脚取消派生 3 格</strong></td><td>快速前冲，落地后第一下普通技 <strong>+4 有利帧</strong></td></tr>
+        <tr><td>斗气迸放</td><td>Drive Impact</td><td>1 格</td><td>带霸体的推进打击，可破防、撞墙</td></tr>
+        <tr><td>斗爆</td><td>Drive Surge（OD 必杀）</td><td>2 格</td><td>强化必杀，等同历代 EX 技</td></tr>
+        <tr><td>斗气反转</td><td>Drive Reversal</td><td>2 格</td><td>防御硬直中脱身反击，伤害低但破压制</td></tr>
+        <tr><td>满槽</td><td>Drive Gauge</td><td>6 格，<strong>每回合重置为满</strong></td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">绿冲的 1 格／3 格、确反康触发情形、气绝脱离方式、超必杀槽积累来源四项为游戏内实测确认；蓝防起手与按住的确切格数（第三方帧数据口径为起手半格、按住约每秒 0.3 格，1 格＝10,000 meter）与命中回槽量尚未逐项实测。</p>
+
+  <p><strong>绿冲那条 +4 值得单看</strong>：它解释了「绿冲＝从立回进入压制、获得局部优势、强制猜拳」这句为什么成立。绿冲落地后自带有利帧，攻方<strong>必然</strong>处于对手必须答一道题的位置——猜拳不是绿冲的风险，是绿冲买到的东西。</p>
+  <p><strong>而 1 格与 3 格之间是三倍的差价，这条差价正好切在循环的两个阶段上</strong>：裸出绿冲 1 格，是<strong>立回 → 压制</strong>的门票钱；拳脚取消绿冲 3 格，发生在已经拿到一次命中或防住之后，是<strong>收益与压制内部</strong>的追加投资。同一个动作挂在不同的边上，价格差三倍。三格是满槽的一半，付完之后防御侧的投资空间被压掉一半——蓝防起手即扣槽、斗气反转要 2 格，<strong>取消绿冲之后被反打，很可能已经没有反转可用</strong>。所以这条差价的真实含义是：贵的不是那三格，是花完之后剩下的三格。</p>
+
+  <h3>3.4 气绝（虚损／Burnout）：一个模式开关</h3>
+  <div class="quote">普通防御：斗气还有的情况下不会被打虚血（本质：限制传统牵制魔血手段，围绕斗气展开，虚损状态才是传统街霸模式）</div>
+  <p>街霸 6 的默认模式是<strong>反磨血</strong>——只要槽还在，防御不掉血，于是「远程道具无风险磨血」这条传统街霸的赢法被废掉了。槽打空进入气绝后，防御开始吃削血、受伤与眩晕加重、五种斗气技全部禁用，<strong>游戏切回传统街霸模式</strong>。</p>
+  <p><strong>这句判断的设计价值比它本身更大</strong>：气绝不是一个惩罚状态，是<strong>一个模式切换器</strong>。它让「把对手的槽抽干」成为一条独立的胜利路线——你不必打空他的生命值，只要打空他的斗气，他的防御就从免费变成收费。前半句说「限制传统牵制魔血手段」，后半句其实是：<strong>魔血没有消失，被搬到了第二条血条上</strong>。</p>
+  <p><strong>脱离机制实测确认：气绝期间自然回复继续</strong>，靠时间就能回满。这条把「模式开关」的强度定得很准——<strong>气绝是有时限的惩罚，不是不可逆的塌方</strong>。所以抽干对手槽的战术价值不在「终结他」，而在<strong>买一段窗口</strong>：这段时间里对手没有斗气技、防御开始掉血、伤害与眩晕加重，正是传统磨血压起身打法重新生效的窗口，窗口过去他又拿回全部答案。设计上的推论是：<strong>气绝时长就是这个模式的默认配额</strong>，调它等于直接调「传统打法能回来几次」，比逐个改招式更省成本。</p>
+
+  <h3>3.5 超必杀槽：与斗气槽的激励形状相反</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>斗气槽</th><th>超必杀槽</th></tr></thead>
+      <tbody>
+        <tr><td>决策频率</td><td>高频、小额（每几秒一次）</td><td>低频、大额（一局几次）</td></tr>
+        <tr><td>花光后果</td><td>气绝，惩罚</td><td>无惩罚，只是没有</td></tr>
+        <tr><td>攒着不用</td><td>满槽即浪费</td><td>回合结束清零</td></tr>
+        <tr><td>对应循环位置</td><td>四个阶段全部</td><td>主要是收益阶段的兑现点，以及被压制阶段的无敌逃逸</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>斗气催你花，超必杀等你攒。玩家同时被两股力拉扯，这是「资源感」的来源。</p>
+  <p><strong>超必杀槽的积累来源，实测确认四项全部成立</strong>：命中对手、被命中、防御成功、蓝防与斗气技。把它和 3.2 的斗气收支并排看，会得到一条还没写出来的性质——<strong>两条槽在同一个动作上同时进出</strong>：</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>动作</th><th>斗气槽</th><th>超必杀槽</th></tr></thead>
+      <tbody>
+        <tr><td>蓝防成功</td><td><strong>回</strong></td><td><strong>涨</strong></td></tr>
+        <tr><td>普通防御</td><td><strong>扣</strong></td><td>涨</td></tr>
+        <tr><td>被命中</td><td>扣</td><td><strong>涨</strong></td></tr>
+        <tr><td>命中对手</td><td><strong>涨</strong></td><td><strong>涨</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>于是防守侧出现一条不均衡：<strong>蓝防是防守动作里唯一「两条槽同时往上涨」的路径</strong>（进攻侧命中对手也双涨，但那要占用一次收益），普通防御则是「斗气在掉、超必杀在涨」。这解释了为什么蓝防值得用投技去定价——它给的好处是双份的，反制它的收益也必须是双份的。</p>
+  <p>另一半解释是被压制阶段：<strong>挨打也在攒超必杀</strong>。所以「被压制」在循环图上不是纯损耗格，它的出口除了 <em>防御 → 反击／无敌技</em>，还有一条隐性的——<strong>攒够槽用带无敌的超必杀把压制打断</strong>。这条隐性出口正是第一节表里「被压制」那一行写了「槽空时逃逸选项消失」却仍然不至于必死的原因。</p>
+
+  <h3>3.6 特殊资源：角色在循环图上的私有边</h3>
+  <p>图上列了杰米酒量、曼侬牌子、金伯利与布兰卡的设置道具。按它们与循环的关系分三类更可用：</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>类型</th><th>例子</th><th>接进循环的位置</th></tr></thead>
+      <tbody>
+        <tr><td>与通用资源直接兑换型</td><td>杰米酒量：酒量较低时部分招式命中会回斗气</td><td><strong>多一个斗气来源</strong>，直接改变 3.2 那张收支表</td></tr>
+        <tr><td>设置／占地型</td><td>布兰卡蚁穴炸弹等（金伯利的归属待核对）</td><td>对应图上边 14 的「道具设置」，是<strong>压制阶段的出题素材</strong></td></tr>
+        <tr><td>累积解锁型</td><td>曼侬牌子：攒够才换出高收益动作</td><td>改变<strong>收益阶段的上限</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>设计含义</strong>：通用循环图不动，每个角色用私有资源决定自己走哪条边、在哪个阶段多拿一层收益。特殊资源因此不是「角色风味」，是<strong>循环图的私有边表</strong>。</p>
+
+  <h2>四、角色设计差异</h2>
+  <div class="quote">本质：从四个阶段／不同距离之间进行调配，让角色拥有自己的优势区间，或者增加减少阶段之间转换的手段</div>
+  <p>角色差异不是招式差异，是<strong>在循环图上开关哪几条边</strong>。</p>
+
+  <h3>4.1 设计一张角色表要回答的五个问题</h3>
+  <p>直接对应 1.2 的边：</p>
+  <ol>
+    <li>立回靠什么出题？（边 3／4／5——远程道具、前后走、突进，有几条）</li>
+    <li>怎么进压制？（边 16 加绿冲、设置道具）</li>
+    <li>压制出什么题？（边 14——道具设置／斗气压制／加帧技能／指令投／中段下段混合）</li>
+    <li>收益阶段上限多少？（边 11→12 的兑现量，斗爆与超必杀的插入点）</li>
+    <li>怎么逃出被压制？（边 20、25——无敌升龙、斗气反转、还是基本没有）</li>
+  </ol>
+  <p>第 5 问最容易被忽略，但它决定一个角色的<strong>下限</strong>。四类原型里有三类都被标了「被压制阶段能力弱（缺少跳回立回的招式或性能弱）」——这一句是五问里最值钱的那一条。</p>
+
+  <h3>4.2 四类原型：强在哪条边、弱在哪条边</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>原型</th><th>立回</th><th>进压制</th><th>压制出题</th><th>收益</th><th>逃出被压制</th><th>代表</th></tr></thead>
+      <tbody>
+        <tr><td><strong>标准</strong></td><td>有远程道具</td><td>只有绿冲（斗气投资）</td><td>中等，无设置类压起身</td><td>一般</td><td><strong>有起身无敌技</strong></td><td>隆、肯、卢克</td></tr>
+        <tr><td><strong>突进／压制</strong></td><td>弱或缺少牵制手段，主动破坏立回</td><td>突进能力强、手段多</td><td><strong>出题能力最强</strong>（设置／多种起攻）</td><td>单次收益偏低</td><td>弱或缺</td><td>金伯利、DJ、亚斯敏</td></tr>
+        <tr><td><strong>重型</strong></td><td>移动弱、缺牵制，拳脚判定撑住立回</td><td>靠对手进来</td><td>强（指令投等）</td><td><strong>火力恐怖</strong></td><td>弱或缺</td><td>桑吉尔夫等</td></tr>
+        <tr><td><strong>牵制</strong></td><td>强，牵制手段丰富</td><td>少（移动弱）</td><td>多种出题手段</td><td>正常或偏低</td><td>弱，但有<strong>独特转换攻防手段（换位等）</strong></td><td>达尔西姆</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>标准角色的定义方式值得单独看</strong>：它不是「各项中等」，而是<strong>五个问题都有及格答案</strong>——有道具、有绿冲、有起身无敌技、收益一般、压制中等。标准角色是这张表的<strong>基准解</strong>，其他三类都是「牺牲某一问换另一问」。把「具有起身无敌技（从被压制阶段跳回立回阶段的招式）」写进标准角色的定义里，等于承认了：<strong>能不能逃出被压制，是角色是否完整的默认线</strong>。</p>
+
+  <h3>4.3 克制三角，以及它在图上的成因</h3>
+  <div class="quote">牵制角色克重型／重型克突进角色／突进角色克牵制角色</div>
+  <ul>
+    <li><strong>牵制克重型</strong>：重型缺少进入压制与收益的边（无突进、绿冲贵）。牵制方把对局锁在立回阶段，而立回对重型是净损耗——他出题的手段最少，判定口对他几乎不给答案。</li>
+    <li><strong>重型克突进</strong>：双方大量在压制与被压制之间来回，重型的猜拳收益更高（指令投不防、单次伤害大）。突进方买到的「+4 有利帧」进的是重型的判定口，答错一次就换被压制。</li>
+    <li><strong>突进克牵制</strong>：牵制移动弱、缺少从被压制跳回立回的边。一旦被贴脸，循环锁死在压制／被压制两个黄格里，牵制方最擅长的立回阶段直接不出现。</li>
+  </ul>
+  <div class="rule"><strong>三条克制边共用一个结构：把对手拖进他答案最少的那个阶段。</strong>这才是「调配四个阶段」的真正含义——克制关系不是数值大小，是阶段归属。胜负不在「打不打得到」，在「循环能不能转起来」。</div>
+
+  <h3>4.4 克制关系的失效条件</h3>
+  <p>设计时最该盯的是这三点，而不是三角本身：</p>
+  <ol>
+    <li><strong>斗气槽是三角的第三方变量。</strong>牵制方靠「让对方通常防御」抽槽，对重型同样有效——重型一旦气绝，连他唯一站得住的立回也站不住（防御开始吃削血、五种斗气技禁用）。<strong>资源层可以推翻阶段层的克制结论。</strong></li>
+    <li><strong>边的强度会随版本移动，原型分类不会。</strong>官方平衡更新持续在调完美招架的槽收支与蓝防恢复。所以四类原型是稳定抽象，具体谁克谁、克多深是易碎结论——对外表述要把这两层分开。</li>
+    <li><strong>「被压制能力弱」是共享短板，也是反制的抓手。</strong>突进型、重型、牵制型三类都有这一条。含义：只要给对手一个「强制你进压制」的手段，三类角色的胜率一起变。<strong>一个通用机制能同时打到多个原型</strong>，这解释了为什么本作的平衡改动集中在斗气系统上，而不是逐个改角色。</li>
+  </ol>
+
+  <div class="footer">
+    拆解框架与循环图、资源图均由我自己绘制，图纸为矢量导出。口径分三档：官方系统页与角色帧数据已核实的数值、游戏内实测确认的四项（绿冲消耗、确反康触发情形、气绝脱离方式、超必杀槽积累来源）、以及页面保留标注的待实测项（蓝防与命中回槽的确切格数、反应阈值帧数、金伯利道具归属）。版本易碎的结论与稳定的抽象分开陈述，克制三角只作为阶段归属关系给出。
+  </div>
+</div>
+</body>
+</html>
