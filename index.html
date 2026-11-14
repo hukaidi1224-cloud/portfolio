@@ -52,7 +52,7 @@
                     <div class="stat-label" data-page-node-id="XfslLtoTaAwoyt8HjSScxK">游戏项目</div>
                 </div>
                 <div class="stat-item" data-page-node-id="muAxkTmCeACTx24IKN46zZ">
-                    <div class="stat-number" data-page-node-id="GxQ8454W0CPh5ghjoIlHVf">2+</div>
+                    <div class="stat-number" data-page-node-id="GxQ8454W0CPh5ghjoIlHVf">3+</div>
                     <div class="stat-label" data-page-node-id="pSgsD9o9lsZDOBPUcMMuNf">游戏拆解</div>
                 </div>
                 <div class="stat-item" data-page-node-id="5cMT2pYn8dteTfN60HCIAO">
@@ -359,7 +359,7 @@
             <!-- 游戏拆解：拆外部游戏，图纸为飞书画板导出的矢量图 -->
             <div id="analysis" class="portfolio-category">
                 <h3 class="category-title">游戏拆解</h3>
-                <p class="category-lead">拆的是别人的游戏，框架跟着对象的结构走，不套同一张模板：格斗游戏走四层（战斗核心循环 → 博弈系统 → 战斗资源 → 角色设计差异），Roguelite 走六层（体验 → 玩法 → 核心循环 → 核心系统 → 交互链 → 关卡流程）。图纸是矢量图，浏览器里可无限放大。</p>
+                <p class="category-lead">图纸是矢量图，浏览器里可无限放大。</p>
                 <div class="portfolio-grid">
                     <article class="portfolio-item">
                         <div class="item-tags">
@@ -367,7 +367,7 @@
                             <span class="chip doc">仅文档</span>
                         </div>
                         <h5 class="card-title">《街头霸王 6》战斗系统拆解</h5>
-                        <p class="item-desc">四层走：战斗核心循环 → 博弈系统 → 战斗资源 → 角色设计差异。循环图从画板原始数据导出完整 26 条边表，读出「两个出题口、一个判定口、两个收益入口、一条逃逸边」的结构；斗气槽按来源与去向拆成收支表，气绝判为一个模式开关；四类角色原型与克制三角回到图上，用「哪几条边开着」解释成立原因。关键数值经游戏内实测，未实测项在页面标注。</p>
+                        <p class="item-desc">四层走一遍：战斗核心循环 → 博弈系统 → 战斗资源 → 角色设计差异，循环图的 26 条边全列，关键数值经游戏内实测。</p>
                         <div class="btn-group">
                             <a href="files/analysis/street-fighter-6.html" class="btn" target="_blank">查看拆解</a>
                         </div>
@@ -378,9 +378,20 @@
                             <span class="chip doc">仅文档</span>
                         </div>
                         <h5 class="card-title">《Brotato》系统与关卡拆解</h5>
-                        <p class="item-desc">六层走一遍：体验 → 玩法 → 核心循环 → 核心系统 → 交互链 → 关卡流程。系统层以对象为基本单位展开 GameManager 与九个可交互对象；交互链把障碍接到玩家的真实决策上；关卡层给 20 波逐波标注测试目的，另附四个界面的信息优先级排序。</p>
+                        <p class="item-desc">六层走一遍：体验 → 玩法 → 核心循环 → 核心系统 → 交互链 → 关卡流程，系统层以对象为基本单位，20 波逐波标注测试目的。</p>
                         <div class="btn-group">
                             <a href="files/analysis/brotato.html" class="btn" target="_blank">查看拆解</a>
+                        </div>
+                    </article>
+                    <article class="portfolio-item">
+                        <div class="item-tags">
+                            <span class="chip">动作 · 任务设计</span>
+                            <span class="chip doc">仅文档</span>
+                        </div>
+                        <h5 class="card-title">《影之刃零》药师玉儿线拆解</h5>
+                        <p class="item-desc">拆一条任务线，用任务策划日常在用的八个视角走：目的 → 授予 → 结构字段 → 动线 → 状态读写 → 告知 → 兑现 → 失效，另附三条异闻的结构字段表与玉儿位置状态机。</p>
+                        <div class="btn-group">
+                            <a href="files/analysis/shadowbreak-quest.html" class="btn" target="_blank">查看拆解</a>
                         </div>
                     </article>
                 </div>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>影之刃零 拆解 · 一条任务线 | 胡凯迪</title>
+<style>
+  :root {
+    --bg: #000000;
+    --panel: rgba(255,255,255,0.04);
+    --line: rgba(255,255,255,0.12);
+    --text: #ffffff;
+    --muted: rgba(255,255,255,0.68);
+    --dim: rgba(255,255,255,0.45);
+    --accent: #34d399;
+    --accent-soft: rgba(52,211,153,0.08);
+    --warn: #f0a35e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.75;
+    color: var(--text);
+    background: var(--bg);
+    padding: 3rem 1.5rem 5rem;
+  }
+  .doc { max-width: 980px; margin: 0 auto; }
+  .back { display: inline-block; color: var(--dim); text-decoration: none; font-size: 0.9rem; margin-bottom: 2.5rem; }
+  .back:hover { color: #fff; }
+  .kicker { color: var(--accent); font-size: 0.85rem; letter-spacing: 0.14em; margin-bottom: 0.7rem; }
+  h1 { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.7rem; }
+  .subtitle { color: var(--muted); font-size: 1.05rem; max-width: 820px; margin-bottom: 1.4rem; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 2rem; }
+  .tag { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.85); padding: 0.3rem 0.9rem; border-radius: 20px; font-size: 0.82rem; }
+  .tag.accent { background: rgba(52,211,153,0.14); color: var(--accent); }
+  h2 { font-size: 1.45rem; font-weight: 600; margin: 3.2rem 0 1.2rem; padding-left: 0.9rem; border-left: 3px solid #fff; }
+  h3 { font-size: 1.08rem; font-weight: 600; margin: 1.8rem 0 0.6rem; color: rgba(255,255,255,0.95); }
+  p { color: var(--muted); margin-bottom: 1rem; }
+  ul, ol { color: var(--muted); margin: 0 0 1rem 1.4rem; }
+  li { margin-bottom: 0.4rem; }
+  strong { color: rgba(255,255,255,0.94); font-weight: 600; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.84em; color: var(--accent); background: rgba(52,211,153,0.08); padding: 0.08em 0.4em; border-radius: 4px; }
+  .quote { border-left: 2px solid var(--line); padding: 0.2rem 0 0.2rem 1.1rem; margin: 1rem 0 1.4rem; color: var(--muted); }
+  .table-wrap { overflow-x: auto; margin: 1.2rem 0 1.6rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 660px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 0.62rem 0.7rem; text-align: left; vertical-align: top; }
+  th { color: rgba(255,255,255,0.9); font-weight: 600; background: rgba(255,255,255,0.04); }
+  td { color: var(--muted); }
+  td strong { color: #fff; }
+  td.lbl { color: rgba(255,255,255,0.9); white-space: nowrap; }
+  .rule { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 0.9rem 1.1rem; border-radius: 0 8px 8px 0; margin: 1.2rem 0 1.6rem; color: var(--muted); }
+  .rule strong { color: #fff; }
+  .rule.warn { border-left-color: var(--warn); background: rgba(240,163,94,0.08); }
+  .flow { background: rgba(255,255,255,0.03); border: 1px solid var(--line); border-radius: 10px; padding: 1.1rem 1.3rem; margin: 1.2rem 0 1.6rem; color: var(--muted); font-size: 0.9rem; line-height: 1.95; }
+  .flow b { color: #fff; font-weight: 600; }
+  .note { color: var(--dim); font-size: 0.85rem; }
+  .footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); color: var(--dim); font-size: 0.82rem; }
+  @media (max-width: 720px) {
+    body { padding: 2rem 1rem 3.5rem; }
+    h1 { font-size: 1.8rem; }
+    .table-wrap { overflow-x: visible; }
+    table { min-width: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+  <a class="back" href="../../index.html">← 返回作品集</a>
+
+  <div class="kicker">游戏拆解 · 任务设计</div>
+  <h1>《影之刃零》药师玉儿线：一条任务在数据上是什么</h1>
+  <p class="subtitle">拆的粒度是<strong>一条任务线</strong>——三条异闻加一个奖杯，横跨第一到第三章。整款游戏的拆解框架（六层、四层）套不到这个粒度上，因为它们默认对象是稳定的，而任务线最关键的一维是<strong>它会失效</strong>。这里改用任务策划日常在做的那八个视角：目的、授予、结构字段、动线、状态读写、告知、兑现、失效。</p>
+
+  <div class="meta">
+    <span class="tag accent">拆解对象：影之刃零 · 玉儿线</span>
+    <span class="tag">八视角框架</span>
+    <span class="tag">结构字段表 ＋ 状态读写表</span>
+    <span class="tag">引导分级 G0–G4</span>
+    <span class="tag">双层账：同构 / 借皮 / 冲突</span>
+  </div>
+
+  <h2>〇、八个视角在问什么</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>视角</th><th>问的问题</th><th>产出物</th></tr></thead>
+      <tbody>
+        <tr><td class="lbl">1 目的</td><td>这条任务在这一章里承担什么职能：教学／区域解锁／叙事补白／奖励投放／节奏调剂。砍掉它会缺什么</td><td>一句话设计意图</td></tr>
+        <tr><td class="lbl">2 授予</td><td>谁给、凭什么条件给、玩家有没有「接」这个动作</td><td>触发条件与授予形式</td></tr>
+        <tr><td class="lbl">3 结构字段</td><td>任务由哪些状态机构成：目标计数、前置、后续、图钉策略、日志文本</td><td>策划填的那张表</td></tr>
+        <tr><td class="lbl">4 动线</td><td>起点—途经—终点在地图上的关系，是否压在主线必经路上，往返几次，跨几章</td><td>空间走查</td></tr>
+        <tr><td class="lbl">5 状态读写</td><td>这条任务读哪些世界状态、写哪些世界状态；NPC 位置与区域状态是否被改写；写入能否回退</td><td>读写表</td></tr>
+        <tr><td class="lbl">6 告知</td><td>上述每条信息玩家从哪个界面拿到；缺口由什么代偿——环境线索、自己试错、还是第三方攻略</td><td>分级与缺口清单</td></tr>
+        <tr><td class="lbl">7 兑现</td><td>奖励落进哪个循环：回复续航／能力解锁／成长数值／成就／结局</td><td>奖励流</td></tr>
+        <tr><td class="lbl">8 失效</td><td>哪些动作会让它断掉，断掉的可感知性有多强，补救成本多大</td><td>失效面</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>3 和 5 是策划视角独有的两层，剧情攻略写不到；6 负责把 3 与 5 里的隐藏状态折算成玩家的可见性。任务设计的绝大多数问题都出在第 6 步，而玉儿线最有价值的地方在 5 与 6 之间：<strong>它写入的状态是 NPC 位置，而 NPC 位置写不进任务面板。</strong></p>
+
+  <h2>一、这条线是什么</h2>
+  <p>三条独立异闻，共用一个奖杯。全部事实：</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>节点</th><th>在哪接</th><th>玩家做什么</th><th>交付</th><th>失效</th><th>兑现</th></tr></thead>
+      <tbody>
+        <tr><td class="lbl">〇 相遇</td><td>第一章「追兵」沿绳索攀下悬崖后，玉儿在溪谷营地</td><td>无。一句人物动机：她偷到药方，认定血肉之花能治父亲的昏睡怪病</td><td>—</td><td>—</td><td>无</td></tr>
+        <tr><td class="lbl">【血肉花】</td><td>剧情遇到玉儿时<strong>自动接受</strong>，没有对话选项</td><td>悲泣溪谷·杀气塔<strong>底层花海</strong>击败隐藏 BOSS 新娘阿花，拾取双生血肉花。入口在一层铃铛绕到塔右后的地面缺口，沿木桥滑下</td><td>回溪谷驿站，对话可选「一人一半」</td><td><strong>白赤练战前</strong>未交付即断</td><td>武器红妆鬼斩 ＋ 同名奖杯</td></tr>
+        <tr><td class="lbl">【见习医师】</td><td>击败主线 BOSS「斧老大：彭猛」后玉儿才刷在驿站，对话选<strong>「采药」</strong></td><td>溪谷三味药：止血藤在关押处出口下方河道，凝脂叶在远眺龙柱处过桥贴左墙跳平台，金创草在龙柱龙头像正对的道路上。<strong>三处全部有地图标点</strong></td><td>回溪谷驿站</td><td><strong>碰飞贼营地鹤形铃铛那一刻</strong>：玉儿被搬走，交付入口消失</td><td>饰品香薰药盒：药瓶治疗量 +20%（乘算）；打磨「·改」+30% 并附带霸体</td></tr>
+        <tr><td class="lbl">【救死扶伤】</td><td>血色森林飞贼营地铃铛旁。<strong>第一次去见不到玉儿，须先传去别的铃铛再传回来她才刷新</strong></td><td>救治 4 名伤患：亡命徒陷阱铃铛旁一大一小两个洞穴、悬崖山舍巨梯下方、营地上锁门另一侧。第 4 人需要盗贼营地地牢钥匙，钥匙在山舍地窖下方。<strong>四处全部有地图标点</strong></td><td>回营地</td><td><strong>白赤练战前</strong>未交付即断</td><td>饰品静心小葫芦：喝药立即解除破防，3 秒内不消耗杀气</td></tr>
+        <tr><td class="lbl">尾段</td><td>第三章庞镇，击败「雷枪」长鸿后</td><td>进正前方的玉儿家，与其父交谈</td><td>—</td><td>—</td><td>奖杯<strong>「杏林有继」</strong>在此刻跳出，要求三条全通</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>二、目的：它在第一章干五件主线不做的事</h2>
+  <ol>
+    <li><strong>投放回复续航。</strong>两件饰品的作用面都压在「喝药」这一个动作上（治疗量乘算、喝药解除破防），而第一章正是玩家学会喝药的窗口。主线不投这类奖励。</li>
+    <li><strong>承载一个隐藏 BOSS 与一把隐藏武器。</strong>阿花是人偶型，出血无效，逼玩家换打法；她守的位置在杀气塔的隐藏区。</li>
+    <li><strong>造一次跨章回访。</strong>尾段落在第三章庞镇，要求玩家回到这条线的起点人物身上。</li>
+    <li><strong>调剂节奏。</strong>主线这一段是追兵、斧老大、彭猛，全是战斗；这条线的主干是采集与救治，只有一场强制战斗。</li>
+    <li><strong>落一个母题。</strong>药师之家、亡母的手法、没能送出去的香包——物品文本、数值族别、奖杯名三处指向同一件事。</li>
+  </ol>
+  <p>五条职能里，1 与 3 是系统层面的，2 与 4 是节奏层面的，5 是叙事层面的。一条支线同时占用五个职能，这是它值得单独拆的原因。</p>
+
+  <h2>三、授予：一条线给全三种形态</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>形态</th><th>本线实例</th><th>玩家的动作</th><th>隐含条件</th></tr></thead>
+      <tbody>
+        <tr><td class="lbl">自动授予</td><td>【血肉花】</td><td>没有「接」这个动作，剧情遇到就进日志</td><td>剧情进度</td></tr>
+        <tr><td class="lbl">BOSS 状态解锁 ＋ 对话选项</td><td>【见习医师】</td><td>要选对话里的「采药」</td><td>彭猛是否已死</td></tr>
+        <tr><td class="lbl">NPC 位置刷新</td><td>【救死扶伤】</td><td>传走再传回，她才出现</td><td>玉儿当前在哪个区域、交互对象是否已重载</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>三条没有一个要求玩家去任务板主动寻找，授予成本压到零。代价同向：<strong>三条能不能做，全由玩家看不见的状态决定</strong>——剧情进度、某个 BOSS 的死活、自己刚才传送去了哪。触发层的便利与告知层的缺失是同一次设计决定的两面。</p>
+
+  <h2>四、结构字段：把三条任务写成表</h2>
+  <p>这一节是拆解里最接近策划交付物的部分——同一条任务线在数据上由哪些构件组成，每个构件被填成了什么值。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>字段</th><th>血肉花</th><th>见习医师</th><th>救死扶伤</th></tr></thead>
+      <tbody>
+        <tr><td class="lbl">接取条件</td><td>剧情遭遇，自动写入日志</td><td><code>flag(彭猛已死) &amp;&amp; 选项「采药」</code></td><td><code>NPC 可见(玉儿 @ 飞贼营地)</code>，需一次传送重载</td></tr>
+        <tr><td class="lbl">目标类型</td><td>战斗 ＋ 拾取</td><td>采集，计数 ×3</td><td>交互救治，计数 ×4</td></tr>
+        <tr><td class="lbl">完成判定</td><td>交付道具给玉儿</td><td>交付 3 味药</td><td>4 名伤患全部处理</td></tr>
+        <tr><td class="lbl">前置读取</td><td>杀气塔隐藏区可达</td><td>主线 BOSS 状态</td><td>跨章传送；盗贼营地地牢钥匙（在山舍地窖下方）</td></tr>
+        <tr><td class="lbl">写入状态</td><td>武器红妆鬼斩、任务道具、尾段 flag</td><td>饰品香薰药盒；<code>玉儿位置</code> 不变</td><td>饰品静心小葫芦</td></tr>
+        <tr><td class="lbl">后续链</td><td>第三章庞镇·与父亲交谈 → 杏林有继</td><td>汇入杏林有继</td><td>汇入杏林有继</td></tr>
+        <tr><td class="lbl">图钉策略</td><td><strong>隐藏区入口与拾取点都不标点</strong></td><td>三味药全部标点</td><td>四名伤患全部标点</td></tr>
+        <tr><td class="lbl">失效字段</td><td>白赤练战前未交付</td><td><code>玉儿离开溪谷驿站</code></td><td>白赤练战前未交付</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>三条共用一套字段，差异只落在两处：<strong>接取条件的类型</strong>（剧情 flag／BOSS flag／NPC 可见性）与<strong>目标的动词类型</strong>（战斗＋拾取／采集／救治）。一个计数、一个 flag、一个可见性判定，就是这类任务线的全部构件；剩下都是内容与文案。</p>
+  <p class="note">字段表有个直接用法：把「失效字段」这一栏单独抽出来看，本线三条里有一条填的是位置条件、两条填的是 BOSS 进度条件，三种条件混用而界面用同一套方式呈现——这是后面所有告知问题的源头。</p>
+
+  <h2>五、动线与三种钥匙</h2>
+  <div class="flow">
+    <b>悲泣溪谷</b>：崖底营地（相遇）→ 驿站（接取 ×2、交付 ×2）→ 杀气塔塔底花海（战斗 ＋ 拾取）→ 关押处出口河道 / 龙柱一带（采集 ×3）<br>
+    <b>血色森林</b>：飞贼营地（接取 ＋ 交付）→ 亡命徒陷阱一大一小洞穴 → 悬崖山舍巨梯 → 上锁门另一侧（需钥匙，钥匙在山舍地窖下方）<br>
+    <b>庞镇</b>：玉儿家（尾段，跳奖杯）
+  </div>
+  <p><strong>顺路度</strong>：三味药全压在溪谷探索的必经面上，几乎不用专程；四名伤患分散在血色森林四个点，其中一处带钥匙前置，会产生一次非剧情性往返；阿花在隐藏区，是全线唯一需要专程找入口的一段。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>钥匙类型</th><th>本线实例</th><th>它锁住什么</th><th>玩家的感知</th></tr></thead>
+      <tbody>
+        <tr><td class="lbl">道具钥匙</td><td>盗贼营地地牢钥匙（山舍地窖下方）</td><td>第 4 名伤患</td><td>门锁着，找钥匙——常规做法，玩家知道自己在等什么</td></tr>
+        <tr><td class="lbl">强度钥匙</td><td>阿花战（出血无效，建议武器先升级、备凝锋丹）</td><td>双生血肉花的获取</td><td>打不过就是打不过，反馈立刻可见</td></tr>
+        <tr><td class="lbl"><strong>位置钥匙</strong></td><td>玉儿当前在哪个区域</td><td>【见习医师】能否交付、【救死扶伤】能否接取</td><td><strong>完全不可见</strong>，而且开锁与关窗是同一个动作</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>前两种是常规设计，第三种最少见：<strong>钥匙是玩家自己的移动动作，用它打开一扇门的同时永久关上另一扇。</strong></p>
+
+  <h2>六、状态读写：全线只有一条规则</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>当前状态</th><th>触发（单向）</th><th>写入</th><th>同时关闭</th></tr></thead>
+      <tbody>
+        <tr><td class="lbl">玉儿在溪谷营地（只给动机）</td><td>攀下悬崖的剧情遭遇</td><td>【血肉花】进日志</td><td>—</td></tr>
+        <tr><td class="lbl">玉儿在溪谷驿站</td><td>击败主线 BOSS 彭猛</td><td>可接【见习医师】、可交付【血肉花】</td><td>—</td></tr>
+        <tr><td class="lbl"><strong>玉儿在飞贼营地</strong></td><td><strong>触碰血色森林·飞贼营地的鹤形铃铛</strong></td><td>可接【救死扶伤】</td><td><strong>【见习医师】的交付入口永久消失</strong></td></tr>
+        <tr><td class="lbl">玉儿在庞镇（已故，皮囊）</td><td>第三章剧情推进</td><td>尾段：与父亲交谈 → 奖杯</td><td>本线全部窗口</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="rule">
+    <strong>全线唯一规则：玉儿一次只在一个位置，而这个位置由玩家自己的移动动作决定，两个写入点都不可回退。</strong><br>
+    由此得到一条强制顺序：接【救死扶伤】必须去飞贼营地，而去过飞贼营地就无法再交付【见习医师】。所以【见习医师】的实际截止是「碰那个铃铛之前」，攻略把它写成「荆野战前」——那是同一个节点的近似表述，打到荆野必然先碰过铃铛。
+  </div>
+  <p>读取侧：彭猛存活、主线 BOSS 进度、玉儿当前位置、地牢钥匙持有。写入侧：三件装备、两条任务 flag、一个奖杯，以及「玉儿在哪个区域」这个变量。<strong>这条线唯一真正被改写的世界状态，就是 NPC 的位置。</strong></p>
+
+  <h2>七、告知：点位给得慷慨，状态一律不给</h2>
+  <p>先给引导分级，再填本线的实际得分。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>级</th><th>内容</th><th>本线是否做到</th></tr></thead>
+      <tbody>
+        <tr><td class="lbl">G0</td><td>只有 NPC 头顶标记，交付后不再提</td><td>白色支线的普遍处境</td></tr>
+        <tr><td class="lbl">G1</td><td>给地点（地图标点目标）</td><td><strong>做到</strong>：三味药 ＋ 四名伤患共 7 处全部标点</td></tr>
+        <tr><td class="lbl">G2</td><td>给顺路（目标点压在主线必经动线上）</td><td><strong>做到</strong>：溪谷采集段几乎全程顺路</td></tr>
+        <tr><td class="lbl">G3</td><td>给条件（要几件、要什么状态、封闭区域需要哪类能力）</td><td><strong>部分做到</strong>：日志写明计数目标，地图标注打不开的机关需要哪类影之武装；钥匙锁与强度锁都在这一级</td></tr>
+        <tr><td class="lbl">G4</td><td>给时限与失效（写明截止节点，或给出「你真的要前进吗」类提醒）</td><td><strong>为 0</strong>：三条的失效条件在任务面板、地图、对话里全部不成文。全局只有两处同类提示——进幻影庄园开门时弹「尚有未竟之事」，以及终局入口的确认提示</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>缺口清单</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>缺口</th><th>具体表现</th><th>玩家的实际反应</th></tr></thead>
+      <tbody>
+        <tr><td class="lbl">路径引导</td><td>血肉花的隐藏区入口与拾取点都不标点。「绕到塔右后的地面缺口、沿木桥滑下到塔底」这一段游戏不说</td><td>三条里唯一要打隐藏 BOSS 的那条，恰好是唯一不给点位的那条；找不到入口就判定成「这条做不了」</td></tr>
+        <tr><td class="lbl">刷新条件</td><td>「传走再传回才见得到她」没有任何提示</td><td>判定成「这里没人」，然后走开</td></tr>
+        <tr><td class="lbl">失效条件</td><td>三条的失效全部不成文</td><td>只能靠试错，或查攻略</td></tr>
+        <tr><td class="lbl">状态代价</td><td>碰营地铃铛＝搬走玉儿＝同时关掉上一条的交付窗口，而这一切没有任何表征</td><td><strong>玩家那一下以为自己在开传送点</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>方向引导与路径引导要分开记账。</strong>地图标点给的是方向（目标在哪个坐标），不说的是路径（从哪个缺口下去、要不要先拿钥匙）与状态（这个坐标上的人此刻还在不在）。本作在方向这一层做得相当慷慨，缺口全在状态层——<strong>地图能标一个坐标，标不出这个坐标上的人会不会走。</strong></p>
+  <div class="rule">
+    <strong>三问判据</strong>：玩家在不看攻略的前提下能否答出——① 我要去哪（G1／G2）；② 我要做什么（G3）；③ 我什么时候必须做完（G4）。<br>
+    玉儿线：① 两条能过，血肉花卡在路径；② 能过，计数型目标日志写清了要几件；③ <strong>全线不过</strong>。第三问的失败面积最大，也是「会断支线」这类评价的实际来源。
+  </div>
+
+  <h2>八、失效：由系统规则相乘得出的断线，因此无法成文</h2>
+  <p><strong>判定形态＝位置制。</strong>失效由 NPC 位置规则与玩家移动动作相乘得出。【救死扶伤】「第一次到营地见不到玉儿」与【见习医师】「碰营地铃铛就断」是<strong>同一条规则的两面</strong>。</p>
+  <p><strong>后果</strong>：错过任一条＝线断，「杏林有继」本周目拿不到，只能读旧档或进 NG+。白金做法是每区域起点终点各留一个手动存档位。</p>
+  <p><strong>为什么没写</strong>：这类失效写不进任务面板——写出来就等于宣布存在一条强制顺序，而这条顺序的价值恰恰在于玩家自己撞上。缺口在<strong>机制形态与告知形态不匹配</strong>：由系统规则相乘得出的失效，没有对应的文案位置。文案偷懒的说法不成立，位置制的失效在现有界面里没有可写的格子。</p>
+  <div class="rule warn">
+    <strong>落差</strong>：设计想要的是「战局不等人」的紧迫感，玩家实际读到的是「我漏了个成就」。断档机制的可感知性没有做进任何玩家会主动看的界面，这条线的叙事价值就兑现不到体验上。
+  </div>
+
+  <h2>九、兑现：四层各填一格</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>层</th><th>内容</th><th>读数</th></tr></thead>
+      <tbody>
+        <tr><td class="lbl">叙事</td><td>庞镇反转：那里的鲜红血肉花是假的，归家的玉儿已是梦差操控的皮囊，魂手里那朵真花把意识填回人体，父亲得救并向她道别。<strong>玉儿死于火流星＝固定节点，救不了她</strong></td><td>选择只作用在最后救父亲那一步。叙事层给的是「救不了她」，机制层给的是「能不能救他」</td></tr>
+        <tr><td class="lbl">战斗</td><td>无追加战斗阶段（对照：沐小葵线集齐 5 条红丝带会给 BOSS 追加阶段）</td><td>空格即结论：这条线不改动战斗</td></tr>
+        <tr><td class="lbl">成长</td><td>香薰药盒（+20% 乘算，打磨后 +30% ＋霸体）、静心小葫芦（喝药解破防 ＋ 3 秒不耗杀气）、红妆鬼斩</td><td>两件饰品都作用在喝药上，与第 2 节的投放职能完全一致</td></tr>
+        <tr><td class="lbl">元层</td><td>奖杯「杏林有继」 ＋ 「红妆鬼斩」</td><td><strong>不进结局判定树。</strong>本作的结局由「湖心秘密」与「血脉觉醒（五处龙柱试炼）」两个关键支线的状态组合决定，玉儿线不在其中——它的完成度只兑换成装备与成就</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>这一格值得单独说：任务完成度的回报分成三档——结局分支、装备与成就、叙事去向。<strong>玉儿线只拿第二档与第三档。</strong>它因此是一个干净的对照样本：一条被认真做成、给了三件实物奖励和一个奖杯的支线，与结局判定完全无关。「完成度换结果」这件事在这条线上走的是成长与成就通道。</p>
+
+  <h2>十、双层账：虚构层的理由与系统层的效果是否互相解释</h2>
+  <p>判据：<strong>换掉虚构层的理由，机制要不要跟着改。</strong>要改＝同构；不用改＝借皮；按故事推断会做错＝冲突。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>节点</th><th>虚构层说法</th><th>系统层效果</th><th>判定</th></tr></thead>
+      <tbody>
+        <tr><td class="lbl">相遇</td><td>药师之女为父寻药</td><td>不入日志</td><td>借皮（纯触发铺垫）</td></tr>
+        <tr><td class="lbl">血肉花·自动接受</td><td>她偷到药方，急着抓药</td><td>任务无条件进日志，玩家无需操作</td><td>同构：病情越急，越不该让玩家去找任务板</td></tr>
+        <tr><td class="lbl">阿花与双生血肉花</td><td>药在杀气塔的隐藏区，被一个穿嫁衣的东西守着</td><td>一场高难战斗（出血无效＝强制换打法）＋隐藏武器＋任务道具</td><td>同构：「守着药」直接对应机制层的强度锁</td></tr>
+        <tr><td class="lbl">见习医师·接取</td><td>彭猛死了，溪谷才安全到可以谈生意</td><td>玉儿的出现条件＝主线 BOSS 状态</td><td>冲突：故事上讲得通，机制上不告知，玩家会以为这条线不存在</td></tr>
+        <tr><td class="lbl">三味药</td><td>止血藤、凝脂叶、金创草，全是外伤药</td><td>采集 ×3，全部标点</td><td>同构：换成「找三块矿石」，三味药的名与效都要改</td></tr>
+        <tr><td class="lbl">香薰药盒</td><td>「少女赠香包未果，便依亡母所授之法，制此药盒。'既是药具，便不会再被推辞了吧……'」</td><td>药瓶治疗量乘算 +20%</td><td><strong>同构最强</strong>：物品文本、数值族别、奖杯名「杏林有继」的「继」字，三处指向同一个母亲与同一门医术</td></tr>
+        <tr><td class="lbl">救死扶伤·碰营地铃铛</td><td>她跟着营地跑，人不见时就是还没安顿好</td><td>同一个动作搬来她，并永久关闭上一条的交付窗口</td><td><strong>冲突最强</strong>：叙事上她随时在，机制上她一次只在一个位置，迁移由玩家自己触发且不告知</td></tr>
+        <tr><td class="lbl">庞镇·与父亲交谈</td><td>假花、皮囊、真花填魂</td><td>这一步才跳奖杯，且要求前两条已完成</td><td>同构：叙事终点同时是成就终点</td></tr>
+        <tr><td class="lbl">玉儿死于火流星</td><td>她一定死，玩家救不了她</td><td>无机制后果，只在救父亲那一步留出选择</td><td>同构（负向）：叙事层的无力感没有被机制补偿</td></tr>
+        <tr><td class="lbl">断线</td><td>战局不等人</td><td>任务永久不可用 ＋ 奖杯丢失 ＋ 只能读档或 NG+</td><td>冲突：故事给了理由，机制把触发藏在玩家自己的传送动作里</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>比例：<strong>同构 6（含 1 个负向）／借皮 1／冲突 3</strong>。设计成立。三处冲突同指一个根因：<strong>玉儿只有一个位置，而位置规则不写进任务面板。</strong></p>
+
+  <h2>十一、三条结论</h2>
+  <ol>
+    <li><strong>授予的便利与告知的缺失是同一次设计决定。</strong>三条任务没有一个要求玩家去任务板，代价是三条能不能做全由玩家看不见的状态决定——剧情进度、BOSS 死活、自己刚去了哪。把接取成本降到零，等于把状态可读性也降到零。</li>
+    <li><strong>引导的缺口有明确形状：点位给得慷慨，状态一律不给。</strong>七条目标点全部标点，而「入口在哪个缺口」「这个 NPC 要传走再传回才刷出来」「碰一下铃铛就永久关掉另一条的窗口」三件全不说。地图能标一个坐标，标不出这个坐标上的人会不会走。</li>
+    <li><strong>最狠的一处失效是系统规则相乘得出的，因此无法成文。</strong>判定＝NPC 位置 × 玩家移动动作；写进任务面板就等于宣布存在一条强制顺序。这里的缺口在机制形态与告知形态不匹配，而玩家体验到的不是「我的选择有分量」，是「我漏了个成就」。</li>
+  </ol>
+
+  <div class="footer">
+    拆解粒度到单条任务线，框架随对象结构而变。同类拆解见作品集「游戏拆解」组。
+  </div>
+</div>
+</body>
+</html>
