@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>俯视角战斗模型</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #05070a;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      color: #dfe7f3;
+      user-select: none;
+    }
+    canvas {
+      position: fixed;
+      inset: 0;
+      display: block;
+      cursor: crosshair;
+    }
+    #hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      padding: 18px 22px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+    }
+    .bars {
+      width: min(340px, 46vw);
+      min-width: 220px;
+    }
+    .bar {
+      position: relative;
+      height: 15px;
+      border-radius: 8px;
+      background: #161d28;
+      overflow: hidden;
+      margin-bottom: 8px;
+      box-shadow: inset 0 0 0 1px #2b3648;
+    }
+    .bar span {
+      display: block;
+      height: 100%;
+      width: 100%;
+      transition: width 0.06s linear;
+    }
+    .bar.hp span { background: linear-gradient(90deg, #b93636, #ef6a58); }
+    .bar.st span { background: linear-gradient(90deg, #b18b1f, #e8cf5a); }
+    .bar em {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-style: normal;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: #eef4ff;
+      text-shadow: 0 1px 2px #000;
+    }
+    .flasks {
+      display: flex;
+      gap: 6px;
+      margin-top: 2px;
+      align-items: center;
+    }
+    .flasks i {
+      display: block;
+      width: 22px;
+      height: 9px;
+      border-radius: 5px;
+      background: #202a38;
+      box-shadow: inset 0 0 0 1px #33445c;
+    }
+    .flasks i.on {
+      background: linear-gradient(90deg, #c47a21, #f0b655);
+      box-shadow: 0 0 8px rgba(240, 182, 85, 0.45);
+    }
+    .readout {
+      text-align: right;
+      font-size: 12px;
+      line-height: 1.85;
+      color: #8496b0;
+      font-variant-numeric: tabular-nums;
+    }
+    .readout b { color: #e6edf8; font-weight: 600; }
+    .bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+      font-size: 12px;
+      color: #7e8fa8;
+    }
+    #hint { line-height: 2; max-width: 76vw; }
+    kbd {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: #141b26;
+      border: 1px solid #2c394d;
+      color: #c9d6e8;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 11px;
+      margin: 0 1px;
+    }
+    #bossbar {
+      position: fixed;
+      left: 50%;
+      bottom: 86px;
+      transform: translateX(-50%);
+      width: min(640px, 74vw);
+      pointer-events: none;
+    }
+    #bossbar .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+      font-size: 13px;
+      letter-spacing: 0.10em;
+      color: #d4dff0;
+      text-shadow: 0 1px 3px #000;
+    }
+    #bossbar .meta #bossPhase {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: #8496b0;
+    }
+    #bossbar .meta #bossPhase.hot { color: #ff9a6a; }
+    #bossbar .duo {
+      display: none;
+      margin-bottom: 12px;
+    }
+    #bossbar .duo.on { display: block; }
+    #bossbar .duo .meta {
+      margin-bottom: 4px;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: #9fd8d0;
+    }
+    #bossbar .duo .meta #helperPhase {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: #6d8f8b;
+    }
+    #bossbar .duo .meta #helperPhase.channel { color: #7fd4c8; }
+    #bossbar .duo .meta #helperPhase.down { color: #7a6a72; }
+    #bossbar .duo .track {
+      height: 7px;
+      border-color: #24413f;
+    }
+    #bossbar .duo .track span {
+      background: linear-gradient(90deg, #1c5e59, #4fbfb4);
+    }
+    #bossbar .track {
+      position: relative;
+      height: 12px;
+      background: #141a24;
+      border: 1px solid #3a2a2a;
+      box-shadow: 0 0 22px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+    }
+    #bossbar .track span {
+      display: block;
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #6e1d1d, #b93a32 55%, #d9634a);
+      transition: width 0.12s linear;
+    }
+    #bossbar .notch {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(0, 0, 0, 0.7);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+    #bossbar .posture {
+      display: none;
+      position: relative;
+      height: 5px;
+      margin-top: 5px;
+      background: #141a24;
+      border: 1px solid #3a3340;
+      overflow: hidden;
+    }
+    #bossbar .posture.on { display: block; }
+    #bossbar .posture span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #7a5c22, #f0d089);
+      transition: width 0.10s linear;
+    }
+    #bossbar .posture.broken span { background: #ffe6a8; }
+    #bossbar .posture.tough span { background: linear-gradient(90deg, #2c4256, #9fc6e0); }
+    #death, #victory {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.14s;
+    }
+    #death {
+      background: radial-gradient(circle at 50% 46%, rgba(110, 0, 0, 0.16), rgba(0, 0, 0, 0.52));
+      font-size: clamp(30px, 5vw, 56px);
+      letter-spacing: 0.3em;
+      color: #e8d6d1;
+      text-shadow: 0 0 32px rgba(255, 60, 40, 0.4);
+    }
+    #victory {
+      background: radial-gradient(circle at 50% 46%, rgba(90, 64, 20, 0.10), rgba(0, 0, 0, 0.46));
+      font-size: clamp(26px, 4.4vw, 48px);
+      letter-spacing: 0.32em;
+      color: #f1dfb4;
+      text-shadow: 0 0 28px rgba(255, 200, 110, 0.35);
+      transition: opacity 0.3s;
+    }
+    #victory small, #death small {
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      color: #8e9bb0;
+      text-shadow: none;
+    }
+    #parryHint, #trainingPanel {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(560px, 82vw);
+      padding: 12px 16px;
+      border-radius: 4px;
+      pointer-events: none;
+      font-size: 13px;
+      line-height: 1.75;
+      letter-spacing: 0.03em;
+    }
+    #parryHint {
+      bottom: 168px;
+      background: rgba(6, 14, 20, 0.9);
+      border: 1px solid rgba(120, 230, 255, 0.40);
+      border-left: 3px solid rgba(120, 230, 255, 0.85);
+      color: #cfe9f5;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    #parryHint.show { opacity: 1; }
+    #parryHint b { color: #a8f2ff; letter-spacing: 0.10em; }
+    #trainingPanel {
+      top: 92px;
+      display: none;
+      width: min(460px, 72vw);
+      background: rgba(6, 12, 18, 0.82);
+      border: 1px solid rgba(120, 230, 255, 0.22);
+      color: #c6d7e6;
+    }
+    #trainingPanel.show { display: block; }
+    #trainingPanel .tp-kicker {
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      color: #7fc8dd;
+      margin-bottom: 6px;
+    }
+    #trainingPanel .tp-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin: 3px 0;
+    }
+    #trainingPanel .tp-row b { color: #dff4fb; letter-spacing: 0.06em; }
+    #trainingPanel .tp-row svg { flex: none; }
+    #trainingPanel .tp-count {
+      margin-top: 8px;
+      font-size: 12px;
+      letter-spacing: 0.10em;
+      color: #8fa6bb;
+    }
+    #trainingPanel .tp-count b { color: #a8f2ff; font-size: 15px; }
+    #select {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at 50% 34%, rgba(70, 96, 128, 0.14), rgba(5, 7, 10, 0) 58%),
+        #05070a;
+      z-index: 5;
+    }
+    .select-inner {
+      width: min(1080px, 96vw);
+      text-align: center;
+    }
+    .select-kicker {
+      font-size: 11px;
+      letter-spacing: 0.30em;
+      color: #5f7594;
+      margin-bottom: 12px;
+    }
+    #select h1 {
+      margin: 0 0 30px;
+      font-size: clamp(22px, 3.2vw, 32px);
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      color: #e6edf8;
+    }
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 26px;
+    }
+    .group { text-align: left; }
+    .group-head {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin: 0 0 12px;
+      padding-left: 2px;
+    }
+    .group-name {
+      font-size: 13px;
+      letter-spacing: 0.18em;
+      color: #c9d6e8;
+    }
+    .group-note {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: #5f7594;
+    }
+    .group-cards {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .card {
+      --accent: #dfe7f3;
+      position: relative;
+      width: 236px;
+      padding: 22px 20px 18px;
+      text-align: left;
+      background: #0b1017;
+      color: #dfe7f3;
+      border: 1px solid #232e40;
+      border-left: 3px solid var(--accent);
+      border-radius: 4px;
+      cursor: pointer;
+      font: inherit;
+      transition: background 0.12s, border-color 0.12s, transform 0.12s, box-shadow 0.12s;
+    }
+    .card:hover { background: #101823; }
+    .card.active {
+      background: #121b27;
+      border-color: #3a4b65;
+      border-left-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+    }
+    .card-name {
+      display: block;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      margin-bottom: 10px;
+    }
+    .card-role {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 3px;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      background: rgba(255, 255, 255, 0.04);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    }
+    .card-status {
+      display: block;
+      margin-top: 18px;
+      font-size: 11px;
+      letter-spacing: 0.10em;
+      color: #60718a;
+      font-variant-numeric: tabular-nums;
+    }
+    .card-status.done { color: #c7a86a; }
+    .select-hint {
+      margin-top: 38px;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      color: #6b7d96;
+    }
+    @media (max-width: 640px) {
+      #hint { max-width: 60vw; font-size: 11px; }
+      .card { width: 200px; }
+      .group-cards { gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="hud">
+    <div class="top">
+      <div class="bars">
+        <div class="bar hp"><span id="hpFill"></span><em id="hpText">100 / 100</em></div>
+        <div class="bar st"><span id="stFill"></span><em id="stText">100 / 100</em></div>
+        <div class="flasks" id="flasks"></div>
+      </div>
+      <div class="readout">
+        <div>状态 <b id="stateText">待机</b></div>
+        <div>Boss 阶段 <b id="phaseText">一</b></div>
+        <div>尝试 <b id="tryText">0</b></div>
+        <div>Boss AI <b id="aiText">开</b></div>
+      </div>
+    </div>
+    <div class="bottom">
+      <div id="hint">
+        <kbd>WASD</kbd> 移动 · 鼠标瞄准 · <kbd>左键</kbd> 轻击 · <kbd>右键</kbd> 重击 · <kbd>空格</kbd> 翻滚<br>
+        <kbd>Shift</kbd> 弹反 · <kbd>E</kbd> 血瓶 · <kbd>Esc</kbd> 返回选关 · <kbd>H</kbd> Boss AI · <kbd>R</kbd> 重置 · <kbd>`</kbd> 调试
+      </div>
+      <div>俯视角战斗模型 · v0.33</div>
+    </div>
+  </div>
+
+  <div id="bossbar">
+    <div class="duo" id="duoBar">
+      <div class="meta">
+        <span id="helperName">锁匠</span>
+        <span id="helperPhase">干预</span>
+      </div>
+      <div class="track"><span id="helperFill"></span></div>
+    </div>
+    <div class="meta">
+      <span id="bossName">灰烬哨兵</span>
+      <span id="bossPhase">第一阶段</span>
+    </div>
+    <div class="track">
+      <span id="bossFill"></span>
+      <i class="notch"></i>
+    </div>
+    <div class="posture" id="postureWrap"><span id="postureFill"></span></div>
+  </div>
+
+  <div id="death">你死了<small>即将重来</small></div>
+  <div id="victory"><div id="victoryTitle">敌人已倒下</div><small id="victorySub">Enter 返回选关</small></div>
+
+  <div id="parryHint">
+    <b>青环 = 可弹反</b><br>
+    Boss 身外亮起平滑青白环，这一下能弹：环转白时按 <kbd>Shift</kbd>。锯齿暖环只能躲。
+  </div>
+
+  <div id="trainingPanel">
+    <div class="tp-kicker">训练桩 · 弹反 3 次收工</div>
+    <div class="tp-row">
+      <svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="6" fill="none" stroke="#78e6ff" stroke-width="2"/></svg>
+      <span><b>平滑青环</b> 能弹：环亮白时按 <kbd>Shift</kbd>，成功后立刻左键处决。</span>
+    </div>
+    <div class="tp-row">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 1 L11 6 L16 5 L12.5 9 L16 13 L11 12 L9 17 L7 12 L2 13 L5.5 9 L2 5 L7 6 Z" fill="none" stroke="#ff684e" stroke-width="1.6"/></svg>
+      <span><b>锯齿暖环</b> 不能弹：走开或按 <kbd>空格</kbd> 翻滚。</span>
+    </div>
+    <div class="tp-row">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 9 L9 1 A8 8 0 0 1 16.9 10.4 Z" fill="rgba(255,186,96,0.25)" stroke="#ffba60" stroke-width="1.4"/></svg>
+      <span><b>扇面 / 直道</b> 会挨打的范围；虚线弧是身体滑到的终点。</span>
+    </div>
+    <div class="tp-count">成功弹反 <b id="parryCount">0</b> / 3</div>
+  </div>
+
+  <div id="select">
+    <div class="select-inner">
+      <div class="select-kicker">俯视角战斗模型 · v0.33</div>
+      <h1>选择对手</h1>
+      <div class="cards" id="cards"></div>
+      <div class="select-hint"><kbd>←</kbd><kbd>→</kbd> 选择 · <kbd>Enter</kbd> 迎战 · 战斗中 <kbd>Esc</kbd> 返回</div>
+    </div>
+  </div>
+
+  <script src="src/bosses.js?v=0.11"></script>
+  <script src="src/sim.js?v=0.11"></script>
+  <script src="src/select.js?v=0.11"></script>
+  <script src="src/input.js?v=0.11"></script>
+  <script src="src/render.js?v=0.11"></script>
+  <script src="src/main.js?v=0.11"></script>
+</body>
+</html>
