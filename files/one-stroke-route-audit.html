@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一笔画塔防 · 同一波有几种画法 | 胡凯迪</title>
+<style>
+  :root {
+    --bg: #000000;
+    --panel: rgba(255,255,255,0.04);
+    --line: rgba(255,255,255,0.12);
+    --text: #ffffff;
+    --muted: rgba(255,255,255,0.68);
+    --dim: rgba(255,255,255,0.45);
+    --accent: #34d399;
+    --accent-soft: rgba(52,211,153,0.08);
+    --warn: #f0a35e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.75;
+    color: var(--text);
+    background: var(--bg);
+    padding: 3rem 1.5rem 5rem;
+  }
+  .doc { max-width: 980px; margin: 0 auto; }
+  .back { display: inline-block; color: var(--dim); text-decoration: none; font-size: 0.9rem; margin-bottom: 2.5rem; }
+  .back:hover { color: #fff; }
+  .kicker { color: var(--accent); font-size: 0.85rem; letter-spacing: 0.14em; margin-bottom: 0.7rem; }
+  h1 { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.7rem; }
+  .subtitle { color: var(--muted); font-size: 1.05rem; max-width: 820px; margin-bottom: 1.4rem; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 2rem; }
+  .tag { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.85); padding: 0.3rem 0.9rem; border-radius: 20px; font-size: 0.82rem; }
+  .tag.accent { background: rgba(52,211,153,0.14); color: var(--accent); }
+  h2 { font-size: 1.45rem; font-weight: 600; margin: 3.2rem 0 1.2rem; padding-left: 0.9rem; border-left: 3px solid #fff; }
+  h3 { font-size: 1.08rem; font-weight: 600; margin: 1.8rem 0 0.6rem; color: rgba(255,255,255,0.95); }
+  p { color: var(--muted); margin-bottom: 1rem; }
+  ul, ol { color: var(--muted); margin: 0 0 1rem 1.4rem; }
+  li { margin-bottom: 0.4rem; }
+  strong { color: rgba(255,255,255,0.94); font-weight: 600; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.84em; color: var(--accent); background: rgba(52,211,153,0.08); padding: 0.08em 0.4em; border-radius: 4px; }
+  .table-wrap { overflow-x: auto; margin: 1.2rem 0 1.6rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 660px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 0.62rem 0.7rem; text-align: left; vertical-align: top; }
+  th { color: rgba(255,255,255,0.9); font-weight: 600; background: rgba(255,255,255,0.04); }
+  td { color: var(--muted); }
+  td strong { color: #fff; }
+  td.lbl { color: rgba(255,255,255,0.9); white-space: nowrap; }
+  .rule { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 0.9rem 1.1rem; border-radius: 0 8px 8px 0; margin: 1.2rem 0 1.6rem; color: var(--muted); }
+  .rule strong { color: #fff; }
+  .rule.warn { border-left-color: var(--warn); background: rgba(240,163,94,0.08); }
+  .note { color: var(--dim); font-size: 0.85rem; }
+  .fig { margin: 1.4rem 0 2.4rem; }
+  .fig-frame {
+    background: #f4f5f7;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem;
+    overflow: auto;
+    max-height: 76vh;
+    overscroll-behavior: contain;
+  }
+  .fig-frame img { display: block; width: auto; max-width: none; }
+  .fig-cap { color: var(--dim); font-size: 0.82rem; padding-top: 0.6rem; display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .fig-cap a { color: var(--accent); text-decoration: none; }
+  .fig-cap a:hover { text-decoration: underline; }
+  .footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); color: var(--dim); font-size: 0.82rem; }
+  @media (max-width: 720px) {
+    body { padding: 2rem 1rem 3.5rem; }
+    h1 { font-size: 1.8rem; }
+    .table-wrap { overflow-x: visible; }
+    table { min-width: 0; }
+    .fig-frame { max-height: 70vh; }
+    .fig-frame img { width: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+  <a class="back" href="../index.html">← 返回作品集</a>
+
+  <div class="kicker">设计自测 · 系统与数值</div>
+  <h1>一笔画塔防：同一波到底有几种画法</h1>
+  <p class="subtitle">画线是这款游戏唯一的部署动作——塔预置在节点上，玩家连一条线把它们激活，线的形状决定这一波的防线。设计时的判断是「多条线可行、余量不同」，但没人量过：<strong>同一波到底有几种画法，哪一种最省血</strong>。这份自测用游戏真实的战斗循环跑了 640 条画线方案来回答。</p>
+
+  <div class="meta">
+    <span class="tag accent">自测对象：一笔画塔防 v6.13.1</span>
+    <span class="tag">8 张种子地图 × 第 4/7/10/12 波</span>
+    <span class="tag">640 条画线方案</span>
+    <span class="tag">真实 startWave / updateWave 循环</span>
+    <span class="tag">判据：守住 ＋ 余量</span>
+  </div>
+
+  <h2>〇、为什么要测这个</h2>
+  <p>这款游戏的伤害规则是「怪物只受塔的伤害，行进本身不掉血」。所以一条线的价值由两件事决定：<strong>它能激活几座塔</strong>，以及<strong>怪物在这条线上会走多久</strong>——走得越久，暴露在塔火下的时间越长。画线因此是纯粹的战术决策，值得用测量代替拍脑袋。</p>
+  <p>设计稿里写了「画线是战略层，定余量不定生死；多条线可行、余量不同」。这句话包含两个可以验证的断言：① 换成不同的线，这一波的过与不过基本不变；② 变的是余量。余量的操作定义是<strong>这一波结束时还剩多少血</strong>。下面用四条规则去检验它们。</p>
+
+  <h2>一、怎么测</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项</th><th>做法</th></tr></thead>
+      <tbody>
+        <tr><td class="lbl">只变一个变量</td><td>前 W−1 波固定走同一条基准路线、同一套购买策略；到目标波次开打前取态势，此后只换画线，塔、遗物、金币、血全部不动</td></tr>
+        <tr><td class="lbl">走真实循环</td><td>每一条候选线都用游戏自己的 <code>startWave</code> / <code>updateWave</code> 打完一整波，索敌、开火、伤害全部由游戏代码结算，不另写伤害公式</td></tr>
+        <tr><td class="lbl">候选从地图长出来</td><td>在真实邻接图上先求最短路径，再在「最短 +2 段」以内枚举所有走法；至少穿 1 座塔，只能终止在出怪点，途中不许顺路再接第二个出怪点</td></tr>
+        <tr><td class="lbl">能量按真实规则记账</td><td>可用能量 = 10 + 3×(W−1)，每一段消耗 1 点，新画的段数从余量里扣，不退款</td></tr>
+        <tr><td class="lbl">判据</td><td>守住＝本波结束基地血量大于 0；余量＝守住且本波掉血不超过当前血量的 20%（负值表示这一波结算回血）</td></tr>
+        <tr><td class="lbl">抽样</td><td>按「比最短多走几段 × 塔数」分层，每格取 40 条；候选空间本身远大于样本（单格最高 2,299 条），所以结论停在家族级</td></tr>
+        <tr><td class="lbl">种子</td><td>种子地图是游戏自带的 12 张随机图的固定序列，取前 8 张</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>四种画法形态</h3>
+  <p>分类只看「这一波新画的那一段」，因为整条线接了几个出怪点是历史决定的，拿它分类会把「不换线」全判成多点：</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>形态</th><th>这一波怎么画</th></tr></thead>
+      <tbody>
+        <tr><td class="lbl">F1 不换线</td><td>沿用上一波的线，对照</td></tr>
+        <tr><td class="lbl">F2 同环重画</td><td>最短新增段，新终点与当前末端在同一个环</td></tr>
+        <tr><td class="lbl">F3 跨环直插</td><td>最短新增段，新终点跳到更外一环的出怪点</td></tr>
+        <tr><td class="lbl">F4 绕远换塔</td><td>比最短段多走 1–4 段，用来串更多塔</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>二、结果</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>波次</th><th>种子数</th><th>抽样条数</th><th>守住</th><th>留有余量</th><th>剩余能量（中位）</th></tr></thead>
+      <tbody>
+        <tr><td class="lbl">第 4 波</td><td>8</td><td>320</td><td><strong>320（100%）</strong></td><td>194（61%）</td><td>11</td></tr>
+        <tr><td class="lbl">第 7 波</td><td>3</td><td>120</td><td><strong>101（84%）</strong></td><td>78（65%）</td><td>20</td></tr>
+        <tr><td class="lbl">第 10 波</td><td>3</td><td>120</td><td><strong>120（100%）</strong></td><td>80（67%）</td><td>22</td></tr>
+        <tr><td class="lbl">第 12 波</td><td>2</td><td>80</td><td><strong>80（100%）</strong></td><td>26（33%）</td><td>27</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="fig">
+    <div class="fig-frame"><img src="analysis/img/one-stroke-cleanmatrix.svg" alt="四种画法在各波次留有余量的比例"></div>
+    <div class="fig-cap">
+      <span>行＝波次，列＝画法形态，格内是「守住且留有余量」的占比与该格样本数。</span>
+      <a href="analysis/img/one-stroke-cleanmatrix.svg" target="_blank">打开原图</a>
+    </div>
+  </div>
+
+  <div class="rule"><strong>设计稿的两个断言都成立。</strong>640 条抽样里 621 条守住，只有 19 条没守住，而且全部落在第 7 波；第 4、10、12 波的 520 条全过。<strong>换线换到的是余量，过与不过基本不动。</strong></div>
+
+  <h2>三、四条发现</h2>
+
+  <h3>1 前期比的是串多少塔，后期比的是接哪一环</h3>
+  <p>塔数与「这一波掉多少血」的相关系数：第 4 波 −0.50、第 7 波 −0.59，到第 10 波 +0.06、第 12 波 +0.07。<strong>前期多串一座塔就是实打实的火力</strong>；后期火力已经饱和，多一座塔几乎没有边际收益，决定余量的是把线接到哪个出怪点。</p>
+  <p>数字上也对得上：留有余量的方案，第 4 波平均 6.1 座塔，没余量的只有 4.4 座；到第 12 波，两组都是 11.1 座，塔数彻底失去分辨力。</p>
+
+  <h3>2 最后一波，接外环出怪点是唯一的零损解</h3>
+  <p>第 12 波里跨环直插 10 条抽样全部留有余量，掉血中位数是 −1（这一波结算回血）；同环重画的 38 条里只有 7 条有余量，掉血中位数 26。<strong>接外环会让整波怪变多，这是设计里写明的代价；实测外环出怪点进场后要走完整条外环到内环的线，暴露时间最长</strong>，怪变多被塔火时间补回来了。</p>
+  <p class="note">这一族只有 10 条样本、2 张种子地图，结论只到方向级。</p>
+
+  <h3>3 换线能救死局，也能把本来能过的波打穿</h3>
+  <p>第 7 波是三张种子里唯一出现分化的波次。同一张种子地图上，「不换线」会直接打穿，而同一波绕远换塔的 12 条方案全部守住——<strong>多串 1–4 段就能把死局救回来</strong>。另一张种子反过来：「不换线」守得住，8 条换线方案反而死。</p>
+  <p>换线在这里有真实的下行风险，选错线会把本来稳过的一波打穿。这与「容量内每波可放心重构」的设计假设有出入：重构不吃资源，但吃判断。</p>
+
+  <h3>4 能量不是这类决策的瓶颈</h3>
+  <p>抽样里剩余能量的中位数是 11–27 点，而基准路线只用了 4–12 段。第 4 波就给了 19 点预算，够画一条两倍长的线。<strong>画线的约束是「哪条边值得连」，不是「能量够不够」</strong>——这支持把画线做成读图要素，而非资源分配。</p>
+
+  <h2>四、口径与局限</h2>
+  <ul>
+    <li><strong>版本</strong>：自测基于 v6.13.1 的构建；页面上「在线试玩」是 v6.8.2 的固化版本，两者数值与商店规则有差异，结论按 v6.13.1 读。</li>
+    <li><strong>样本随波次递减</strong>：基准路线能撑到第 7 波的有 3 张种子地图，撑到第 12 波的只有 2 张。波形越高，结论越偏方向。</li>
+    <li><strong>抽样式枚举</strong>：候选空间单格最高 2,299 条，每格取 40 条。报告的是「这一波有哪几类解、各族差多少」，不是全解清单。</li>
+    <li><strong>机器不是玩家</strong>：机器不看编队、不临场判断、不试错；它给的是同条件对照，不是玩家水平。手感、可读性、紧张感仍然只能真人试玩。</li>
+    <li><strong>单波判定</strong>：换线只在这一波生效，后面仍按基准路线推进；「救回这一波」不等于「救回整局」。</li>
+    <li><strong>商店是启发式</strong>：按固定偏好购买，不模拟锁店、攒钱与三选一的最优解。</li>
+  </ul>
+
+  <div class="footer">
+    自测由我设计并实现：路线搜索器在真实游戏循环上枚举画线方案，逐条用游戏自己的开波与推进函数结算；640 条方案的明细数据留档可复跑。数据口径为 v6.13.1，8 张种子地图，第 4／7／10／12 波，每格 40 条抽样。判据里的「余量」固定为「本波掉血 ≤ 当前血量 20%」。版本易碎的数字与结构性结论分开陈述：四条发现讲的是机制形状，具体百分比随版本移动。
+  </div>
+</div>
+</body>
+</html>

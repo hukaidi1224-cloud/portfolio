@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 372" width="760" height="372" font-family="-apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, sans-serif">
+<rect width="760" height="372" fill="#f4f5f7"/>
+<text x="118" y="34" font-size="17" font-weight="600" fill="#1c2430">守住且留有余量的方案占比</text>
+<text x="118" y="60" font-size="12" fill="#5a6672">余量＝本波掉血不超过当前血量的 20%；括号内为该格样本数</text>
+<text x="194.0" y="74" font-size="13" font-weight="600" fill="#2a3542" text-anchor="middle">不换线</text>
+<text x="194.0" y="90" font-size="11" fill="#6b7683" text-anchor="middle">F1</text>
+<text x="350.0" y="74" font-size="13" font-weight="600" fill="#2a3542" text-anchor="middle">同环重画</text>
+<text x="350.0" y="90" font-size="11" fill="#6b7683" text-anchor="middle">F2</text>
+<text x="506.0" y="74" font-size="13" font-weight="600" fill="#2a3542" text-anchor="middle">跨环直插</text>
+<text x="506.0" y="90" font-size="11" fill="#6b7683" text-anchor="middle">F3</text>
+<text x="662.0" y="74" font-size="13" font-weight="600" fill="#2a3542" text-anchor="middle">绕远换塔</text>
+<text x="662.0" y="90" font-size="11" fill="#6b7683" text-anchor="middle">F4</text>
+<text x="102" y="129.0" font-size="13" font-weight="600" fill="#2a3542" text-anchor="end">第 4 波</text>
+<rect x="118" y="96" width="152" height="56" rx="6" fill="#59d18e"/>
+<text x="194.0" y="120" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">75%</text>
+<text x="194.0" y="138" font-size="11" fill="#41505e" text-anchor="middle">6 / 8</text>
+<rect x="274" y="96" width="152" height="56" rx="6" fill="#7ad8a4"/>
+<text x="350.0" y="120" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">58%</text>
+<text x="350.0" y="138" font-size="11" fill="#41505e" text-anchor="middle">70 / 121</text>
+<rect x="430" y="96" width="152" height="56" rx="6" fill="#68d498"/>
+<text x="506.0" y="120" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">67%</text>
+<text x="506.0" y="138" font-size="11" fill="#41505e" text-anchor="middle">45 / 67</text>
+<rect x="586" y="96" width="152" height="56" rx="6" fill="#78d7a3"/>
+<text x="662.0" y="120" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">59%</text>
+<text x="662.0" y="138" font-size="11" fill="#41505e" text-anchor="middle">73 / 124</text>
+<text x="102" y="189.0" font-size="13" font-weight="600" fill="#2a3542" text-anchor="end">第 7 波</text>
+<rect x="118" y="156" width="152" height="56" rx="6" fill="#a8e1c4"/>
+<text x="194.0" y="180" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">33%</text>
+<text x="194.0" y="198" font-size="11" fill="#41505e" text-anchor="middle">1 / 3</text>
+<rect x="274" y="156" width="152" height="56" rx="6" fill="#7ed9a8"/>
+<text x="350.0" y="180" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">55%</text>
+<text x="350.0" y="198" font-size="11" fill="#41505e" text-anchor="middle">21 / 38</text>
+<rect x="430" y="156" width="152" height="56" rx="6" fill="#67d498"/>
+<text x="506.0" y="180" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">68%</text>
+<text x="506.0" y="198" font-size="11" fill="#41505e" text-anchor="middle">23 / 34</text>
+<rect x="586" y="156" width="152" height="56" rx="6" fill="#5cd290"/>
+<text x="662.0" y="180" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">73%</text>
+<text x="662.0" y="198" font-size="11" fill="#41505e" text-anchor="middle">33 / 45</text>
+<text x="102" y="249.0" font-size="13" font-weight="600" fill="#2a3542" text-anchor="end">第 10 波</text>
+<rect x="118" y="216" width="152" height="56" rx="6" fill="#69d499"/>
+<text x="194.0" y="240" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">67%</text>
+<text x="194.0" y="258" font-size="11" fill="#41505e" text-anchor="middle">2 / 3</text>
+<rect x="274" y="216" width="152" height="56" rx="6" fill="#5dd291"/>
+<text x="350.0" y="240" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">73%</text>
+<text x="350.0" y="258" font-size="11" fill="#41505e" text-anchor="middle">38 / 52</text>
+<rect x="430" y="216" width="152" height="56" rx="6" fill="#84daab"/>
+<text x="506.0" y="240" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">53%</text>
+<text x="506.0" y="258" font-size="11" fill="#41505e" text-anchor="middle">10 / 19</text>
+<rect x="586" y="216" width="152" height="56" rx="6" fill="#6cd59b"/>
+<text x="662.0" y="240" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">65%</text>
+<text x="662.0" y="258" font-size="11" fill="#41505e" text-anchor="middle">30 / 46</text>
+<text x="102" y="309.0" font-size="13" font-weight="600" fill="#2a3542" text-anchor="end">第 12 波</text>
+<rect x="118" y="276" width="152" height="56" rx="6" fill="#e8eef0"/>
+<text x="194.0" y="300" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">0%</text>
+<text x="194.0" y="318" font-size="11" fill="#41505e" text-anchor="middle">0 / 2</text>
+<rect x="274" y="276" width="152" height="56" rx="6" fill="#c5e7d8"/>
+<text x="350.0" y="300" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">18%</text>
+<text x="350.0" y="318" font-size="11" fill="#41505e" text-anchor="middle">7 / 38</text>
+<rect x="430" y="276" width="152" height="56" rx="6" fill="#2ac86e"/>
+<text x="506.0" y="300" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">100%</text>
+<text x="506.0" y="318" font-size="11" fill="#41505e" text-anchor="middle">10 / 10</text>
+<rect x="586" y="276" width="152" height="56" rx="6" fill="#afe2c9"/>
+<text x="662.0" y="300" font-size="15" font-weight="700" fill="#16202b" text-anchor="middle">30%</text>
+<text x="662.0" y="318" font-size="11" fill="#41505e" text-anchor="middle">9 / 30</text>
+<text x="118" y="362" font-size="11.5" fill="#5a6672">第 12 波的跨环直插只有 10 条样本，结论只到方向级。</text>
+</svg>
