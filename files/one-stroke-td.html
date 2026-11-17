@@ -56,59 +56,6 @@
   }
   #shop-title { font-size:16px; margin-bottom:14px; }
   #shop-cards { display:flex; gap:12px; justify-content:center; margin-bottom:14px; }
-  /* v6.8.2 常驻基础件货架：付费店 2 格、每格 1 份；与主牌 3 格视觉上分开 */
-  #shop-shelf {
-    display:none; margin:0 0 12px; padding-top:10px; border-top:1px dashed #2c3e50;
-  }
-  #shelf-title { font-size:12px; color:#9ff0d8; margin-bottom:8px; }
-  #shelf-cards { display:flex; gap:10px; justify-content:center; }
-  .shelf-card {
-    width:150px; background:#152238; border:1px dashed #365078; border-radius:8px;
-    padding:9px; text-align:left; display:flex; flex-direction:column; gap:6px;
-  }
-  .shelf-card .rname { font-size:13px; font-weight:600; }
-  .shelf-card .rstack { font-size:11px; color:#f9e79f; line-height:1.35; }
-  .shelf-card button {
-    padding:5px; background:#27ae60; color:#fff; border:none; border-radius:5px;
-    font-size:12px; cursor:pointer;
-  }
-  .shelf-card button:disabled { background:#555; opacity:0.5; cursor:not-allowed; }
-  /* v6.4 事件房 */
-  #event-room {
-    position:fixed; display:none; top:50%; left:50%; transform:translate(-50%,-50%);
-    background:#1a1626; border:1px solid #4a3a6e; border-radius:12px;
-    padding:18px; z-index:21; box-shadow:0 8px 32px rgba(0,0,0,0.7); text-align:center;
-    min-width:600px; max-width:760px;
-  }
-  #event-title { font-size:17px; color:#c39bd3; margin-bottom:6px; letter-spacing:1px; }
-  #event-sub { font-size:12px; color:#8a7aa0; margin-bottom:14px; }
-  #event-cards { display:flex; gap:12px; justify-content:center; margin-bottom:14px; }
-  .event-card {
-    width:190px; background:#241d38; border:1px solid #4a3a6e; border-radius:8px;
-    padding:12px; text-align:left; display:flex; flex-direction:column; gap:8px;
-  }
-  .event-card .ename { font-size:14px; font-weight:600; color:#d7bde2; }
-  .event-card .etag { font-size:11px; padding:1px 8px; border-radius:8px; align-self:flex-start; }
-  .event-card .etag.exchange { background:#1c4a3a; color:#7ee2b8; }
-  .event-card .etag.gamble { background:#5a3a10; color:#f5b041; }
-  .event-card .etag.loan { background:#5a1c1c; color:#ec7063; }
-  .event-card .etag.upgrade { background:#1c3a5a; color:#85c1e9; }
-  .event-card .edesc { font-size:12px; color:#aab; line-height:1.5; flex:1; }
-  /* v6.8.2 事件花费行：金币=黄，免费=绿，让“要付什么”一眼可读 */
-  .event-card .ecost { font-size:12px; font-weight:600; color:#f9e79f; }
-  .event-card .ecost:empty { display:none; }
-  .event-card button {
-    padding:6px; background:#8e44ad; color:#fff; border:none; border-radius:5px;
-    cursor:pointer; font-size:13px;
-  }
-  .event-card button:hover:not(:disabled) { background:#a569bd; }
-  .event-card button:disabled { opacity:0.4; cursor:not-allowed; }
-  .event-card .why { font-size:11px; color:#e67e22; min-height:14px; }
-  #event-leave {
-    padding:6px 20px; background:#34495e; color:#ccc; border:none; border-radius:5px;
-    cursor:pointer; font-size:13px;
-  }
-  #event-leave:hover { background:#4a6076; }
   .shop-card {
     width:190px; background:#1a2744; border:1px solid #2c3e50; border-radius:8px;
     padding:12px; text-align:left; display:flex; flex-direction:column; gap:8px;
@@ -117,15 +64,25 @@
   .shop-card .rtype { font-size:11px; padding:1px 8px; border-radius:8px; align-self:flex-start; }
   .shop-card .rtype.global { background:#5d3a8e; color:#d7bde2; }
   .shop-card .rtype.buckle { background:#7d5a10; color:#f9e79f; }
+  .shop-card .rtype.supply { background:#1c4a3a; color:#7ee2b8; }
+  /* v6.12.0 稀有度：边框只做提示，文字标签始终可见（色觉障碍下也能读档位） */
+  .shop-card.rarity-rare { border-color:#3d7ebf; }
+  .shop-card.rarity-legend { border-color:#c9a227; box-shadow:0 0 12px rgba(201,162,39,.18); }
+  .shop-card .rrarity { font-size:11px; padding:1px 7px; border-radius:8px; margin-left:4px; }
+  .shop-card .rrarity.common { background:#2c3e50; color:#9ab; }
+  .shop-card .rrarity.rare { background:#1c3a5a; color:#85c1e9; }
+  .shop-card .rrarity.legend { background:#5a3a10; color:#f5b041; }
+  .shop-card .rprice { font-size:12px; font-weight:600; color:#f9e79f; }
   /* 全局乘数读数：资源行已占满 800px 宽，放进 flex 会被挤出右边界；放右上又会撞 #top-controls（暂停/声音），
      故绝对定位到资源行下方、左对齐（截图实测 v6.6）。
      v6.8.0：结构读数最多可叠到 9 项（主流/孤塔/攻速/缺血/异型/转弯/塔型/直段/首杀），
      nowrap 单行会超出 800px 画布被裁、并与右上按钮重叠（浏览器实测：超画布 8px + 与 #top-controls 重叠）。
      ⚠️ 必须写成 #res #school（特异度 2,0,0）：v6.6.1 为修资源行折行加的 `#res .panel{white-space:nowrap}`
      特异度是 (1,1,0)，直接写在 #school(1,0,0) 上会被它覆盖——实测 getComputedStyle 仍是 nowrap（假修复）。
-     max-width 收到 700px：给右上 #top-controls 让位，宁可多换一行也不遮挡控件。 */
+     v6.11.0：右上 #top-controls 多了「数据」按钮（约 150px 宽），max-width 从 700 收到 620，
+     否则读数条会盖住按钮（画布 800px，左 12 + 620 = 632，右侧控件从约 638 起）。 */
   #school { background:rgba(14,90,74,0.92); color:#9ff0d8; position:absolute; top:calc(100% + 4px); left:0; display:none; line-height:1.35; }
-  #res #school { white-space:normal; width:max-content; max-width:700px; }
+  #res #school { white-space:normal; width:max-content; max-width:620px; }
   .shop-card .rdesc { font-size:12px; color:#aab; line-height:1.5; flex:1; }
   .shop-card .rcost { color:#e74c3c; }
   /* v6.8.1 可叠普通件：已持有 N/上限 + 下一层净效果（只给读数，不放设计标签） */
@@ -145,11 +102,97 @@
     border-radius:6px; font-size:13px; cursor:pointer;
   }
   #shop-skip:hover { background:#2e86c1; color:#fff; }
+  #shop-reroll {
+    padding:7px 18px; margin-right:8px; background:#24344f; color:#9ff0d8;
+    border:1px solid #365078; border-radius:6px; font-size:13px; cursor:pointer;
+  }
+  #shop-reroll:hover:not(:disabled) { background:#2e86c1; color:#fff; }
+  #shop-reroll:disabled { opacity:0.45; cursor:not-allowed; }
   .top-control {
     pointer-events:auto; border:0; border-radius:6px; padding:7px 10px;
     background:rgba(22,33,62,0.95); color:#eee; cursor:pointer; font-size:15px;
   }
   #top-controls { position:absolute; top:58px; right:12px; z-index:8; display:flex; gap:6px; }
+  /* v6.11.0 数据看板：重要数据 = 道具直接改写的核心数值；次要数据 = 条件乘区与逐塔明细。
+     z-index 必须高于暂停层（同为 .overlay 的 40），否则开看板时自动暂停会把看板盖住。 */
+  #stats-overlay { z-index: 46; }
+  /* v6.13.1：右上遗物计数可点开持有清单 */
+  #relics { pointer-events:auto; cursor:pointer; }
+  #relics:hover { background:rgba(30,58,95,0.96); }
+  #relic-list-overlay { z-index: 46; }
+  .relic-list-card {
+    width:min(680px,94vw); max-height:84vh; overflow:auto; background:#16213e;
+    border:1px solid #365078; border-radius:14px; padding:20px 22px;
+    box-shadow:0 12px 50px rgba(0,0,0,.65); text-align:left;
+  }
+  .relic-list-card h2 { margin:0; font-size:16px; }
+  .relic-item { background:#1a2744; border:1px solid #2c3e50; border-radius:7px; padding:10px 12px; margin-bottom:9px; }
+  .relic-item:last-child { margin-bottom:0; }
+  .relic-item .rname { font-size:14px; font-weight:600; color:#f2f5fa; }
+  .relic-item .rmeta { font-size:11px; color:#9ff0d8; margin-left:8px; font-weight:400; }
+  .relic-item .rdesc { font-size:12px; color:#aab; line-height:1.55; margin-top:5px; }
+  .relic-item .rcost { color:#e74c3c; }
+  .relic-item .rmount { font-size:11px; color:#8fa4bf; margin-top:4px; }
+  .stats-card {
+    width:min(880px,94vw); max-height:88vh; overflow:auto; background:#16213e;
+    border:1px solid #365078; border-radius:14px; padding:22px 24px;
+    box-shadow:0 12px 50px rgba(0,0,0,.65); text-align:left;
+  }
+  .stats-head {
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin:-4px 0 14px; padding:4px 0 10px; position:sticky; top:0; z-index:1;
+    background:#16213e; border-bottom:1px solid #2c3e50;
+  }
+  .stats-tabs { display:flex; gap:6px; }
+  .stats-tab {
+    padding:7px 16px; background:#1e3a5f; color:#9ab; border:1px solid #2c3e50;
+    border-radius:6px; cursor:pointer; font-size:13px; font-family:inherit;
+  }
+  .stats-tab:hover { color:#fff; }
+  .stats-tab.on { background:#2e86c1; color:#fff; border-color:#2e86c1; }
+  #stats-close, #relic-list-close {
+    padding:7px 14px; background:#34495e; color:#ccc; border:0; border-radius:6px;
+    cursor:pointer; font-size:13px; font-family:inherit;
+  }
+  #stats-close:hover, #relic-list-close:hover { background:#4a6076; }
+  .stats-section { margin-bottom:16px; }
+  .stats-section:last-child { margin-bottom:0; }
+  .stats-section h3 { font-size:13px; color:#7fc8ff; margin-bottom:8px; font-weight:600; }
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; }
+  .stat-tile { background:#1a2744; border:1px solid #2c3e50; border-radius:7px; padding:9px 11px; }
+  .stat-tile .k { font-size:11px; color:#8fa4bf; }
+  .stat-tile .v { font-size:17px; font-weight:600; color:#f2f5fa; margin-top:3px; font-variant-numeric:tabular-nums; }
+  .stat-tile .s { font-size:11px; color:#9ff0d8; margin-top:2px; line-height:1.4; }
+  .stat-row {
+    display:flex; justify-content:space-between; align-items:baseline; gap:14px;
+    padding:6px 2px; border-bottom:1px solid #22304a; font-size:12px;
+  }
+  .stat-row:last-child { border-bottom:0; }
+  .stat-row .k { color:#aab; }
+  .stat-row .v { color:#eee; font-variant-numeric:tabular-nums; text-align:right; }
+  .stat-row .v.good { color:#7ee2b8; }
+  .stat-row .v.bad { color:#ec7063; }
+  .stat-row .v.muted { color:#778; }
+  .stat-note { font-size:11px; color:#7f8c9a; margin-top:6px; line-height:1.5; }
+  .stat-table { width:100%; border-collapse:collapse; font-size:12px; font-variant-numeric:tabular-nums; }
+  .stat-table th {
+    text-align:right; color:#8fa4bf; font-weight:500; padding:5px 6px;
+    border-bottom:1px solid #2c3e50; white-space:nowrap;
+  }
+  .stat-table th:first-child, .stat-table td:first-child { text-align:left; }
+  .stat-table td { text-align:right; padding:5px 6px; border-bottom:1px solid #1f2b40; color:#dde; white-space:nowrap; }
+  .stat-table tr:last-child td { border-bottom:0; }
+  .shop-card .rpreview {
+    font-size:11px; color:#9ff0d8; line-height:1.5;
+    border-top:1px dashed #2c3e50; padding-top:6px;
+  }
+  .shop-card .rpreview .warn { color:#e67e22; }
+  .shop-card .rpreview .none { color:#7f8c9a; }
+  #shop-stats {
+    padding:7px 18px; background:#1e3a5f; color:#9ab; border:1px solid #2c3e50;
+    border-radius:6px; font-size:13px; cursor:pointer; margin-left:8px;
+  }
+  #shop-stats:hover { background:#2e86c1; color:#fff; }
   .overlay {
     position:fixed; inset:0; display:none; align-items:center; justify-content:center;
     background:rgba(8,10,22,0.82); z-index:40; padding:20px;
@@ -191,28 +234,18 @@
       <div class="panel" id="hp" data-page-node-id="pDl1PBRIOeKOYvYwTNznJM">基地 100</div>
       <div class="panel" id="energy" data-page-node-id="LXsP29AHa00Co1E7vc8sYG">能量 10</div>
       <div class="panel" id="gold" data-page-node-id="SDmEfMT2D09Upe2jJsznFj">金币 100</div>
-      <div class="panel" id="relics" data-page-node-id="64cALMsoBGcNLQQbUezojc">遗物 0</div>
+      <div class="panel" id="relics" title="点击查看已持有的遗物与卡扣" data-page-node-id="64cALMsoBGcNLQQbUezojc">遗物 0</div>
       <div class="panel" id="school">全局 ×1.00</div>
     </div>
   </div>
   <div id="status" data-page-node-id="bmArnKwXYUKihHSsJiIlnr"><span id="status-text" data-page-node-id="FHjSP0HF3FhEndiaTGcI4r">拖动画面移动 · 滚轮缩放 · 从基地拖线，终点落在出生点。每接 1 个出生点，每波多 1 份编队。</span><button id="start-btn" data-page-node-id="yCQpVrAdKtb95xlGnrAHmN">开始出怪 ▶</button></div>
-  <div id="top-controls"><button id="pause-btn" class="top-control" title="暂停 (Esc)">⏸</button><button id="sound-btn" class="top-control" title="声音开关">🔊</button></div>
+  <div id="top-controls"><button id="stats-btn" class="top-control" title="数据面板 (D)">数据</button><button id="pause-btn" class="top-control" title="暂停 (Esc)">⏸</button><button id="sound-btn" class="top-control" title="声音开关">🔊</button></div>
 </div>
 <div id="menu" data-page-node-id="RrMVy461WyL0XKCD6oxmBS"></div>
 <div id="shop" data-page-node-id="kPRLszgwZoKR3mtE1aYiOh">
   <div id="shop-title" data-page-node-id="35AsloA466ZB3V0IjuuNIM"></div>
   <div id="shop-cards" data-page-node-id="ZH3dPBdriMvIJOwR4kGPIe"></div>
-  <div id="shop-shelf">
-    <div id="shelf-title"></div>
-    <div id="shelf-cards"></div>
-  </div>
-  <button id="shop-skip" data-page-node-id="HMQyOqpOJKupwYsBEdC83Z">跳过</button>
-</div>
-<div id="event-room">
-  <div id="event-title"></div>
-  <div id="event-sub"></div>
-  <div id="event-cards"></div>
-  <button id="event-leave">离开（不交易）</button>
+  <button id="shop-reroll">刷新</button><button id="shop-skip" data-page-node-id="HMQyOqpOJKupwYsBEdC83Z">跳过</button><button id="shop-stats">数据面板</button>
 </div>
 <button id="restart-btn" data-page-node-id="TNhQVjmKvDujltvH92d4q0">重新开始</button>
 <div id="instructions" data-page-node-id="tHkF2eMVx8exNdRqyNw4Ky">
@@ -220,8 +253,8 @@
   <b>连点 = 怪物份数</b>：每接 1 个出生点，每波多 1 份完整编队。红圈逐波外扩；<b>更外环还有连着的出生点，内环就不算失守</b>。<br>
   <b>塔与开荒</b>：<b style="color:#2e86c1">↑ 箭塔</b> / <b style="color:#d4ac0d">◉ 减速</b> / <b style="color:#cb4335">✸ 爆破</b>。连线经过即激活，删线只休眠；暗色虚线塔不可通行，已激活的箭塔/爆破塔能开荒拿金，越往外塔越少。<br>
   <b>环层与路线</b>：内环简单、中环标准、外环高危高赏。外环跳过内环/中环时（孤军深入），外环怪每跳 1 环 +30% 血（最多 +60%）；<b>中环直插不加税</b>。<br>
-  <b>波次与商店</b>：12 波；第 3/6/9 波是任务波（连到 ◆ 目标点得免费遗物），第 6/12 波是 Boss。波间商店 2 遗物 + 1 卡扣（第 8 波起全遗物），可锁定；遗物有红代价、同类互斥，卡扣点塔安装/拆卸。<br>
-  <b>读数</b>：遗物会改变伤害、塔型、路径或经济；部分遗物会在 HUD/塔菜单显示当前生效的数字（主流/塔型/直段/转弯/异型/孤塔/缺血/首杀/本波攻速），其余直接看卡面与战斗。
+  <b>波次与商店</b>：12 波；第 3/6/9 波是任务波（连到 ◆ 目标点得免费遗物），第 6/12 波是 Boss。波间商店固定 4 个货位（第 8 波起全遗物），可锁定、可花金币刷新；补给与遗物同一个池，每店最多 1 件；幸运提高高稀有度概率。<br>
+  <b>读数</b>：遗物会改变伤害、塔型、路径或经济；部分遗物会在 HUD/塔菜单显示当前生效的数字（主流/塔型/直段/转弯/异型/孤塔/缺血/首杀），其余直接看卡面与战斗。
 </div>
 <div id="title-overlay" class="overlay">
   <div class="overlay-card">
@@ -235,9 +268,30 @@
       <b>连线：</b>经过塔即激活；<b>终点必须是出生点</b>。没连到的线会变成橙色草稿，可继续拖或右键回收；草稿修好前不能开波。<br>
       <b>出生点：</b><b>每接 1 个点，每波多 1 份完整编队</b>。红圈逐波外扩；更外环还有连着的出生点，内环就不算失守。<br>
       <b>路线：</b>内环简单、中环标准、外环高危高赏。外环跳过内环/中环时（孤军深入），外环怪每跳 1 环 +30% 血（最多 +60%，Boss 减半）；<b>中环直插不加税</b>。<br>
-      <b>波次与商店：</b>第 3/6/9 波任务波（连到 ◆ 得免费遗物），第 6/12 波 Boss。波间商店 2 遗物 + 1 卡扣，可锁定；遗物有红代价、同类互斥，卡扣点塔安装。<br>
+      <b>波次与商店：</b>第 3/6/9 波任务波（连到 ◆ 得免费遗物），第 6/12 波 Boss。波间商店固定 4 个货位（第 8 波起全遗物），可锁定；遗物有红代价，卡扣点塔安装。<br>
       <button id="title-help-back">返回</button>
     </div>
+  </div>
+</div>
+<div id="stats-overlay" class="overlay">
+  <div class="stats-card">
+    <div class="stats-head">
+      <div class="stats-tabs">
+        <button id="stats-tab-main" class="stats-tab on">重要数据</button>
+        <button id="stats-tab-detail" class="stats-tab">次要数据</button>
+      </div>
+      <button id="stats-close">关闭 (D)</button>
+    </div>
+    <div id="stats-body"></div>
+  </div>
+</div>
+<div id="relic-list-overlay" class="overlay">
+  <div class="relic-list-card">
+    <div class="stats-head">
+      <h2>已持有的遗物与卡扣</h2>
+      <button id="relic-list-close">关闭 (Esc)</button>
+    </div>
+    <div id="relic-list-body"></div>
   </div>
 </div>
 <div id="pause-overlay" class="overlay"><div class="overlay-card"><h2>已暂停</h2><button id="resume-btn">继续</button><button class="back-title">回标题</button></div></div>
@@ -256,36 +310,46 @@
   "startGold": 100,
   "startEnergy": 10,
   "baseMaxHp": 100,
-  "events": {
-    "_note": "v6.4.1 资源运营层；v6.8.2 整批重做。事件房固定波次触发（时机确定、种类随机）。eventWaves 写【备战期序号】= 即将开打的那一波号：[3,6,9,12] 表示 prep3/prep6/prep9/prep12 各弹一次。v6.8.2 的设计口径：① 只做加速器——当场给路线/遗物/货架上的东西，不做「先拿钱后还债」的拖发育交易；② 删掉高利贷/风险投资/能量过载；③ 抽卡按局面加权，并保底一张现在就能执行的卡；④ 花费必须上卡面（cost 由 eventCostText 渲染），不能只在选不了时说一句不够。",
-    "eventWaves": [3, 6, 9, 12],
-    "minHpSafe": 15,
+  "supplies": {
+    "_note": "v6.12.0 事件房删除，8 个事件迁为补给卡。补给与遗物同一个池，每家付费店最多 1 件；maxBuys 为整局购买次数上限；priceAdd 为每次重复购买后的加价。",
+    "maxPerShop": 1,
+    "supplyChance": { "early": 0.6, "mid": 0.45, "late": 0.35 },
     "pool": [
-      { "id": "blood_machine", "name": "卖血机", "desc": "抽走 12 点生命，吐出 90 金币", "tags": ["exchange"],
-        "cost": { "hp": 12 }, "gain": { "gold": 90 }, "repeatable": true },
-      { "id": "energy_forge", "name": "能量熔炉", "desc": "以 70 金币为燃料，永久扩容 2 点能量", "tags": ["exchange"],
-        "cost": { "gold": 70 }, "gain": { "energy": 2 }, "repeatable": true },
-      { "id": "energy_cash", "name": "能量变现", "desc": "拆解 2 点能量容量，换得 110 金币", "tags": ["exchange"],
-        "cost": { "energy": 2 }, "gain": { "gold": 110 }, "repeatable": true },
-      { "id": "relic_casino", "name": "遗物赌坊", "desc": "投入 120 金币，六成概率开出随机遗物", "tags": ["gamble"],
-        "cost": { "gold": 120 }, "gain": { "gambleRelic": { "chance": 0.6, "pity": 2 } }, "repeatable": true },
-      { "id": "pawn_shop", "name": "典当行", "desc": "拆掉一件已购遗物，返还其价格的六成", "tags": ["exchange"],
-        "cost": {}, "gain": { "pawRelic": true }, "repeatable": true },
-      { "id": "vitality_core", "name": "生命核心", "desc": "基地生命上限 +25，并立即回复 25 点", "tags": ["upgrade"],
-        "cost": { "gold": 80 }, "gain": { "maxHp": 25 }, "repeatable": true },
-      { "id": "heart_bank", "name": "生命银行", "desc": "存入 20 点生命，下一波结束时连本带息取回 30 点", "tags": ["exchange"],
-        "cost": { "hp": 20 }, "gain": { "deposit": { "amount": 30, "delayWaves": 1 } }, "repeatable": true },
-      { "id": "air_rent", "name": "空域租金", "desc": "租出 1 个未连接出生点（外环优先）：之后 4 波每波 +20 金，连接该点即终止", "tags": ["exchange"],
-        "cost": {}, "gain": { "airRent": { "amount": 20, "waves": 4 } }, "repeatable": true },
-      { "id": "cornerstone", "name": "基石", "desc": "随机一件未满层的普通件 +2 层（一件都没有时给一件新的）", "tags": ["upgrade"],
-        "cost": { "gold": 90 }, "gain": { "stackLayers": 2 }, "repeatable": true },
-      { "id": "black_market", "name": "黑市情报", "desc": "接下来 2 家付费商店各多 1 张货（3 选变 4 选）", "tags": ["upgrade"],
-        "cost": { "gold": 60 }, "gain": { "shopIntel": 2 }, "repeatable": true },
-      { "id": "route_supply", "name": "路线补给", "desc": "立刻获得 6 点能量，当场把线接下去", "tags": ["exchange"],
-        "cost": { "gold": 90 }, "gain": { "energyNow": 6 }, "repeatable": true },
-      { "id": "ante", "name": "加注", "desc": "免费获得一件随机遗物；下一波怪物血量 +50%", "tags": ["gamble"],
-        "cost": {}, "gain": { "freeRelic": true, "nextWaveHpMul": 1.5 }, "repeatable": false }
+      { "id": "s_energy", "name": "能量包", "desc": "立即获得 2 点能量", "price": 70, "priceAdd": 30, "rarity": "common", "maxBuys": 3, "gain": { "energyNow": 2 } },
+      { "id": "s_convoy", "name": "补给车队", "desc": "立即获得 6 点能量", "price": 110, "rarity": "rare", "maxBuys": 1, "gain": { "energyNow": 6 } },
+      { "id": "s_relic_box", "name": "遗物盲盒", "desc": "六成概率开出随机遗物，幸运每点 +2%，最多九成；2 次失败后保底", "price": 120, "rarity": "rare", "maxBuys": 99, "gain": { "gambleRelic": { "chance": 0.6, "pity": 2 } } },
+      { "id": "s_vitality", "name": "生命核心", "desc": "基地生命上限 +25，并立即回复 25 点", "price": 80, "rarity": "common", "maxBuys": 2, "gain": { "maxHp": 25 } },
+      { "id": "s_heart_bank", "name": "生命银行", "desc": "存入 20 点生命，2 波后连本带息取回 30 点", "price": 0, "rarity": "common", "maxBuys": 1, "cost": { "hp": 20 }, "gain": { "deposit": { "amount": 30, "delayWaves": 2 } } },
+      { "id": "s_cornerstone", "name": "基石", "desc": "随机一件还能叠加的遗物 +2 层（一件都没有时给一件新的）", "price": 90, "rarity": "rare", "maxBuys": 2, "gain": { "stackLayers": 2 } },
+      { "id": "s_black_market", "name": "黑市情报", "desc": "接下来 2 家付费商店各多 1 张货", "price": 60, "rarity": "rare", "maxBuys": 2, "gain": { "shopIntel": 2 } },
+      { "id": "s_ante", "name": "加注", "desc": "免费获得一件随机遗物（幸运提高品质）；下一波怪物血量 +50%", "price": 0, "rarity": "legend", "maxBuys": 1, "gain": { "freeRelic": true, "nextWaveHpMul": 1.5 } }
     ]
+  },
+  "luck": {
+    "_note": "v6.12.0 幸运 0–12，只影响商店/补给稀有度与盲盒概率；v1 不做战斗暴击。稀有/传说权重按点数线性增加后归一化。",
+    "max": 12,
+    "rarePerPoint": 3,
+    "legendPerPoint": 1.5,
+    "supplyRarePerPoint": 2,
+    "supplyLegendPerPoint": 1,
+    "blindBoxPerPoint": 0.02,
+    "blindBoxCap": 0.9
+  },
+  "rarity": {
+    "_note": "三档稀有度。shopWeights 按波次给基础权重，幸运加成后再归一化；supplyWeights 为补给卡自身的三档权重。",
+    "tiers": ["common", "rare", "legend"],
+    "labels": { "common": "普通", "rare": "稀有", "legend": "传说" },
+    "shopWeights": [
+      { "untilWave": 3, "weights": [70, 25, 5] },
+      { "untilWave": 7, "weights": [55, 35, 10] },
+      { "untilWave": 12, "weights": [40, 42, 18] }
+    ],
+    "supplyWeights": { "common": 100, "rare": 40, "legend": 12 }
+  },
+  "family": {
+    "_note": "四族数值件：同族共用层数上限，超出后更高稀有度替换最低层并退还该层基础价的 tradeInMul；效果按各层自身加成求和，再封顶为 cap × 最高层加成。",
+    "caps": { "dmg": 5, "spd": 5, "rng": 5, "luck": 3 },
+    "tradeInMul": 0.6
   },
   "economy": {
     "_note": "v6.2.4 从代码抽出的散落数值。env* 为环境/节奏常量，奖励为结算数值。",
@@ -360,76 +424,86 @@
     { "r": 410, "n": 16, "spread": 0.05, "jr": 4, "lock": 0.45, "off": 0 },
     { "r": 490, "n": 16, "spread": 0.05, "jr": 4, "lock": 0.55, "off": 0 }
   ],
-  "shop": { "paidRelics": 2, "paidBuckles": 1, "allRelicWavesFrom": 8, "mutexWeight": 0.3 },
+  "shop": { "paidSlots": 4, "paidRelics": 3, "allRelicWavesFrom": 8, "mutexWeight": 0.3, "intelSlots": 1, "rerollCosts": [20, 35, 50, 65, 80, 95], "rerollMax": 6, "familyOnePerShop": true },
   "relics": [
-    { "id": "g_rage", "type": "global", "name": "狂怒发条", "desc": "全局攻速 +100%", "cost": "，但伤害降至 35%", "price": 90, "pair": "atkMod", "hooks": { "globalCdMul": 0.5, "globalDmgMul": 0.35 } },
-    { "id": "g_sniper", "type": "global", "name": "猎颅校准", "desc": "全局伤害 ×2.5", "cost": "，但攻速减半", "price": 90, "pair": "atkMod", "hooks": { "globalCdMul": 2, "globalDmgMul": 2.5 } },
-    { "id": "g_volley", "type": "global", "name": "箭雨敕令", "desc": "所有箭塔可同时攻击 2 个目标", "cost": "，但单发伤害 ×65%", "price": 95, "pair": "spread", "hooks": { "arrowDmgMul": 0.65 } },
-    { "id": "g_focus", "type": "global", "name": "点杀矩阵", "desc": "同塔连续攻击同一目标，每击伤害 +15%", "cost": "，至多叠 5 层；对群怪几乎无增益", "price": 95, "pair": "spread", "hooks": {} },
-    { "id": "g_frontier", "type": "global", "name": "远征法典", "desc": "每多连接 1 个环，全局伤害 +18%", "cost": "，但获得时基地生命 -20%", "price": 100, "pair": "space", "hooks": { "frontierPerRing": 0.18, "frontierHpCostMul": 0.8 } },
-    { "id": "g_bastion", "type": "global", "name": "深垒誓约", "desc": "基地每满 20 血，全局伤害 +12%", "cost": "，但外环塔伤害 ×70%", "price": 100, "pair": "space", "hooks": { "bastionPerHp": 20, "bastionDmgMul": 0.12, "bastionOuterDmgMul": 0.7 } },
-    { "id": "g_toxin", "type": "global", "name": "腐毒导管", "desc": "每次攻击附加毒素：每秒 8 点，持续 3 秒", "cost": "，至多叠 3 层；全局伤害 ×80%", "price": 90, "hooks": { "globalDmgMul": 0.8, "poisonDps": 8, "poisonDur": 180, "poisonMax": 3 } },
-    { "id": "g_chain", "type": "global", "name": "共振尖塔", "desc": "爆破溅射命中 ≥3 个目标时，追加一次 40% 伤害的小爆炸", "price": 95, "hooks": { "chainTrigger": 3, "chainDmgMul": 0.4, "chainRadiusMul": 0.6 } },
-    { "id": "g_harvest", "type": "global", "name": "掠金义肢", "desc": "击杀金币 ×1.6", "cost": "，但每波开始时基地 -2 血", "price": 85, "hooks": { "goldMul": 1.6, "waveHpCost": 2 } },
-    { "id": "g_mirror", "type": "global", "name": "镜像刻印", "desc": "战斗开始时，复制卡扣槽里第一个卡扣到随机另一座无卡扣的激活塔", "price": 80, "hooks": {} },
-    { "id": "g_anvil", "type": "global", "name": "铁砧协议", "desc": "全局伤害 ×1.7", "cost": "，但全局射程 ×0.7", "price": 100, "pair": "range", "hooks": { "globalDmgMul": 1.7, "globalRangeMul": 0.7 } },
-    { "id": "g_eagle", "type": "global", "name": "鹰眼透镜", "desc": "全局射程 ×1.4", "cost": "，但全局伤害 ×0.8", "price": 95, "pair": "range", "hooks": { "globalRangeMul": 1.4, "globalDmgMul": 0.8 } },
-    { "id": "g_burst", "type": "global", "name": "暴烈引信", "desc": "每波每塔的前 5 次攻击伤害 ×3", "cost": "，但全局攻速 ×0.88", "price": 95, "pair": "tempo", "hooks": { "burstShots": 5, "burstMul": 3, "globalCdMul": 1.14 } },
-    { "id": "g_endure", "type": "global", "name": "绵长战意", "desc": "每波开波 6 秒后，全局伤害 ×1.6", "cost": "，但前 6 秒 ×0.8", "price": 95, "pair": "tempo", "hooks": { "endureFrames": 360, "endureLateMul": 1.6, "endureEarlyMul": 0.8 } },
-    { "id": "g_swarm", "type": "global", "name": "蜂群协议", "desc": "每座激活塔使全局攻速 +7%（上限 +70%）", "cost": "，但全局伤害 ×0.7", "price": 100, "hooks": { "swarmPerTower": 0.07, "swarmMax": 0.7, "globalDmgMul": 0.7 } },
-    { "id": "g_winter", "type": "global", "name": "冬寂之息", "desc": "被减速塔命中的怪物，3 秒内受到的所有伤害 +25%", "price": 90, "hooks": { "chillDmgMul": 1.25, "chillDur": 180 } },
-    { "id": "g_thorns", "type": "global", "name": "荆棘回路", "desc": "漏怪对基地的伤害 ×0.5", "cost": "，但击杀金币 ×0.75", "price": 85, "hooks": { "leakReduceMul": 0.5, "goldMul": 0.75 } },
-    { "id": "g_forge", "type": "global", "name": "过载核心", "desc": "全局攻速 ×1.3", "cost": "，但每波能量恢复 -1", "price": 90, "hooks": { "globalCdMul": 0.77, "forgeEnergyMod": -1 } },
-    { "id": "g_tide", "type": "global", "name": "潮汐引擎", "desc": "怪物沿路径每前进 1 个节点，受伤 +4%（上限 +40%）", "price": 95, "hooks": { "tidePerNode": 0.04, "tideMax": 0.4 } },
-    { "id": "g_resonance", "type": "global", "name": "共鸣线圈", "desc": "路径上紧挨的同类型塔互相提供 +15% 伤害", "price": 85, "pair": "adjType", "hooks": { "resonanceMul": 1.15 } },
-    { "id": "g_idle", "type": "global", "name": "闲置产能", "desc": "每 1 点未使用的能量，全局伤害 +3%", "cost": "，上限 +45%", "price": 90, "hooks": { "idleEnergyPer": 0.03, "idleEnergyCap": 0.45 } },
-    { "id": "g_lonely", "type": "global", "name": "孤塔誓约", "desc": "路径上前后都没有紧挨着其他塔的塔，伤害 +60%", "price": 95, "hooks": { "lonelyMul": 1.6 } },
-    { "id": "g_bloodpact", "type": "global", "name": "血契", "desc": "每波结束回复 3 点基地生命", "cost": "，但获得时立即 -15 血", "price": 80, "pair": "hpState", "hooks": { "waveHpGain": 3, "hpCostOnBuy": 15 } },
-    { "id": "g_hoard", "type": "global", "name": "封存账本", "desc": "开波时每持有 75 金，本波全局伤害 +5%", "cost": "，上限 +30%（波内花费不影响本波）", "price": 90, "hooks": { "hoardPer": 0.05, "hoardUnit": 75, "hoardCap": 0.3 } },
-    { "id": "g_tax", "type": "global", "name": "主流税契", "desc": "路径上数量最多的一种塔型超过半数时，全局伤害 +60%", "cost": "，塔型分散时失效", "price": 100, "hooks": { "mainTypeDmgMul": 1.6 } },
-    { "id": "g_convert", "type": "global", "name": "余能折现", "desc": "每波结束，每 1 点未使用能量换 5 金", "cost": "，上限 60 金", "price": 85, "hooks": { "energyGoldPer": 5, "energyGoldCap": 60 } },
-    { "id": "q_atk", "type": "buckle", "name": "迅捷卡扣", "desc": "挂载塔攻速 +40%", "price": 55, "hooks": { "cdMul": 0.71 } },
-    { "id": "q_dmg", "type": "buckle", "name": "重弹卡扣", "desc": "挂载塔伤害 +50%", "price": 60, "hooks": { "dmgMul": 1.5 } },
-    { "id": "q_rng", "type": "buckle", "name": "游侠卡扣", "desc": "挂载塔射程 +30%", "price": 50, "hooks": { "rangeMul": 1.3 } },
-    { "id": "q_frost", "type": "buckle", "name": "霜结卡扣", "desc": "挂载减速塔强度 ×2", "price": 65, "hooks": { "slowPowMul": 2 } },
-    { "id": "q_mine", "type": "buckle", "name": "矿镐卡扣", "desc": "挂载箭塔开荒伤害 ×2", "price": 55, "hooks": { "buckleReclaimMul": 2 } },
-    { "id": "q_fuse", "type": "buckle", "name": "引信卡扣", "desc": "每波前 3 次有效攻击伤害 ×2", "price": 35, "hooks": { "openingShotMul": 2 } },
-    { "id": "q_hunter", "type": "buckle", "name": "猎手卡扣", "desc": "对快速怪/雾行者伤害 +35%", "price": 40, "hooks": { "tagDmgMul": { "swift": 1.35 } } },
-    { "id": "q_breaker", "type": "buckle", "name": "破阵卡扣", "desc": "对重甲怪/Boss 伤害 +35%", "price": 65, "hooks": { "tagDmgMul": { "armored": 1.35 } } },
-    { "id": "q_quake", "type": "buckle", "name": "余震卡扣", "desc": "爆破半径 +40%（仅爆破塔）", "price": 60, "hooks": { "splashMul": 1.4 } },
-    { "id": "q_charge", "type": "buckle", "name": "蓄压卡扣", "desc": "连续 180 帧未开火，下一击 ×3", "price": 55, "hooks": { "idleChargeMul": 3 } },
-    { "id": "q_relay", "type": "buckle", "name": "中继卡扣", "desc": "路径上相邻其他塔冷却 ×0.88", "price": 100, "hooks": { "adjacentCdMul": 0.88 } },
-    { "id": "q_cloak", "type": "buckle", "name": "反隐卡扣", "desc": "可直接索敌隐身单位，对显形目标伤害 +20%", "price": 30, "rarity": "common", "hooks": { "revealOnHit": 180, "revealedDmgMul": 1.2 } },
-    { "id": "q_hub", "type": "buckle", "name": "共鸣枢纽", "desc": "载体塔停止攻击（视为路径节点），路径上紧挨它的塔伤害 +80%", "price": 100, "rarity": "rare", "hooks": { "hubSacrifice": true, "hubAdjMul": 1.8 } },
-    { "id": "g_rime", "type": "global", "name": "霜蚀", "desc": "被减速的怪每秒受 6 点伤害，最多 2 层", "cost": "，但全局伤害 ×0.85", "price": 90, "engine": true, "hooks": { "chillDotDps": 6, "chillDotMax": 2, "globalDmgMul": 0.85 } },
-    { "id": "g_venom", "type": "global", "name": "蚀刻协议", "desc": "毒/冰持续伤害 +50%", "price": 70, "requiresAny": ["g_rime", "g_toxin"], "hooks": { "dotDmgMul": 1.5 } },
-    { "id": "g_exec", "type": "global", "name": "处决协议", "desc": "对生命低于 30% 的怪伤害 +80%", "cost": "，但对满血怪伤害 ×0.85", "price": 95, "engine": true, "hooks": { "executeThreshold": 0.3, "executeMul": 1.8, "fullHpMul": 0.85 } },
-    { "id": "g_guillotine", "type": "global", "name": "断头台", "desc": "处决线提高到 35%，对低血怪额外 +20%", "price": 70, "requiresAny": ["g_exec"], "hooks": { "executeThresholdAdd": 0.05, "executeBonusAdd": 0.2 } },
-    { "id": "g_discount", "type": "global", "name": "折扣券", "desc": "所有遗物/卡扣价格 ×0.85", "cost": "，但每波开始金币 -3、击杀金 ×0.9", "price": 90, "hooks": { "shopPriceMul": 0.85, "waveGoldCost": 3, "goldMul": 0.9 } },
-    { "id": "g_last", "type": "global", "name": "残血协议", "desc": "基地每损失 10 点生命，全局伤害 +8%（上限 +48%）", "cost": "，但所有治疗 ×0.5；与血契互斥", "price": 95, "engine": true, "pair": "hpState", "hooks": { "lastMissingPer": 10, "lastDmgPer": 0.08, "lastDmgCap": 0.48, "healMul": 0.5 } },
-    { "id": "g_backwater", "type": "global", "name": "背水", "desc": "残血协议每 10 点缺血增伤 +4%（上限 +72%）", "price": 70, "requiresAny": ["g_last"], "hooks": { "backwaterPerAdd": 0.04, "backwaterCapAdd": 0.24 } },
-    { "id": "g_twin", "type": "global", "name": "双生塔", "desc": "路径上紧挨的异类型塔互相 +15% 伤害", "cost": "，与共鸣线圈互斥", "price": 90, "pair": "adjType", "hooks": { "twinMul": 1.15 } },
-    { "id": "g_corner", "type": "global", "name": "拐角协议", "desc": "路径每 1 个急转弯（偏折 ≥30°），全局伤害 +5%（上限 +35%）", "cost": "，但全局射程 ×0.9", "price": 95, "hooks": { "cornerPerTurn": 0.05, "cornerCap": 0.35, "globalRangeMul": 0.9 } },
-    { "id": "g_barrage", "type": "global", "name": "火力覆盖", "desc": "爆破塔溅射伤害 +35%", "cost": "，但箭塔伤害 ×0.85", "price": 95, "hooks": { "blastDmgMul": 1.35, "arrowDmgMul": 0.85 } },
-    { "id": "q_rime", "type": "buckle", "name": "蚀刻卡扣", "desc": "攻击附加 4/s × 2s 毒素，最多 2 层", "price": 55, "hooks": { "venomDps": 4, "venomDur": 120, "venomMax": 2 } },
-    { "id": "q_exec", "type": "buckle", "name": "处决卡扣", "desc": "对生命低于 30% 的怪伤害 +50%", "price": 60, "hooks": { "execThreshold": 0.3, "execMul": 1.5 } },
-    { "id": "q_corner", "type": "buckle", "name": "拐角卡扣", "desc": "塔在急转弯 1 节点内，伤害 +30%", "price": 55, "hooks": { "cornerBuckleMul": 1.3 } },
-    { "id": "q_idle", "type": "buckle", "name": "聚能卡扣", "desc": "当前能量 ≥10 时，攻速 +20%", "price": 55, "hooks": { "idleEnergyThreshold": 10, "idleEnergyCdMul": 0.8333 } },
-    { "id": "q_lone", "type": "buckle", "name": "独行卡扣", "desc": "孤塔伤害 +35%", "price": 55, "hooks": { "loneBuckleMul": 1.35 } },
-    { "id": "g_tricolor", "type": "global", "name": "三色均衡", "desc": "三种塔型都上场时，数量最少的那种每座给全局伤害 +12%（上限 +48%）", "cost": "，但任一塔型占满半数以上即失效", "price": 110, "engine": true, "hooks": { "tricolorPerMin": 0.12, "tricolorCap": 0.48 } },
-    { "id": "g_corridor", "type": "global", "name": "走廊协议", "desc": "路径上最长的一段直路（不含急转弯），从第 4 个节点起每节点全局伤害 +8%（上限 +40%）", "cost": "，但全局射程 ×0.9", "price": 110, "engine": true, "hooks": { "corridorPerNode": 0.08, "corridorFromNode": 4, "corridorCap": 0.4, "globalRangeMul": 0.9 } },
-    { "id": "g_firstblood", "type": "global", "name": "首杀赏金", "desc": "每波第一次击杀的金币 ×4（Boss 不算首杀）", "cost": "，但其余击杀金币 ×0.9", "price": 80, "hooks": { "firstBloodMul": 4, "firstRestMul": 0.9 } },
-    { "id": "g_twin_prism", "type": "global", "name": "双生·棱镜", "desc": "双生塔的异型紧挨加成 +15% → +20%", "price": 70, "requiresAny": ["g_twin"], "hooks": { "twinPrismAdd": 0.05 } },
-    { "id": "g_corner_edge", "type": "global", "name": "拐角·外沿", "desc": "急转弯每弯 +5% → +6%，上限 +35% → +40%", "price": 70, "requiresAny": ["g_corner"], "hooks": { "cornerPerAdd": 0.01, "cornerCapAdd": 0.05 } },
-    { "id": "g_barrage_edge", "type": "global", "name": "火力·扩爆", "desc": "爆破塔溅射半径 +20%（与余震卡扣相乘）", "price": 70, "requiresAny": ["g_barrage"], "hooks": { "blastSplashRadiusMul": 1.2 } },
-    { "id": "q_first", "type": "buckle", "name": "首杀卡扣", "desc": "本塔每波第一次击杀额外 +15 金", "price": 55, "hooks": { "firstBuckleGold": 15 } },
-    { "id": "q_dense", "type": "buckle", "name": "群塔卡扣", "desc": "路径上前后紧挨 2 座塔时，该塔伤害 +20%", "price": 55, "hooks": { "denseBuckleMul": 1.2, "denseNeed": 2 } },
-    { "id": "c_whet", "type": "global", "name": "磨刀石", "desc": "全局伤害 +10%，可叠 5 层", "price": 60, "stackable": true, "maxStacks": 5, "priceStep": 0.15, "stackDesc": "伤害 +10%", "hooks": { "stackDmgAdd": 0.10 } },
-    { "id": "c_oil", "type": "global", "name": "润滑油", "desc": "全局攻速 +8%，可叠 5 层", "price": 60, "stackable": true, "maxStacks": 5, "priceStep": 0.15, "stackDesc": "攻速 +8%", "hooks": { "stackSpeedAdd": 0.08 } },
-    { "id": "c_lens", "type": "global", "name": "测距仪", "desc": "全局射程 +8%，可叠 5 层", "price": 55, "stackable": true, "maxStacks": 5, "priceStep": 0.15, "stackDesc": "射程 +8%", "hooks": { "stackRangeAdd": 0.08 } },
-    { "id": "c_purse", "type": "global", "name": "钱袋", "desc": "每波结束金币 +6，可叠 5 层", "price": 50, "stackable": true, "maxStacks": 5, "priceStep": 0.15, "stackDesc": "金币 +6/波", "hooks": { "stackGoldPerWave": 6 } },
-    { "id": "c_hammer", "type": "global", "name": "重锤", "desc": "全局伤害 +18%，可叠 3 层", "cost": "，但攻击间隔 +8%/层", "price": 70, "stackable": true, "maxStacks": 3, "priceStep": 0.15, "stackDesc": "伤害 +18% / 攻击间隔 +8%", "hooks": { "stackDmgAdd": 0.18, "stackCdAdd": 0.08 } },
-    { "id": "c_light", "type": "global", "name": "轻量化", "desc": "全局攻速 +12%，可叠 3 层", "cost": "，但伤害 −8%/层", "price": 65, "stackable": true, "maxStacks": 3, "priceStep": 0.15, "stackDesc": "攻速 +12% / 伤害 −8%", "hooks": { "stackSpeedAdd": 0.12, "stackDmgAdd": -0.08 } }
+    { "id": "g_rage", "type": "global", "name": "狂怒发条", "desc": "全局攻速 +100%", "cost": "，但伤害降至 35%", "price": 90, "rarity": "rare", "pair": "atkMod", "hooks": {"globalCdMul": 0.5, "globalDmgMul": 0.35}},
+    { "id": "g_sniper", "type": "global", "name": "猎颅校准", "desc": "全局伤害 ×2.5", "cost": "，但攻速减半", "price": 90, "rarity": "rare", "pair": "atkMod", "hooks": {"globalCdMul": 2, "globalDmgMul": 2.5}},
+    { "id": "g_volley", "type": "global", "name": "箭雨敕令", "desc": "箭塔每次开火额外攻击 1 个射程内目标", "cost": "，第二发伤害为 50%", "price": 95, "rarity": "rare", "pair": "spread", "hooks": {"volleySecondMul": 0.5}},
+    { "id": "g_focus", "type": "global", "name": "点杀矩阵", "desc": "同塔连续攻击同一目标，每击伤害 +15%", "cost": "，至多叠 5 层；对群怪几乎无增益", "price": 95, "rarity": "rare", "pair": "spread", "hooks": {}},
+    { "id": "g_frontier", "type": "global", "name": "远征法典", "desc": "每多连接 1 个环，全局伤害 +18%", "cost": "，但获得时基地生命 -20%", "price": 100, "rarity": "legend", "pair": "space", "hooks": {"frontierPerRing": 0.18, "frontierHpCostMul": 0.8}},
+    { "id": "g_bastion", "type": "global", "name": "深垒誓约", "desc": "基地每满 20 血，全局伤害 +12%", "cost": "，但外环塔伤害 ×70%", "price": 100, "rarity": "legend", "pair": "space", "hooks": {"bastionPerHp": 20, "bastionDmgMul": 0.12, "bastionOuterDmgMul": 0.7}},
+    { "id": "g_toxin", "type": "global", "name": "腐毒导管", "desc": "每次攻击附加毒素：每秒 8 点，持续 3 秒", "cost": "，至多叠 3 层；全局伤害 ×80%", "price": 90, "rarity": "rare", "hooks": {"globalDmgMul": 0.8, "poisonDps": 8, "poisonDur": 180, "poisonMax": 3}},
+    { "id": "g_chain", "type": "global", "name": "共振尖塔", "desc": "爆破溅射命中 ≥3 个目标时，追加一次 40% 伤害的小爆炸", "price": 95, "rarity": "rare", "hooks": {"chainTrigger": 3, "chainDmgMul": 0.4, "chainRadiusMul": 0.6}},
+    { "id": "g_harvest", "type": "global", "name": "掠金义肢", "desc": "击杀金币 ×1.6", "cost": "，但每波开始时基地 -2 血", "price": 85, "rarity": "common", "hooks": {"goldMul": 1.6, "waveHpCost": 2}},
+    { "id": "g_mirror", "type": "global", "name": "镜像刻印", "desc": "战斗开始时，复制卡扣槽里第一个卡扣到随机另一座无卡扣的激活塔", "price": 80, "rarity": "common", "hooks": {}},
+    { "id": "g_anvil", "type": "global", "name": "铁砧协议", "desc": "全局伤害 ×1.7", "cost": "，但全局射程 ×0.7", "price": 100, "rarity": "legend", "pair": "range", "hooks": {"globalDmgMul": 1.7, "globalRangeMul": 0.7}},
+    { "id": "g_eagle", "type": "global", "name": "鹰眼透镜", "desc": "全局射程 ×1.4", "cost": "，但全局伤害 ×0.8", "price": 95, "rarity": "rare", "pair": "range", "hooks": {"globalRangeMul": 1.4, "globalDmgMul": 0.8}},
+    { "id": "g_burst", "type": "global", "name": "暴烈引信", "desc": "每波每塔的前 5 次攻击伤害 ×3", "cost": "，但全局攻速 ×0.88", "price": 95, "rarity": "rare", "pair": "tempo", "hooks": {"burstShots": 5, "burstMul": 3, "globalCdMul": 1.14}},
+    { "id": "g_endure", "type": "global", "name": "绵长战意", "desc": "每波开波 6 秒后，全局伤害 ×1.6", "cost": "，但前 6 秒 ×0.8", "price": 95, "rarity": "rare", "pair": "tempo", "hooks": {"endureFrames": 360, "endureLateMul": 1.6, "endureEarlyMul": 0.8}},
+    { "id": "g_swarm", "type": "global", "name": "蜂群协议", "desc": "每座激活塔使全局攻速 +7%（上限 +70%）", "cost": "，但全局伤害 ×0.7", "price": 100, "rarity": "legend", "hooks": {"swarmPerTower": 0.07, "swarmMax": 0.7, "globalDmgMul": 0.7}},
+    { "id": "g_winter", "type": "global", "name": "冬寂之息", "desc": "被减速塔命中的怪物，3 秒内受到的所有伤害 +25%", "price": 90, "rarity": "rare", "hooks": {"chillDmgMul": 1.25, "chillDur": 180}},
+    { "id": "g_thorns", "type": "global", "name": "荆棘回路", "desc": "漏怪对基地的伤害 ×0.5", "cost": "，但击杀金币 ×0.75", "price": 85, "rarity": "common", "hooks": {"leakReduceMul": 0.5, "goldMul": 0.75}},
+    { "id": "g_forge", "type": "global", "name": "过载核心", "desc": "全局攻速 ×1.3", "cost": "，但每波能量恢复 -1", "price": 90, "rarity": "rare", "hooks": {"globalCdMul": 0.77, "forgeEnergyMod": -1}},
+    { "id": "g_tide", "type": "global", "name": "潮汐引擎", "desc": "怪物沿路径每前进 1 个节点，受伤 +4%（上限 +40%）", "price": 95, "rarity": "rare", "hooks": {"tidePerNode": 0.04, "tideMax": 0.4}},
+    { "id": "g_resonance", "type": "global", "name": "共鸣线圈", "desc": "路径上紧挨的同类型塔互相提供 +15% 伤害", "price": 85, "rarity": "common", "pair": "adjType", "hooks": {"resonanceMul": 1.15}},
+    { "id": "g_idle", "type": "global", "name": "闲置产能", "desc": "每 1 点未使用的能量，全局伤害 +3%", "cost": "，上限 +45%", "price": 90, "rarity": "rare", "hooks": {"idleEnergyPer": 0.03, "idleEnergyCap": 0.45}},
+    { "id": "g_lonely", "type": "global", "name": "孤塔誓约", "desc": "路径上前后都没有紧挨着其他塔的塔，伤害 +60%", "price": 95, "rarity": "rare", "hooks": {"lonelyMul": 1.6}},
+    { "id": "g_bloodpact", "type": "global", "name": "血契", "desc": "每波结束回复 3 点基地生命", "cost": "，但获得时立即 -15 血", "price": 80, "rarity": "common", "pair": "hpState", "hooks": {"waveHpGain": 3, "hpCostOnBuy": 15}},
+    { "id": "g_hoard", "type": "global", "name": "封存账本", "desc": "开波时每持有 75 金，本波全局伤害 +5%", "cost": "，上限 +30%（波内花费不影响本波）", "price": 90, "rarity": "rare", "hooks": {"hoardPer": 0.05, "hoardUnit": 75, "hoardCap": 0.3}},
+    { "id": "g_tax", "type": "global", "name": "主流税契", "desc": "路径上数量最多的一种塔型超过半数时，全局伤害 +60%", "cost": "，塔型分散时失效", "price": 100, "rarity": "legend", "hooks": {"mainTypeDmgMul": 1.6}},
+    { "id": "g_convert", "type": "global", "name": "余能折现", "desc": "每波结束，每 1 点未使用能量换 5 金", "cost": "，上限 60 金", "price": 85, "rarity": "common", "hooks": {"energyGoldPer": 5, "energyGoldCap": 60}},
+    { "id": "q_atk", "type": "buckle", "name": "迅捷卡扣", "desc": "挂载塔攻速 +40%", "price": 55, "rarity": "rare", "hooks": {"cdMul": 0.71}},
+    { "id": "q_dmg", "type": "buckle", "name": "重弹卡扣", "desc": "挂载塔伤害 +50%", "price": 60, "rarity": "rare", "hooks": {"dmgMul": 1.5}},
+    { "id": "q_rng", "type": "buckle", "name": "游侠卡扣", "desc": "挂载塔射程 +30%", "price": 50, "rarity": "common", "hooks": {"rangeMul": 1.3}},
+    { "id": "q_frost", "type": "buckle", "name": "霜结卡扣", "desc": "挂载塔对已被减速的目标伤害 +30%", "price": 65, "rarity": "rare", "hooks": {"slowTargetDmgMul": 1.3}},
+    { "id": "q_mine", "type": "buckle", "name": "矿镐卡扣", "desc": "挂载塔开荒伤害 ×2", "price": 55, "rarity": "rare", "hooks": {"buckleReclaimMul": 2}},
+    { "id": "q_fuse", "type": "buckle", "name": "引信卡扣", "desc": "每波前 3 次有效攻击伤害 ×2", "price": 35, "rarity": "common", "hooks": {"openingShotMul": 2}},
+    { "id": "q_hunter", "type": "buckle", "name": "猎手卡扣", "desc": "对快速怪/雾行者伤害 +35%", "price": 40, "rarity": "common", "hooks": {"tagDmgMul": {"swift": 1.35}}},
+    { "id": "q_breaker", "type": "buckle", "name": "破阵卡扣", "desc": "对重甲怪/Boss 伤害 +35%", "price": 65, "rarity": "rare", "hooks": {"tagDmgMul": {"armored": 1.35}}},
+    { "id": "q_charge", "type": "buckle", "name": "蓄压卡扣", "desc": "连续 180 帧未开火，下一击 ×3", "price": 55, "rarity": "rare", "hooks": {"idleChargeMul": 3}},
+    { "id": "q_relay", "type": "buckle", "name": "中继卡扣", "desc": "路径上相邻其他塔冷却 ×0.88", "price": 100, "rarity": "legend", "hooks": {"adjacentCdMul": 0.88}},
+    { "id": "q_cloak", "type": "buckle", "name": "反隐卡扣", "desc": "可直接索敌隐身单位，对显形目标伤害 +20%", "price": 30, "rarity": "common", "hooks": {"revealOnHit": 180, "revealedDmgMul": 1.2}},
+    { "id": "q_hub", "type": "buckle", "name": "共鸣枢纽", "desc": "载体塔停止攻击（视为路径节点），路径上紧挨它的塔伤害 +80%", "price": 100, "rarity": "legend", "hooks": {"hubSacrifice": true, "hubAdjMul": 1.8}},
+    { "id": "g_rime", "type": "global", "name": "霜蚀", "desc": "被减速的怪每秒受 6 点伤害，最多 2 层", "cost": "，但全局伤害 ×0.85", "price": 90, "rarity": "rare", "engine": true, "hooks": {"chillDotDps": 6, "chillDotMax": 2, "globalDmgMul": 0.85}},
+    { "id": "g_venom", "type": "global", "name": "蚀刻协议", "desc": "毒/冰持续伤害 +50%", "price": 70, "rarity": "common", "requiresAny": ["g_rime", "g_toxin"], "hooks": {"dotDmgMul": 1.5}},
+    { "id": "g_exec", "type": "global", "name": "处决协议", "desc": "对生命低于 30% 的怪伤害 +80%", "cost": "，但对满血怪伤害 ×0.85", "price": 95, "rarity": "rare", "engine": true, "hooks": {"executeThreshold": 0.3, "executeMul": 1.8, "fullHpMul": 0.85}},
+    { "id": "g_guillotine", "type": "global", "name": "断头台", "desc": "处决线提高到 35%，对低血怪额外 +20%", "price": 70, "rarity": "common", "requiresAny": ["g_exec"], "hooks": {"executeThresholdAdd": 0.05, "executeBonusAdd": 0.2}},
+    { "id": "g_discount", "type": "global", "name": "折扣券", "desc": "所有遗物/卡扣价格 ×0.85", "cost": "，但每波开始金币 -3、击杀金 ×0.9", "price": 90, "rarity": "rare", "hooks": {"shopPriceMul": 0.85, "waveGoldCost": 3, "goldMul": 0.9}},
+    { "id": "g_last", "type": "global", "name": "残血协议", "desc": "基地每损失 10 点生命，全局伤害 +8%（上限 +48%）", "cost": "，但所有治疗 ×0.5", "price": 95, "rarity": "rare", "engine": true, "pair": "hpState", "hooks": {"lastMissingPer": 10, "lastDmgPer": 0.08, "lastDmgCap": 0.48, "healMul": 0.5}},
+    { "id": "g_backwater", "type": "global", "name": "背水", "desc": "残血协议每 10 点缺血增伤 +4%（上限 +72%）", "price": 70, "rarity": "common", "requiresAny": ["g_last"], "hooks": {"backwaterPerAdd": 0.04, "backwaterCapAdd": 0.24}},
+    { "id": "g_twin", "type": "global", "name": "双生塔", "desc": "路径上紧挨的异类型塔互相 +15% 伤害", "price": 90, "rarity": "rare", "pair": "adjType", "hooks": {"twinMul": 1.15}},
+    { "id": "g_corner", "type": "global", "name": "拐角协议", "desc": "路径每 1 个急转弯（偏折 ≥30°），全局伤害 +5%（上限 +35%）", "cost": "，但全局射程 ×0.9", "price": 95, "rarity": "rare", "hooks": {"cornerPerTurn": 0.05, "cornerCap": 0.35, "globalRangeMul": 0.9}},
+    { "id": "g_barrage", "type": "global", "name": "火力覆盖", "desc": "爆破塔溅射伤害 +35%", "cost": "，但箭塔伤害 ×0.85", "price": 95, "rarity": "rare", "hooks": {"blastDmgMul": 1.35, "arrowDmgMul": 0.85}},
+    { "id": "q_rime", "type": "buckle", "name": "蚀刻卡扣", "desc": "攻击附加 4/s × 2s 毒素，最多 2 层", "price": 55, "rarity": "rare", "hooks": {"venomDps": 4, "venomDur": 120, "venomMax": 2}},
+    { "id": "q_exec", "type": "buckle", "name": "处决卡扣", "desc": "对生命低于 30% 的怪伤害 +50%", "price": 60, "rarity": "rare", "hooks": {"execThreshold": 0.3, "execMul": 1.5}},
+    { "id": "q_corner", "type": "buckle", "name": "拐角卡扣", "desc": "塔在急转弯 1 节点内，伤害 +30%", "price": 55, "rarity": "rare", "hooks": {"cornerBuckleMul": 1.3}},
+    { "id": "q_idle", "type": "buckle", "name": "聚能卡扣", "desc": "当前能量 ≥10 时，攻速 +20%", "price": 55, "rarity": "rare", "hooks": {"idleEnergyThreshold": 10, "idleEnergyCdMul": 0.8333}},
+    { "id": "q_lone", "type": "buckle", "name": "独行卡扣", "desc": "孤塔伤害 +35%", "price": 55, "rarity": "rare", "hooks": {"loneBuckleMul": 1.35}},
+    { "id": "g_tricolor", "type": "global", "name": "三色均衡", "desc": "三种塔型都在场时：每座箭塔使箭塔伤害 +0.5%（最多 +10%），每座爆破塔使爆破伤害 +2%（最多 +24%），每座减速塔使减速强度 +1.5 点（最多 +12 点，总强度不超过 70%）", "price": 110, "rarity": "legend", "engine": true, "hooks": {"tricolorArrowPer": 0.005, "tricolorArrowCap": 0.1, "tricolorBlastPer": 0.02, "tricolorBlastCap": 0.24, "tricolorSlowPer": 0.015, "tricolorSlowCap": 0.12}},
+    { "id": "g_corridor", "type": "global", "name": "走廊协议", "desc": "路径上最长的一段直路（不含急转弯），从第 4 个节点起每节点全局伤害 +8%（上限 +40%）", "cost": "，但全局射程 ×0.9", "price": 110, "rarity": "legend", "engine": true, "hooks": {"corridorPerNode": 0.08, "corridorFromNode": 4, "corridorCap": 0.4, "globalRangeMul": 0.9}},
+    { "id": "g_firstblood", "type": "global", "name": "首杀赏金", "desc": "每波第一次击杀的金币 ×4（Boss 不算首杀）", "cost": "，但其余击杀金币 ×0.9", "price": 80, "rarity": "common", "hooks": {"firstBloodMul": 4, "firstRestMul": 0.9}},
+    { "id": "g_twin_prism", "type": "global", "name": "双生·棱镜", "desc": "双生塔的异型紧挨加成 +15% → +20%", "price": 70, "rarity": "common", "requiresAny": ["g_twin"], "hooks": {"twinPrismAdd": 0.05}},
+    { "id": "g_corner_edge", "type": "global", "name": "拐角·外沿", "desc": "急转弯每弯 +5% → +6%，上限 +35% → +40%", "price": 70, "rarity": "common", "requiresAny": ["g_corner"], "hooks": {"cornerPerAdd": 0.01, "cornerCapAdd": 0.05}},
+    { "id": "g_barrage_edge", "type": "global", "name": "火力·扩爆", "desc": "爆破塔溅射半径 +20%", "price": 70, "rarity": "common", "requiresAny": ["g_barrage"], "hooks": {"blastSplashRadiusMul": 1.2}},
+    { "id": "g_pierce", "type": "global", "name": "穿甲弹头", "desc": "箭塔的弹穿过主目标，对身后 40 像素内最近的敌人造成 50% 伤害", "price": 85, "rarity": "rare", "towerType": "arrow", "hooks": {"pierceRadius": 40, "pierceDmgMul": 0.5}},
+    { "id": "g_ember", "type": "global", "name": "燃地", "desc": "爆破塔的爆炸落点留下 2 秒燃烧地面，每秒 10 点伤害", "price": 95, "rarity": "rare", "towerType": "blast", "hooks": {"emberDps": 10, "emberDur": 120}},
+    { "id": "q_first", "type": "buckle", "name": "首杀卡扣", "desc": "本塔每波第一次击杀额外 +15 金", "price": 55, "rarity": "rare", "hooks": {"firstBuckleGold": 15}},
+    { "id": "q_dense", "type": "buckle", "name": "群塔卡扣", "desc": "路径上前后紧挨 2 座塔时，该塔伤害 +20%", "price": 55, "rarity": "rare", "hooks": {"denseBuckleMul": 1.2, "denseNeed": 2}},
+    { "id": "c_whet", "type": "global", "name": "磨刀石", "desc": "全局伤害 +10%，可叠 5 层", "price": 60, "rarity": "common", "family": "dmg", "tier": 1, "stackable": true, "maxStacks": 5, "priceStep": 0.15, "stackDesc": "伤害 +10%", "hooks": {"stackDmgAdd": 0.1}},
+    { "id": "c_oil", "type": "global", "name": "润滑油", "desc": "全局攻速 +8%，可叠 5 层", "price": 60, "rarity": "common", "family": "spd", "tier": 1, "stackable": true, "maxStacks": 5, "priceStep": 0.15, "stackDesc": "攻速 +8%", "hooks": {"stackSpeedAdd": 0.08}},
+    { "id": "c_lens", "type": "global", "name": "测距仪", "desc": "全局射程 +8%，可叠 5 层", "price": 55, "rarity": "common", "family": "rng", "tier": 1, "stackable": true, "maxStacks": 5, "priceStep": 0.15, "stackDesc": "射程 +8%", "hooks": {"stackRangeAdd": 0.08}},
+    { "id": "c_purse", "type": "global", "name": "钱袋", "desc": "每波结束金币 +6，可叠 5 层", "price": 50, "rarity": "common", "stackable": true, "maxStacks": 5, "priceStep": 0.15, "stackDesc": "金币 +6/波", "hooks": {"stackGoldPerWave": 6}},
+    { "id": "c_hammer", "type": "global", "name": "重锤", "desc": "全局伤害 +18%，可叠 3 层", "cost": "，但攻击间隔 +8%/层", "price": 70, "rarity": "common", "stackable": true, "maxStacks": 3, "priceStep": 0.15, "stackDesc": "伤害 +18% / 攻击间隔 +8%", "hooks": {"stackDmgAdd": 0.18, "stackCdAdd": 0.08}},
+    { "id": "c_light", "type": "global", "name": "轻量化", "desc": "全局攻速 +12%，可叠 3 层", "cost": "，但伤害 −8%/层", "price": 65, "rarity": "common", "stackable": true, "maxStacks": 3, "priceStep": 0.15, "stackDesc": "攻速 +12% / 伤害 −8%", "hooks": {"stackSpeedAdd": 0.12, "stackDmgAdd": -0.08}},
+    {"id": "c_whet2", "type": "global", "name": "精钢磨刀", "desc": "全局伤害 +15%，可叠 3 层", "price": 95, "rarity": "rare", "stackable": true, "maxStacks": 3, "priceStep": 0.15, "stackDesc": "伤害 +15%", "family": "dmg", "tier": 2, "hooks": {"stackDmgAdd": 0.15}},
+    {"id": "c_whet3", "type": "global", "name": "屠龙磨刀", "desc": "全局伤害 +22%，同族唯一", "price": 150, "rarity": "legend", "stackable": true, "maxStacks": 1, "priceStep": 0.15, "stackDesc": "伤害 +22%", "family": "dmg", "tier": 3, "hooks": {"stackDmgAdd": 0.22}},
+    {"id": "c_oil2", "type": "global", "name": "精密齿轮", "desc": "全局攻速 +12%，可叠 3 层", "price": 95, "rarity": "rare", "stackable": true, "maxStacks": 3, "priceStep": 0.15, "stackDesc": "攻速 +12%", "family": "spd", "tier": 2, "hooks": {"stackSpeedAdd": 0.12}},
+    {"id": "c_oil3", "type": "global", "name": "时之沙", "desc": "全局攻速 +18%，同族唯一", "price": 150, "rarity": "legend", "stackable": true, "maxStacks": 1, "priceStep": 0.15, "stackDesc": "攻速 +18%", "family": "spd", "tier": 3, "hooks": {"stackSpeedAdd": 0.18}},
+    {"id": "c_lens2", "type": "global", "name": "鹰眼镜片", "desc": "全局射程 +11%，可叠 3 层", "price": 85, "rarity": "rare", "stackable": true, "maxStacks": 3, "priceStep": 0.15, "stackDesc": "射程 +11%", "family": "rng", "tier": 2, "hooks": {"stackRangeAdd": 0.11}},
+    {"id": "c_lens3", "type": "global", "name": "天文望远镜", "desc": "全局射程 +16%，同族唯一", "price": 130, "rarity": "legend", "stackable": true, "maxStacks": 1, "priceStep": 0.15, "stackDesc": "射程 +16%", "family": "rng", "tier": 3, "hooks": {"stackRangeAdd": 0.16}},
+    {"id": "c_luck1", "type": "global", "name": "幸运币", "desc": "幸运 +2（提高商店高稀有度概率）", "price": 60, "rarity": "common", "stackable": true, "maxStacks": 1, "priceStep": 0.15, "stackDesc": "幸运 +2", "family": "luck", "tier": 1, "hooks": {"stackLuckAdd": 2}},
+    {"id": "c_luck2", "type": "global", "name": "赌徒护符", "desc": "幸运 +4", "price": 95, "rarity": "rare", "stackable": true, "maxStacks": 1, "priceStep": 0.15, "stackDesc": "幸运 +4", "family": "luck", "tier": 2, "hooks": {"stackLuckAdd": 4}},
+    {"id": "c_luck3", "type": "global", "name": "命运骰子", "desc": "幸运 +6", "price": 150, "rarity": "legend", "stackable": true, "maxStacks": 1, "priceStep": 0.15, "stackDesc": "幸运 +6", "family": "luck", "tier": 3, "hooks": {"stackLuckAdd": 6}}
   ],
   "waves": [
     ["normal", "normal", "normal"],
@@ -519,7 +593,7 @@ const RELICS = DATA.relics;
 
 // ===== 试玩 build（v6.7.10） =====
 // 链接可带 ?pid=A1 做玩家编号；导出数据里带 build/pid，方便问卷对号。
-const BUILD_ID = 'v6.8.2-playtest-20261028';
+const BUILD_ID = 'v6.13.1-playtest-20261110';
 const PLAYTEST_PID = (() => {
   try { return new URLSearchParams(location.search).get('pid') || ''; }
   catch (_) { return ''; }
@@ -530,19 +604,24 @@ let lastRunExport = null;
 // ===== 状态 =====
 let phase, wave, energy, gold, baseHP, kills, enemyLeakDamage;
 let baseMaxHp;   // v6.4：血量上限可变（生命核心等事件可提升）
-// v6.4 资源运营层状态
-let eventQueue, activeEvent, pendingDebt, deposit, eventLog, pityCounter;
-let airRent = null;             // v6.7.6 空域租金：{ sid, amount, left, zone }
-let waveAtkSpeedBonus = 0;      // v6.7.6 能量过载：本波攻速加成（0~0.48），波末清零
+// v6.12.0 商店 2.0 状态：生命银行押金、盲盒保底、补给购买次数、本店刷新次数
+let deposit, pityCounter;
+let supplyBought, supplyLog, currentShop;
 let firstKillThisWave = false;  // v6.8.0 首杀赏金：本波是否已被击杀过（每波开波重置）
+let firstKillTowerId = null;    // v6.10.0 首杀读数：本波第一杀来自哪座塔（画布标记用）
 let nodes, byId, adj, spawnIds;
 let path, drawing, draft;   // draft：未确认的非法草稿（末端不是出生点），保留待修
 let monsters, projectiles, effects, floats, queue, spawnTimer;
+let burning;   // v6.13.0 燃地：地面持续伤害区（{x,y,r,until,src}），每塔最多 1 块
 let ownedGlobals, ownedBuckles, iidCounter, lockedOffers;
 let quest, pendingMalus, shopQueue, intelShops;   // intelShops = 黑市情报还剩几家店多 1 张货
 let everConnected, warnedZones, ringLostHpMul, waveHpMul;
 let random = Math.random, currentSeed = DATA.seedPool[0], paused = false;
 let gameStartedAt = 0, resultRecorded = false, tutorialStep = 0;
+// v6.11.0 数据看板：statsPausedBefore 记住打开前是否已暂停，关闭时原样恢复
+let statsOpen = false, statsTab = 'main', statsPausedBefore = false;
+// v6.13.1：右上「遗物 N」点开的持有清单（与数据看板互斥，同一时刻只开一层）
+let relicListOpen = false, relicPausedBefore = false;
 
 function mulberry32(seed) {
   let a = seed >>> 0;
@@ -672,10 +751,23 @@ function relicStackLimit(r) { return r && r.stackable ? (r.maxStacks || 1) : 1; 
 // 都能绕过那两道，效果层自己夹一次才是「满层就是上限」的唯一保证。
 function stackSum(key) {
   let s = 0;
+  const families = {};
   for (const r of RELICS) {
     if (!r.stackable || !r.hooks || r.hooks[key] == null) continue;
     const n = Math.min(stackCount(r.id), relicStackLimit(r));
-    if (n > 0) s += r.hooks[key] * n;
+    if (n <= 0) continue;
+    if (r.family) {
+      const f = families[r.family] || (families[r.family] = { sum: 0, top: 0 });
+      f.sum += r.hooks[key] * n;
+      f.top = Math.max(f.top, r.hooks[key]);
+      continue;
+    }
+    s += r.hooks[key] * n;
+  }
+  // v6.12.0 家族：各层自身加成求和，再封顶为 家族上限 × 最高档单层加成
+  for (const fam in families) {
+    const f = families[fam];
+    s += Math.min(f.sum, familyCap(fam) * f.top);
   }
   return s;
 }
@@ -760,25 +852,34 @@ function mainTypeDmgMul() {
 }
 // 孤塔读数：只用于 HUD/路径标记，不参与伤害计算
 function lonelyCount() { return activeTowers().filter(n => isLonelyTower(n)).length; }
-// ===== v6.8.0 1b-1a：三色均衡（塔型结构方向） =====
-// 为什么不是「三种都有就 +50%」：审计（audit-tower-type-mix.cjs）实测 12 个种子都能在 4~5 段、
-// 3 座塔的起手线上满足「三型都有且不过半」，那样这件从第 1 波起就是常驻乘数、没有决策位。
-// 改成按「数量最少的那种塔」的座数缩放：早期弱（3 塔只 +36%），扩线后要同时保住三型并且
-// 谁都不能过半（地图箭塔存量远多于减速/爆破，12 种子实测最多能画出 6~11 塔的均衡线），
-// 于是"保持三型都多"成为一条贯穿全期的排线约束。
+// ===== v6.13.1：三色均衡（三轴编队加成） =====
+// 三型都在场才生效，之后每型按自己那一型的座数成长：箭塔加箭伤、爆破加爆伤、减速加强度。
+// 没有「谁最少」的公共旋钮，也没有过半失效——减速塔只有 1 座时也照样吃到自己那一轴。
+// 各轴封顶写在 hooks 里；减速轴另外受总强度 70% 的硬顶约束（见 towerSlowStats）。
 function tricolorStats() {
   const s = activeTowerTypeStats();
-  const min = Math.min(s.counts.arrow || 0, s.counts.slow || 0, s.counts.blast || 0);
-  // 与主流税契天然互斥：那边要求 bestN*2 > total，这里要求 bestN*2 <= total，永不同真
-  const ok = s.total > 0 && (s.counts.arrow || 0) > 0 && (s.counts.slow || 0) > 0 && (s.counts.blast || 0) > 0
-    && s.bestN * 2 <= s.total;
-  return { counts: s.counts, total: s.total, min, ok, best: s.best, bestN: s.bestN };
+  const counts = s.counts;
+  const min = Math.min(counts.arrow || 0, counts.slow || 0, counts.blast || 0);
+  const ok = s.total > 0 && (counts.arrow || 0) > 0 && (counts.slow || 0) > 0 && (counts.blast || 0) > 0;
+  return { counts, total: s.total, min, ok, best: s.best, bestN: s.bestN };
 }
-function tricolorDmgMul() {
+function tricolorArrowMul() {
   if (!hasGlobal('g_tricolor')) return 1;
   const s = tricolorStats();
   if (!s.ok) return 1;
-  return 1 + Math.min(gHook('tricolorCap'), gHook('tricolorPerMin') * s.min);
+  return 1 + Math.min(gHook('tricolorArrowCap'), gHook('tricolorArrowPer') * (s.counts.arrow || 0));
+}
+function tricolorBlastMul() {
+  if (!hasGlobal('g_tricolor')) return 1;
+  const s = tricolorStats();
+  if (!s.ok) return 1;
+  return 1 + Math.min(gHook('tricolorBlastCap'), gHook('tricolorBlastPer') * (s.counts.blast || 0));
+}
+function tricolorSlowAdd() {
+  if (!hasGlobal('g_tricolor')) return 0;
+  const s = tricolorStats();
+  if (!s.ok) return 0;
+  return Math.min(gHook('tricolorSlowCap'), gHook('tricolorSlowPer') * (s.counts.slow || 0));
 }
 // 余能折现：波末把未用能量换金，形成"能量 → 金币"的资源转换
 function convertEnergyGold() {
@@ -931,6 +1032,35 @@ function twinPairCount() {
   }
   return count;
 }
+// ===== v6.10.0 读数上画布：只返回该画的节点，不参与伤害计算 =====
+// 背景：三局自测里，玩家只注意到有画布标记的走廊/拐角/孤塔；主流/三色/缺血/异型/首杀
+// 都只在 HUD 文字里，玩家「基本没看」。这一批把结构读数搬到地图上，数值与门槛一律不动。
+function majorityTowerNodes() {
+  if (!hasGlobal('g_tax')) return [];
+  const s = activeTowerTypeStats();
+  if (!s.total || !s.best || s.tie) return [];
+  if (s.bestN * 2 <= s.total) return [];
+  return activeTowers().filter(n => n.ttype === s.best);
+}
+function twinLinkPairs() {
+  if (!hasGlobal('g_twin')) return [];
+  const out = [];
+  for (let i = 0; i < path.length - 1; i++) {
+    if (!isTowerAtPathIndex(i) || !isTowerAtPathIndex(i + 1)) continue;
+    const a = byId[path[i]], b = byId[path[i + 1]];
+    if (a.ttype !== b.ttype) out.push([a, b]);
+  }
+  return out;
+}
+function firstKillTowerNode() {
+  if (!firstKillTowerId) return null;
+  const n = byId[firstKillTowerId];
+  return n && n.kind === 'tower' ? n : null;
+}
+function blastReadoutNodes() {
+  if (!hasGlobal('g_barrage')) return [];
+  return activeTowers().filter(n => n.ttype === 'blast');
+}
 // 残血协议：按「上限 - 当前生命」的缺口分层，每 10 点 +8%（上限 +48%）
 function missingHp() { return Math.max(0, baseMaxHp - baseHP); }
 function lastDmgMul() {
@@ -964,24 +1094,78 @@ function idleEnergyCdMul(hooks) {
   const need = hooks.idleEnergyThreshold != null ? hooks.idleEnergyThreshold : 10;
   return energy >= need ? hooks.idleEnergyCdMul : 1;
 }
-// v6.7.6 能量过载：攻击间隔按“攻速 +X%”折算成 cd 倍率（1/(1+X)）
-function waveSpeedCdMul() {
-  return waveAtkSpeedBonus > 0 ? 1 / (1 + waveAtkSpeedBonus) : 1;
-}
 // 把塔的单发基础伤害与所有全局/单塔乘区集中到一处，便于验收与后续加件。
-function towerShotDamage(n, t, bk) {
+// v6.11.0：拆成 parts 返回每个乘区，看板与战斗共用同一条计算链；towerShotDamage 只取 final。
+// 乘法的结合顺序必须逐字保持原样（浮点最后一位会影响四舍五入）。
+function towerDamageParts(n, t, bk) {
   bk = bk || {};
   let dmg = t.dmg || 0;
   if (bk.dmgMul) dmg = dmg * bk.dmgMul;
-  if (n.ttype === 'arrow') dmg = dmg * gHook('arrowDmgMul');
-  if (n.ttype === 'blast') dmg = dmg * gHook('blastDmgMul');
-  return Math.round(dmg * gHook('globalDmgMul') * expeditionDmgMul() * bastionDmgMul(n) * endureDmgMul()
-    * resonanceDmgMul(n) * idleDmgMul() * lonelyDmgMul(n) * hubAdjDmgMul(n) * hoardDmgMul() * mainTypeDmgMul()
-    * lastDmgMul() * cornerDmgMul() * twinDmgMul(n) * buckleConditionalDmgMul(n, bk)
-    // v6.8.0 1b-1a：塔型结构（三色）+ 空间几何（走廊）
-    * tricolorDmgMul() * corridorDmgMul()
+  if (n.ttype === 'arrow') dmg = dmg * gHook('arrowDmgMul') * tricolorArrowMul();
+  if (n.ttype === 'blast') dmg = dmg * gHook('blastDmgMul') * tricolorBlastMul();
+  const parts = {
+    base: t.dmg || 0,
+    afterType: dmg,
+    typeMul: dmg / Math.max(1e-9, (t.dmg || 0)),
+    global: gHook('globalDmgMul'),
+    expedition: expeditionDmgMul(),
+    bastion: bastionDmgMul(n),
+    endure: endureDmgMul(),
+    resonance: resonanceDmgMul(n),
+    idle: idleDmgMul(),
+    lonely: lonelyDmgMul(n),
+    hubAdj: hubAdjDmgMul(n),
+    hoard: hoardDmgMul(),
+    mainType: mainTypeDmgMul(),
+    last: lastDmgMul(),
+    corner: cornerDmgMul(),
+    twin: twinDmgMul(n),
+    buckle: buckleConditionalDmgMul(n, bk),
+    corridor: corridorDmgMul(),
+    stack: stackDmgMul(),
+  };
+  parts.final = Math.round(dmg * parts.global * parts.expedition * parts.bastion * parts.endure
+    * parts.resonance * parts.idle * parts.lonely * parts.hubAdj * parts.hoard * parts.mainType
+    * parts.last * parts.corner * parts.twin * parts.buckle
+    // v6.8.0 1b-1a：空间几何（走廊）
+    * parts.corridor
     // v6.8.1 1b-1b：可叠普通件（磨刀石/重锤/+ 轻量化的负项，全部加法）
-    * stackDmgMul());
+    * parts.stack);
+  return parts;
+}
+function towerShotDamage(n, t, bk) {
+  return towerDamageParts(n, t, bk).final;
+}
+// v6.11.0：冷却与射程从 updateWave 内联代码原样抽出，看板与战斗共用。
+// 四次 Math.round 的顺序不能合并——每一步都取整，合并会改变实际帧数。
+function towerCooldownFrames(n, bk) {
+  const t = TOWER[n.ttype];
+  bk = bk || buckleHooks(n) || {};
+  let cd = t.cd;
+  if (bk.cdMul) cd = Math.round(cd * bk.cdMul);
+  if (bk.idleEnergyCdMul) cd = Math.round(cd * idleEnergyCdMul(bk));
+  cd = Math.round(cd * adjacentCooldownMul(n));
+  cd = Math.round(cd * gHook('globalCdMul') * swarmCdMul() * stackCdMul());
+  return cd;
+}
+function towerRangePx(n, bk) {
+  const t = TOWER[n.ttype];
+  bk = bk || buckleHooks(n) || {};
+  let range = Math.round(t.range * gHook('globalRangeMul') * stackRangeMul());
+  if (bk.rangeMul) range = Math.round(range * bk.rangeMul);
+  return range;
+}
+// 减速塔的实际减速幅度：与 updateWave 命中分支同一公式（v6.13.0 起不再有卡扣强度倍率，底线仍是速度下限）
+// v6.13.1：三色均衡的减速轴在这里叠加——每座减速塔 +1.5 个百分点，总强度不超过 70%。
+function towerSlowStats(n, bk) {
+  const t = TOWER.slow;
+  bk = bk || buckleHooks(n) || {};
+  const floor = ECO.speedFloor != null ? ECO.speedFloor : 0.15;
+  const base = Math.max(floor, t.factor);
+  const add = tricolorSlowAdd();
+  if (add <= 0) return { factor: base, pct: Math.round((1 - base) * 100), dur: t.dur };
+  const factor = Math.max(floor, 1 - Math.min(0.7, (1 - base) + add));
+  return { factor, pct: Math.round((1 - factor) * 100), dur: t.dur };
 }
 function expeditionDmgMul() {
   if (!hasGlobal('g_frontier')) return 1;
@@ -1095,6 +1279,37 @@ function buildGraph() {
     }
   }
 
+  // v6.13.0 塔型保底（每型 ≥3）：给“以后可以定向改铸”留出底子，先保证没有整张图只剩 1 座某型。
+  // 规则：某型少于 3 座时，从数量最多且 >3 的塔型里挑离该型质心最近的塔位改成缺的型；
+  // 迭代到满足或没有可拆的型为止。按固定类型顺序处理，结果确定（12 种子实测只有 550007 会被改）。
+  const GTD_TYPES = ['arrow', 'slow', 'blast'];
+  for (const need of GTD_TYPES) {
+    for (let guard = 0; guard < 60; guard++) {
+      const byType = { arrow: [], slow: [], blast: [] };
+      for (const n of nodes) if (n.kind === 'tower') byType[n.ttype].push(n);
+      if (byType[need].length >= 3) break;
+      let donor = null;
+      for (const k of GTD_TYPES) {
+        if (k === need) continue;
+        if (byType[k].length > 3 && (!donor || byType[k].length > byType[donor].length)) donor = k;
+      }
+      if (!donor) break;
+      const ex = byType[need];
+      let cx = CX, cy = CY;
+      if (ex.length) {
+        cx = ex.reduce((a, n) => a + n.x, 0) / ex.length;
+        cy = ex.reduce((a, n) => a + n.y, 0) / ex.length;
+      }
+      let best = null, bestD = Infinity;
+      for (const n of byType[donor]) {
+        const d = Math.hypot(n.x - cx, n.y - cy);
+        if (d < bestD - 1e-9) { bestD = d; best = n; }
+      }
+      if (!best) break;
+      best.ttype = need;
+    }
+  }
+
   // 保底0：出怪点与塔/节点保持最小间距，避免视觉重叠与误触（旋转重位，半径不变）
   const clearOfSpawns = n => spawnIds.every(sid =>
     Math.hypot(n.x - byId[sid].x, n.y - byId[sid].y) > byId[sid].r + n.r + 26);
@@ -1191,18 +1406,19 @@ function initGame(seed = nextSeed()) {
   baseMaxHp = DATA.baseMaxHp != null ? DATA.baseMaxHp : 100;   // v6.4：上限可变
   baseHP = baseMaxHp; kills = 0; enemyLeakDamage = 0;
   path = []; drawing = null; draft = null;
-  monsters = []; projectiles = []; effects = []; floats = []; queue = []; spawnTimer = 0;
+  monsters = []; projectiles = []; effects = []; floats = []; queue = []; spawnTimer = 0; burning = [];
   ownedGlobals = []; ownedBuckles = []; iidCounter = 0; lockedOffers = new Set();
   hoardSnapshot = gold; paidShopCount = 0; announcedTaxPct = -1;
   quest = null; pendingMalus = 0; shopQueue = []; intelShops = 0;
-  eventQueue = []; activeEvent = null; pendingDebt = null; deposit = null; eventLog = []; pityCounter = 0;
-  airRent = null; waveAtkSpeedBonus = 0; firstKillThisWave = false;
+  deposit = null; pityCounter = 0; supplyBought = {}; supplyLog = []; currentShop = null;
+  firstKillThisWave = false;
   everConnected = new Set(); warnedZones = new Set(); ringLostHpMul = 1; waveHpMul = 1;
   paused = false; resultRecorded = false; gameStartedAt = Date.now();
-  runLog = { build: BUILD_ID, pid: PLAYTEST_PID || null, seed: currentSeed, startedAt: new Date().toISOString(), waves: [], shops: [], events: [] };
+  statsTab = 'main';
+  runLog = { build: BUILD_ID, pid: PLAYTEST_PID || null, seed: currentSeed, startedAt: new Date().toISOString(), waves: [], shops: [], supplies: [] };
   lastRunExport = null;
   centerCamOn(CX, CY);
-  closeMenu(); closeShop(); closeEvent(); showRestart(false); closeOverlays();
+  closeMenu(); closeShop(); showRestart(false); closeOverlays();
   refreshBuildTag();
   announcePrep();
   refreshUI();
@@ -1421,6 +1637,8 @@ function startWave() {
   hoardSnapshot = gold;   // v6.6 封存账本：本波按开波瞬间的金币结算
   // v6.8.0 首杀：每波开波重置「本波首杀是否已拿」与「每座塔的首杀卡扣是否已拿」
   firstKillThisWave = false;
+  firstKillTowerId = null;
+  burning = [];   // v6.13.0：上一波残留的燃地不带进新一波
   for (const n of nodes) if (n.kind === 'tower') { n.openingShotsUsed = 0; n.burstShotsUsed = 0; n.firstBuckleUsed = false; }
   applyMirrorAtWaveStart();
   queue = []; spawnTimer = 0;
@@ -1529,24 +1747,31 @@ function updateFx() {
       } else { p.x += (dx / dd) * 6; p.y += (dy / dd) * 6; }
       continue;
     }
+    // v6.12.2：爆破塔只有一种弹——爆炸弹。目标可以是怪，也可以是锁塔，
+    // 落点一律走 explode()：对怪结算溅射伤害，对锁塔结算开荒冲击，两者同时发生。
     if (p.kind === 'blast') {
-      const dx = p.x - p.sx, dy = p.y - p.sy, dd = Math.hypot(dx, dy);
-      if (dd < 9 || !p.tgt.alive) {
-        explode(p.x, p.y, p); p.dead = true; continue;
-      }
-      const tx = p.tgt.x - p.x, ty = p.tgt.y - p.y, td = Math.hypot(tx, ty);
-      if (td < 6) { explode(p.tgt.x, p.tgt.y, p); p.dead = true; continue; }
+      const dest = p.node || p.tgt;
+      const gone = p.node ? !p.node.locked : !p.tgt.alive;
+      const tx = dest.x - p.x, ty = dest.y - p.y, td = Math.hypot(tx, ty);
+      if (td < 6 || gone) { explode(p.x, p.y, p); p.dead = true; continue; }
       p.x += (tx / td) * 5; p.y += (ty / td) * 5;
       continue;
     }
     if (!p.tgt.alive) { p.dead = true; continue; }
     const dx = p.tgt.x - p.x, dy = p.tgt.y - p.y, dd = Math.hypot(dx, dy);
     if (dd < 9) {
+      // v6.13.0 穿透目标要在主目标死亡引发分裂之前锁定，避免把刚裂出来的小怪也算作“身后”
+      const sec = pierceSecondary(p);
       p.tgt.hp -= p.dmg; p.dead = true;
       revealByBuckle(p.tgt, p.hooks);
       applyPoison(p.tgt);
       applyVenom(p.tgt, p.hooks);
       if (p.tgt.hp <= 0) killMonster(p.tgt, p.src);
+      if (sec) {
+        sec.hp -= Math.round(damageForTarget(p.rawDmg, p.hooks, sec, p.openMul) * gHook('pierceDmgMul'));
+        effects.push({ x1: p.tgt.x, y1: p.tgt.y, x2: sec.x, y2: sec.y, life: 10, color: '#aed6f1' });
+        if (sec.hp <= 0) killMonster(sec, p.src);
+      }
     } else { p.x += (dx / dd) * 6; p.y += (dy / dd) * 6; }
   }
   projectiles = projectiles.filter(p => !p.dead);
@@ -1554,8 +1779,34 @@ function updateFx() {
   floats = floats.filter(f => --f.life > 0);
 }
 
+// v6.12.1 爆破开荒：爆炸范围内的未开荒塔同时掉开荒进度，与对怪伤害同基数
+function blastReclaim(x, y, radius, dmg) {
+  if (!(radius > 0) || !(dmg > 0)) return 0;
+  let hits = 0;
+  for (const o of nodes) {
+    if (o.kind !== 'tower' || !o.locked) continue;
+    if (Math.hypot(o.x - x, o.y - y) > radius) continue;
+    hits++;
+    o.reclaim -= dmg;
+    effects.push({ x1: o.x, y1: o.y, x2: o.x, y2: o.y - 8, life: 10, color: '#e59866' });
+    if (o.reclaim <= 0) reclaimDone(o);
+  }
+  return hits;
+}
+
 function explode(x, y, projectile) {
-  effects.push({ boom: true, x, y, life: 12 });
+  effects.push({ boom: true, x, y, life: 12, r: projectile.splash });
+  // v6.13.0 燃地：爆炸落点留一块燃烧地面。同一座塔最多 1 块——重复命中只把旧块搬到新落点并刷新时长，
+  // 不叠伤害；共振尖塔的小爆炸是内联循环，不经这里，所以不会二次产燃地。
+  if (hasGlobal('g_ember')) {
+    const zone = {
+      x, y, r: projectile.splash, dps: gHook('emberDps'),
+      until: spawnTimer + gHook('emberDur'), src: projectile.src != null ? projectile.src : null,
+    };
+    const at = burning.findIndex(b => b.src === zone.src);
+    if (at >= 0) burning[at] = zone; else burning.push(zone);
+  }
+  blastReclaim(x, y, projectile.splash, projectile.baseDmg);
   let hits = 0;
   for (const m of monsters) {
     if (!m.alive) continue;
@@ -1570,8 +1821,8 @@ function explode(x, y, projectile) {
   }
   // 共振尖塔：溅射命中 ≥3 目标时追加小爆炸（不递归触发）
   if (hasGlobal('g_chain') && hits >= gHook('chainTrigger')) {
-    effects.push({ boom: true, x, y, life: 8 });
     const r2 = Math.round(projectile.splash * gHook('chainRadiusMul'));
+    effects.push({ boom: true, x, y, life: 8, r: r2 });
     for (const m of monsters) {
       if (!m.alive) continue;
       if (Math.hypot(m.x - x, m.y - y) <= r2) {
@@ -1594,7 +1845,7 @@ function killMonster(m, srcId) {
   let fbMul = 1;
   let fbText = '';
   if (hasGlobal('g_firstblood') && !m.boss) {
-    if (!firstKillThisWave) { firstKillThisWave = true; fbMul = gHook('firstBloodMul'); fbText = ' 首杀'; }
+    if (!firstKillThisWave) { firstKillThisWave = true; firstKillTowerId = srcId != null ? srcId : null; fbMul = gHook('firstBloodMul'); fbText = ' 首杀'; }
     else fbMul = gHook('firstRestMul');
   }
   // v6.3 荆棘回路：击杀金币衰减（与 goldMul 遗物相乘）
@@ -1662,9 +1913,9 @@ function adjacentCooldownMul(n) {
 }
 
 function splashRadius(n) {
-  const hooks = buckleHooks(n) || {};
-  // v6.8.0 火力·扩爆（支持件，requiresAny g_barrage）：半径 +20%，与余震卡扣相乘
-  return Math.round(TOWER.blast.splash * (hooks.splashMul || 1) * gHook('blastSplashRadiusMul'));
+  // v6.8.0 火力·扩爆（支持件，requiresAny g_barrage）：半径 +20%
+  // v6.13.0 余震卡扣退役后，半径只剩这一条全局来源
+  return Math.round(TOWER.blast.splash * gHook('blastSplashRadiusMul'));
 }
 
 function executeDmgMul(m) {
@@ -1684,8 +1935,35 @@ function damageForTarget(baseDmg, hooks, m, openingMul = 1) {
   const revealedMul = hooks && hooks.revealedDmgMul && m.revealed > 0 ? hooks.revealedDmgMul : 1;
   // v6.3 冬寂之息：被减速塔命中的怪，在 chill 窗口内受到的所有伤害放大
   const chillMul = (hasGlobal('g_winter') && m.chillUntil > spawnTimer) ? gHook('chillDmgMul') : 1;
+  // v6.13.0 霜结卡扣：条件写在目标身上——挂载塔打已被减速的目标增伤，任何塔都能挂
+  const slowedMul = (hooks && hooks.slowTargetDmgMul && m.slowed > 0) ? hooks.slowTargetDmgMul : 1;
   return Math.round(baseDmg * openingMul * tagDamageMul(hooks, m) * revealedMul * chillMul * tideDmgMul(m)
-    * executeDmgMul(m) * buckleExecuteMul(hooks, m));
+    * executeDmgMul(m) * buckleExecuteMul(hooks, m) * slowedMul);
+}
+
+// v6.13.0 穿甲弹头：命中主目标后，沿「塔→主目标」射线，在身后半径内找最近的 1 个敌人补 50%。
+// 每发只追加一次；二次目标按自己身上的条件重算伤害（不继承点杀矩阵的连击层数）。
+function pierceSecondary(p) {
+  if (!p || !p.pierce || !hasGlobal('g_pierce')) return null;
+  const src = byId[p.src], tgt = p.tgt;
+  if (!src || !tgt) return null;
+  const ax = tgt.x - src.x, ay = tgt.y - src.y;
+  const len = Math.hypot(ax, ay);
+  if (len < 1e-6) return null;
+  const ux = ax / len, uy = ay / len;
+  const rad = gHook('pierceRadius');
+  let best = null, bestD = 1e9;
+  for (const m of monsters) {
+    if (!m.alive || m === tgt) continue;
+    // 穿透沿用箭塔的索敌规则：未显形的隐身怪不会被身后的弹带走
+    if (!visibleToTower(m, 'arrow', src)) continue;
+    const dx = m.x - tgt.x, dy = m.y - tgt.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist > rad) continue;
+    if (dx * ux + dy * uy <= 0) continue;   // 只打主目标身后（射线更远的一侧）
+    if (dist < bestD) { bestD = dist; best = m; }
+  }
+  return best;
 }
 
 function revealBySlow(m) { m.revealed = 180; }
@@ -1753,6 +2031,18 @@ function updateWave() {
   }
   monsters = monsters.filter(m => m.alive);
 
+  // v6.13.0 燃地结算：按帧连续掉血；离开范围立刻停伤，快速穿过的怪只吃几跳。
+  // 与霜蚀/蚀刻分开结算（各自独立数组），不吃 dotDmgMul 之外的霜蚀层数。
+  if (burning && burning.length) {
+    burning = burning.filter(b => b.until > spawnTimer);
+    for (const b of burning) for (const m of monsters) {
+      if (!m.alive) continue;
+      if (Math.hypot(m.x - b.x, m.y - b.y) > b.r) continue;
+      m.hp -= b.dps / 60;
+      if (m.hp <= 0) killMonster(m);
+    }
+  }
+
   for (const n of nodes) {
     if (n.kind !== 'tower' || !path.includes(n.id)) continue;
     // v6.5 共鸣枢纽：载体塔停止攻击（不开火、不开荒），仅作为路径节点为紧邻塔提供增益
@@ -1762,14 +2052,9 @@ function updateWave() {
     n.cd = (n.cd || 0);
     if (n.cd > 0) { n.cd--; continue; }
     const bk = buckleHooks(n) || {};
-    let cd = t.cd, range = t.range;
-    if (bk.cdMul) cd = Math.round(cd * bk.cdMul);
-    if (bk.idleEnergyCdMul) cd = Math.round(cd * idleEnergyCdMul(bk));   // v6.7.5 聚能卡扣
-    cd = Math.round(cd * adjacentCooldownMul(n));
-    cd = Math.round(cd * gHook('globalCdMul') * swarmCdMul() * waveSpeedCdMul() * stackCdMul());
-    // v6.3 鹰眼/铁砧：全局射程修正
-    range = Math.round(range * gHook('globalRangeMul') * stackRangeMul());
-    if (bk.rangeMul) range = Math.round(range * bk.rangeMul);
+    // v6.11.0：冷却/射程走共用函数，保证看板显示的帧数与实际开火完全一致
+    const cd = towerCooldownFrames(n, bk);
+    const range = towerRangePx(n, bk);
     // v6.3 全局伤害聚合；v6.5 idle/lonely/hubAdj；v6.6 hoard/tax；
     // v6.7.5 追加残血 / 拐角 / 双生 / 条件卡扣；集中到 towerShotDamage
     const dmg = towerShotDamage(n, t, bk);
@@ -1778,7 +2063,10 @@ function updateWave() {
       if (!visibleToTower(m, n.ttype, n)) continue;
       const dd = Math.hypot(m.x - n.x, m.y - n.y);
       if (dd > range) continue;
-      const score = (n.ttype === 'slow' && (m.slowed > 0 || m.boss) ? -1000 : 0) + dd;
+      // v6.13.0 减速塔不再优先锁 Boss：Boss 免疫减速，原评分让它在 W6/W12 抢走小怪的目标，
+      // 命中后不生效还要照扣冷却。现在优先已减速目标，Boss 排到最后（仅当射程内只剩它才开火）。
+      const score = (n.ttype === 'slow' && m.slowed > 0 ? -1000 : 0)
+        + (n.ttype === 'slow' && m.boss ? 1e6 : 0) + dd;
       if (score < best) { best = score; target = m; }
     }
     if (target) {
@@ -1799,15 +2087,21 @@ function updateWave() {
           }
         }
         for (const tg of targets) {
-          const dealt = Math.round(damageForTarget(dmg, bk, tg, shot * charge * burst) * focusDmgMul(n, tg));
-          projectiles.push({ x: n.x, y: n.y, tgt: tg, dmg: dealt, hooks: bk, color: '#85c1e9', kind: 'mon', src: n.id });
+          const openMul = shot * charge * burst;
+          // v6.13.1：主目标不吃惩罚；只有箭雨敕令的第二个目标按 50% 结算
+          const shotDmg = tg === target ? dmg : Math.round(dmg * gHook('volleySecondMul'));
+          const dealt = Math.round(damageForTarget(shotDmg, bk, tg, openMul) * focusDmgMul(n, tg));
+          // v6.13.0 穿甲弹头要按「未吃连击加成」的基数结算第二目标，因此额外带上原始伤害与开火倍率；
+          // 只有主目标带 pierce（箭雨敕令的第二发不穿透，避免一发变成 4 个目标）
+          projectiles.push({ x: n.x, y: n.y, tgt: tg, dmg: dealt, rawDmg: shotDmg, openMul, pierce: tg === target, hooks: bk, color: '#85c1e9', kind: 'mon', src: n.id });
         }
       } else if (n.ttype === 'slow') {
         if (!target.boss) {
-          // v6.7.1：slowStrMul 在池中无定义（旧遗物遗留），只剩卡扣倍率
-          const pow = (bk.slowPowMul || 1);
-          target.slowed = t.dur;
-          target.slowFactor = Math.max(ECO.speedFloor != null ? ECO.speedFloor : 0.15, t.factor / pow);
+          const st = towerSlowStats(n, bk);
+          target.slowed = st.dur;
+          // 取更强的一档：多座减速塔只保留最深系数，后命中不覆盖前一次
+          const prev = target.slowed > 0 && target.slowFactor ? target.slowFactor : 1;
+          target.slowFactor = Math.min(prev, st.factor);
           if (hasGlobal('g_rime')) target.rimeStacks = Math.min(gHook('chillDotMax') || 2, (target.rimeStacks || 0) + 1);
           revealBySlow(target);
           markChill(target);   // v6.3 冬寂之息：减速命中即挂标记
@@ -1833,7 +2127,13 @@ function updateWave() {
       if (rn) {
         n.cd = cd;
         takeIdleCharge(n, bk);
-        projectiles.push({ x: n.x, y: n.y, node: rn, dmg: Math.round(selfDmg * recMul), color: n.ttype === 'blast' ? '#e59866' : '#7fb3d5', kind: 'node' });
+        const recDmg = Math.round(selfDmg * recMul);
+        if (n.ttype === 'blast') {
+          // v6.12.2：与打怪同一套爆炸弹；落点按溅射半径结算所有锁塔，范围内还有锁塔就继续开火
+          projectiles.push({ x: n.x, y: n.y, sx: n.x, sy: n.y, node: rn, baseDmg: recDmg, hooks: bk, openingMul: 1, splash: splashRadius(n), color: '#e59866', kind: 'blast', src: n.id });
+        } else {
+          projectiles.push({ x: n.x, y: n.y, node: rn, dmg: recDmg, color: '#7fb3d5', kind: 'node' });
+        }
       }
     }
   }
@@ -1880,9 +2180,9 @@ function finishWave() {
     baseHP = Math.min(cap, baseHP + Math.round(gHook('waveHpGain') * healMul()));
     hpGain = baseHP - before;
   }
-  // v6.4 生命银行：存款到期连本带息取回
+  // v6.12.0 生命银行（补给）：存款到期连本带息取回
   // 注意：允许突破上限——存入时已从当前血扣走，取回若被上限卡住会白亏，
-  // 且"血量超越上限"正是"上限提升类事件"之外的第二种血量增值手段。
+  // 且"血量超越上限"正是"上限提升类补给"之外的第二种血量增值手段。
   if (deposit && deposit.dueWave <= wave) {
     // v6.7.5 残血协议：取回的生命也按治疗折扣
     const amt = Math.round(deposit.amount * healMul());
@@ -1891,29 +2191,9 @@ function finishWave() {
     floats.push({ x: CX, y: CY - 130, text: `生命银行取出 +${amt} 血`, color: '#2ecc71', life: 80 });
     deposit = null;
   }
-  // v6.4 负债：每波扣偿（高利贷 / 风险投资共用，label 区分）
-  if (pendingDebt && pendingDebt.left > 0) {
-    gold = Math.max(0, gold - pendingDebt.amount);
-    pendingDebt.left--;
-    floats.push({ x: CX, y: CY - 150, text: `${pendingDebt.label || '负债'}偿还 -${pendingDebt.amount} 金（剩 ${pendingDebt.left} 波）`, color: '#e67e22', life: 80 });
-    if (pendingDebt.left <= 0) pendingDebt = null;
-  }
-  // v6.7.6 空域租金：未连接才付；连接即视为终止
-  if (airRent) {
-    if (path.includes(airRent.sid)) {
-      floats.push({ x: CX, y: CY - 190, text: `空域租金终止：${ZONES[airRent.zone].name}出生点已连接`, color: '#e67e22', life: 90 });
-      airRent = null;
-    } else {
-      gold += airRent.amount;
-      airRent.left--;
-      floats.push({ x: CX, y: CY - 190, text: `空域租金 +${airRent.amount} 金（剩 ${airRent.left} 波）`, color: '#2ecc71', life: 90 });
-      if (airRent.left <= 0) airRent = null;
-    }
-  }
   floats.push({ x: CX, y: CY - 60, text: `+${goldGain}金 +${eGain}能量${hpGain > 0 ? ` +${hpGain}血` : ''}`, color: '#2ecc71', life: 70 });
   if (convertGold > 0) floats.push({ x: CX, y: CY - 170, text: `余能折现 +${convertGold} 金`, color: '#7ef0cf', life: 80 });
   playSound('clear');
-  waveAtkSpeedBonus = 0;   // v6.7.6 能量过载只持续本波，结算即失效
 
   let questOk = null;
   if (quest && !quest.resolved) {
@@ -1940,176 +2220,182 @@ function finishWave() {
   refreshUI();
 
   shopQueue = [];
-  // v6.4 资源运营层：波间先弹事件房，再进商店
-  if (shouldOfferEvent()) shopQueue.push('event');
+  // v6.12.0：事件房删除，补给进商店池；任务成功仍先弹免费三选一
   if (questOk === true) shopQueue.push('free');
   shopQueue.push('normal');
   openNextShop();
 }
 
-// ===== v6.4 资源运营层（事件房）=====
-const EV = () => (DATA.events || {});
+// ===== v6.12.0 补给（原事件房迁移）=====
+const SUPPLIES = () => (DATA.supplies && DATA.supplies.pool) || [];
+function supplyDef(id) { return SUPPLIES().find(s => s.id === id); }
 
-// 波次结束（finishWave 里 wave 已 ++）时调用，判断本备战期是否出事件房
-// v6.4.1：固定波次触发（时机确定、种类随机）
-// 语义：eventWaves 里写的是【备战期序号】（= 即将开打的那一波号），不是"打完的波号"。
-//   例：[3,6,9,12] 表示 prep3 / prep6 / prep9 / prep12 各弹一次，
-//   即"迎战第 3/6/9/12 波之前"各给一次资源调度机会。
-function shouldOfferEvent() {
-  const cfg = EV();
-  if (activeEvent) return false;
-  const waves = cfg.eventWaves || [];
-  return waves.includes(wave);
+function luck() {
+  return Math.min(DATA.luck.max, Math.max(0, Math.round(stackSum('stackLuckAdd'))));
 }
-
-// ===== v6.7.6 1a-2 收尾事件 =====
-// 空域租金：只能租“还没连上的出生点”；外环优先，尽量把“不扩张”变成一个可读的选择。
-function unconnectedSpawns() {
-  return spawnIds.filter(id => !path.includes(id)).map(id => byId[id]);
+function supplyChance() {
+  const c = (DATA.supplies && DATA.supplies.supplyChance) || { early: 0.6, mid: 0.45, late: 0.35 };
+  return wave <= 3 ? c.early : (wave <= 7 ? c.mid : c.late);
 }
-function pickAirRentSpawn() {
-  const cands = unconnectedSpawns();
-  if (!cands.length) return null;
-  cands.sort((a, b) => {
-    if (a.zone !== b.zone) return b.zone - a.zone;
-    const da = Math.hypot(a.x - CX, a.y - CY), db = Math.hypot(b.x - CX, b.y - CY);
-    if (da !== db) return db - da;
-    return a.id - b.id;
-  });
-  return cands[0];
+function supplyPrice(s) {
+  if (!s) return 0;
+  const base = (s.price || 0) + (s.priceAdd || 0) * (supplyBought[s.id] || 0);
+  if (base <= 0) return 0;
+  return Math.max(1, Math.round(base * gHook('shopPriceMul')));
 }
-// 事件是否应该出现在本轮的候选里：避免发“当前必然用不了”的死卡。
-function eventVisible(ev) {
-  if (!ev) return false;
-  if (ev.gain && ev.gain.airRent && (!unconnectedSpawns().length || airRent)) return false;
-  if (ev.gain && ev.gain.debt && pendingDebt) return false;
-  if (ev.cost && ev.cost.energyAll && energy <= 0) return false;
-  // v6.8.2：新事件只在「还有东西可给」时出现
-  if (ev.gain && ev.gain.stackLayers
-    && !RELICS.some(r => r.stackable && stackCount(r.id) < relicStackLimit(r))) return false;
-  if (ev.gain && ev.gain.freeRelic && !relicPool().some(r => r.type === 'global')) return false;
-  if (ev.gain && ev.gain.nextWaveHpMul && pendingMalus > 1) return false;
+function supplyCostText(s) {
+  const c = (s && s.cost) || {};
+  const parts = [];
+  const price = supplyPrice(s);
+  if (price > 0) parts.push(`${price} 金`);
+  if (c.hp != null) parts.push(`${c.hp} 生命`);
+  return parts.length ? `花费 ${parts.join(' + ')}` : '免费';
+}
+function supplyRarityWeights() {
+  const base = DATA.rarity.supplyWeights;
+  const lk = luck();
+  return {
+    common: base.common,
+    rare: base.rare + DATA.luck.supplyRarePerPoint * lk,
+    legend: base.legend + DATA.luck.supplyLegendPerPoint * lk,
+  };
+}
+function stackableCandidates() {
+  return RELICS.filter(r => r.stackable && stackCount(r.id) < relicStackLimit(r)
+    && (!r.family || familyLayers(r.family) < familyCap(r.family)));
+}
+function supplyUsable(s) {
+  if (!s) return false;
+  if ((supplyBought[s.id] || 0) >= (s.maxBuys || 1)) return false;
+  const c = s.cost || {};
+  if (c.hp != null && baseHP - c.hp < 15) return false;
+  if (s.gain && s.gain.gambleRelic && !relicPool().some(r => r.type === 'global')) return false;
+  if (s.gain && s.gain.freeRelic && !relicPool().some(r => r.type === 'global')) return false;
+  if (s.gain && s.gain.stackLayers && !stackableCandidates().length) return false;
+  if (s.gain && s.gain.nextWaveHpMul && pendingMalus > 1) return false;
   return true;
 }
-// v6.8.2 事件花费行：卡面必须写清楚要付什么，不能只在点不了时提示一句“不足”。
-function eventCostText(ev) {
-  const c = (ev && ev.cost) || {};
-  const parts = [];
-  if (c.gold != null) parts.push(`${c.gold} 金`);
-  if (c.hp != null) parts.push(`${c.hp} 生命`);
-  if (c.energy != null) parts.push(`${c.energy} 能量`);
-  if (c.energyAll) parts.push(`全部能量（当前 ${energy}）`);
-  return parts.length ? `花费 ${parts.join(' + ')}` : '无需花费';
-}
-// v6.8.2 抽卡权重：按当前局面把“现在真解决问题”的卡抬高。
-// 只调出现概率，不改效果数值；权重表是设计意图，不是收益模型。
-function eventWeight(ev) {
-  if (!ev) return 0;
-  const id = ev.id;
-  const poor = gold < 80, rich = gold >= 300;
-  const hurt = baseHP < baseMaxHp * 0.4;
-  const shortPath = path.length < 12;
-  let w = 1;
-  if (poor) {
-    if (id === 'blood_machine' || id === 'energy_cash' || id === 'pawn_shop') w *= 2.4;
-    if (id === 'relic_casino' || id === 'energy_forge' || id === 'vitality_core'
-      || id === 'cornerstone' || id === 'black_market' || id === 'route_supply') w *= 0.35;
-    if (ev.gain && ev.gain.freeRelic) w *= 1.6;
+function rollSupply() {
+  const cands = SUPPLIES().filter(supplyUsable);
+  if (!cands.length) return null;
+  const w = supplyRarityWeights();
+  const tiers = DATA.rarity.tiers;
+  const avail = tiers.map(t => cands.filter(s => (s.rarity || 'common') === t));
+  const ws = tiers.map((t, i) => (avail[i].length ? (w[t] || 0) : 0));
+  const total = ws.reduce((a, b) => a + b, 0);
+  let idx = avail.findIndex(list => list.length);
+  if (idx < 0) idx = 0;
+  if (total > 0) {
+    let roll = rnd() * total;
+    idx = tiers.length - 1;
+    for (let i = 0; i < tiers.length; i++) { roll -= ws[i]; if (roll <= 0) { idx = i; break; } }
   }
-  if (rich) {
-    if (id === 'energy_forge' || id === 'vitality_core' || id === 'relic_casino'
-      || id === 'cornerstone' || id === 'black_market' || id === 'route_supply') w *= 1.8;
-    if (id === 'blood_machine' || id === 'energy_cash' || id === 'pawn_shop') w *= 0.35;
-  }
-  if (hurt) {
-    if (id === 'blood_machine') w *= 0.2;
-    if (id === 'vitality_core') w *= 2.5;
-    if (id === 'heart_bank') w *= 0.5;
-    if (ev.gain && ev.gain.nextWaveHpMul) w *= 0.4;
-  }
-  if (shortPath) {
-    if (id === 'route_supply' || id === 'energy_forge' || id === 'air_rent') w *= 2.2;
-  } else if (path.length >= 18) {
-    if (id === 'route_supply' || id === 'energy_forge') w *= 0.4;
-  }
-  return w;
-}
-// 抽 3 个候选事件（先过滤不可用/无意义的卡，再按权重抽）
-// v6.8.2 保底：第一张一定从「现在就能执行」的卡里挑；一张都没有时才退回全池（此时全是灰卡，玩家自己会走）。
-function rollEvents() {
-  const pool = (EV().pool || []).filter(eventVisible);
-  const take = arr => {
-    if (!arr.length) return null;
-    const total = arr.reduce((s, ev) => s + eventWeight(ev), 0);
-    let roll = rnd() * total, idx = arr.length - 1;
-    for (let i = 0; i < arr.length; i++) { roll -= eventWeight(arr[i]); if (roll <= 0) { idx = i; break; } }
-    return arr.splice(idx, 1)[0];
-  };
-  const picks = [];
-  const first = take(pool.filter(ev => eventUsable(ev).ok));
-  if (first) { picks.push(first); pool.splice(pool.indexOf(first), 1); }
-  while (picks.length < 3 && pool.length) {
-    const ev = take(pool);
-    if (!ev) break;
-    picks.push(ev);
-  }
-  return picks;
+  const pool = avail[idx].length ? avail[idx] : cands;
+  return pool[Math.floor(rnd() * pool.length)];
 }
 
-// 事件是否可执行（资源是否足够）
-function eventUsable(ev) {
-  if (!ev) return { ok: false, why: '无效事件' };
-  const c = ev.cost || {};
-  const minSafe = EV().minHpSafe != null ? EV().minHpSafe : 15;
-  if (c.hp != null) {
-    if (baseHP - c.hp < minSafe) return { ok: false, why: `生命不足（需 ${c.hp}，且保留 ${minSafe}）` };
+// ===== v6.12.0 数值件家族 =====
+function familyCap(fam) {
+  return (DATA.family && DATA.family.caps && DATA.family.caps[fam]) || 5;
+}
+function familyLayers(fam) {
+  let n = 0;
+  for (const id of ownedGlobals) {
+    const r = relicDef(id);
+    if (r && r.family === fam) n++;
   }
-  if (c.gold != null && gold < c.gold) return { ok: false, why: `金币不足（需 ${c.gold} 金）` };
-  if (c.energy != null && energy < c.energy) return { ok: false, why: `能量不足（需 ${c.energy}）` };
-  if (c.energyAll && energy <= 0) return { ok: false, why: '没有能量' };
-  if (ev.gain && ev.gain.pawRelic) {
-    if (!ownedGlobals.length && !ownedBuckles.length) return { ok: false, why: '没有可典当的遗物' };
+  return n;
+}
+function familyLowest(fam) {
+  let low = null;
+  for (const id of ownedGlobals) {
+    const r = relicDef(id);
+    if (r && r.family === fam && (!low || (r.tier || 0) < (low.tier || 0))) low = r;
   }
-  // v6.7.6：空域租金要有未连接出生点，且不能叠第二份租约
-  if (ev.gain && ev.gain.airRent) {
-    if (airRent) return { ok: false, why: '已有空域租约' };
-    if (!unconnectedSpawns().length) return { ok: false, why: '没有可租出的出生点' };
-  }
-  // v6.7.6：负债同一时间只允许一笔，避免 pendingDebt 互相覆盖、债务凭空消失
-  if (ev.gain && ev.gain.debt && pendingDebt) return { ok: false, why: '已有负债未还清' };
-  // v6.8.2 加速器事件的可执行判据（和 eventVisible 同口径，防止灰卡混进保底位）
-  if (ev.gain && ev.gain.stackLayers
-    && !RELICS.some(r => r.stackable && stackCount(r.id) < relicStackLimit(r))) {
-    return { ok: false, why: '普通件都满层了' };
-  }
-  if (ev.gain && ev.gain.freeRelic && !relicPool().some(r => r.type === 'global')) {
-    return { ok: false, why: '遗物池已空' };
-  }
-  if (ev.gain && ev.gain.nextWaveHpMul && pendingMalus > 1) {
-    return { ok: false, why: '下一波已经有加压' };
-  }
-  return { ok: true, why: '' };
+  return low;
+}
+function familyRoom(r) {
+  if (!r || !r.family) return true;
+  if (stackCount(r.id) >= relicStackLimit(r)) return false;
+  if (familyLayers(r.family) < familyCap(r.family)) return true;
+  const low = familyLowest(r.family);
+  return !!low && (r.tier || 0) > (low.tier || 0);
 }
 
-// 执行事件
-function applyEvent(ev) {
-  const check = eventUsable(ev);
-  if (!check.ok) return check.why;
-  const c = ev.cost || {}, g = ev.gain || {};
-  let text = `【${ev.name}】`;
-  let spentEnergy = null;   // v6.7.6 能量过载：记录“消耗了多少点”用于计算本波攻速
+// ===== v6.12.0 稀有度 =====
+function rarityLabel(r) {
+  const labels = (DATA.rarity && DATA.rarity.labels) || {};
+  return labels[(r && r.rarity) || 'common'] || '普通';
+}
+function rarityWeights() {
+  const cfg = DATA.rarity;
+  let weights = cfg.shopWeights[cfg.shopWeights.length - 1].weights;
+  for (const band of cfg.shopWeights) {
+    if (wave <= band.untilWave) { weights = band.weights; break; }
+  }
+  const lk = luck();
+  return [
+    weights[0],
+    weights[1] + DATA.luck.rarePerPoint * lk,
+    weights[2] + DATA.luck.legendPerPoint * lk,
+  ];
+}
+function pickRelicByRarity(pool, usedFamilies) {
+  const blocked = usedFamilies || new Set();
+  const cands = pool.filter(r => !r.family || !blocked.has(r.family));
+  if (!cands.length) return null;
+  const tiers = DATA.rarity.tiers;
+  const avail = tiers.map(t => cands.filter(r => (r.rarity || 'common') === t));
+  const ws = rarityWeights().map((w, i) => (avail[i].length ? w : 0));
+  const total = ws.reduce((a, b) => a + b, 0);
+  let idx = avail.findIndex(list => list.length);
+  if (idx < 0) idx = 0;
+  if (total > 0) {
+    let roll = rnd() * total;
+    idx = tiers.length - 1;
+    for (let i = 0; i < tiers.length; i++) { roll -= ws[i]; if (roll <= 0) { idx = i; break; } }
+  }
+  const list = avail[idx].length ? avail[idx] : cands;
+  return weightedPick(list, 1)[0] || null;
+}
 
-  // 代价
+// 获得一件全局遗物；家族满层时只接受更高档替换最低层，并退还该层基础价的 60%
+function acquireRelic(r) {
+  let refund = 0;
+  if (r.family) {
+    if (familyLayers(r.family) >= familyCap(r.family)) {
+      const low = familyLowest(r.family);
+      if (!low || (r.tier || 0) <= (low.tier || 0)) return null;
+      const at = ownedGlobals.lastIndexOf(low.id);
+      if (at >= 0) ownedGlobals.splice(at, 1);
+      refund = pawnRefund(low);
+    }
+  }
+  ownedGlobals.push(r.id);
+  // v6.2.5 远征法典：获得时按比例扣基地生命（比例在 hooks，文案自动跟随）
+  if (r.id === 'g_frontier') {
+    const hpMul = (r.hooks && r.hooks.frontierHpCostMul != null) ? r.hooks.frontierHpCostMul : 0.8;
+    const pctText = Math.round((1 - hpMul) * 100);
+    baseHP = Math.max(1, Math.round(baseHP * hpMul));
+    floats.push({ x: CX, y: CY - 90, text: `远征法典：基地 -${pctText}% 生命`, color: '#e74c3c', life: 80 });
+  }
+  // v6.3 血契：获得时立即扣固定血量（有概率致死，故做保底）
+  if (r.hooks && r.hooks.hpCostOnBuy) {
+    const c = r.hooks.hpCostOnBuy;
+    baseHP = Math.max(1, baseHP - c);
+    floats.push({ x: CX, y: CY - 90, text: `${r.name}：基地 -${c} 血`, color: '#e74c3c', life: 80 });
+  }
+  return refund;
+}
+
+// 执行补给：返回给玩家看的一行结果文案
+function applySupply(s) {
+  const g = s.gain || {};
+  const c = s.cost || {};
+  let text = `【${s.name}】`;
   if (c.hp != null) { baseHP = Math.max(1, baseHP - c.hp); text += ` -${c.hp} 血；`; }
-  if (c.gold != null) { gold -= c.gold; text += ` -${c.gold} 金；`; }
-  if (c.energy != null) { energy = Math.max(0, energy - c.energy); text += ` -${c.energy} 能量；`; }
-  if (c.energyAll) { spentEnergy = energy; energy = 0; text += ` 消耗 ${spentEnergy} 能量；`; }
-
-  // 收益
-  if (g.gold != null) { gold += g.gold; text += ` +${g.gold} 金；`; }
-  if (g.energy != null) { energy += g.energy; text += ` 能量上限 +${g.energy}；`; }
+  if (g.energyNow != null) { energy += g.energyNow; text += ` +${g.energyNow} 能量；`; }
   if (g.maxHp != null) {
-    // v6.7.5 残血协议：上限照加，当前生命的「回复」部分 ×0.5
     const healed = Math.round(g.maxHp * healMul());
     baseMaxHp += g.maxHp;
     baseHP = Math.min(baseMaxHp, baseHP + healed);
@@ -2117,62 +2403,45 @@ function applyEvent(ev) {
   }
   if (g.deposit) {
     deposit = { amount: g.deposit.amount, dueWave: wave + (g.deposit.delayWaves || 1) };
-    text += ` 存入 ${c.hp || 0} 血，${deposit.dueWave} 波后取回 ${g.deposit.amount} 血；`;
+    text += ` ${deposit.dueWave} 波后取回 ${g.deposit.amount} 血；`;
   }
-  if (g.debt) {
-    pendingDebt = { amount: g.debt.amount, left: g.debt.waves, label: ev.name };
-    text += ` 负债 ${g.debt.amount} 金 × ${g.debt.waves} 波；`;
-  }
-  // ===== v6.8.2 加速器事件 =====
-  if (g.energyNow != null) { energy += g.energyNow; text += ` +${g.energyNow} 能量；`; }
   if (g.stackLayers) {
-    // 基石：随机一件未满层的普通件 +N 层（含一件都没有的情况——此时等于给一件新的）
-    const cand = RELICS.filter(r => r.stackable && stackCount(r.id) < relicStackLimit(r));
-    if (!cand.length) return '普通件都满层了';
+    const cand = stackableCandidates();
     const target = cand[Math.floor(rnd() * cand.length)];
-    const add = Math.min(g.stackLayers, relicStackLimit(target) - stackCount(target.id));
-    for (let i = 0; i < add; i++) ownedGlobals.push(target.id);
-    text += ` 「${target.name}」+${add} 层（${stackCount(target.id)}/${relicStackLimit(target.id)}）；`;
+    const room = Math.min(
+      g.stackLayers,
+      relicStackLimit(target) - stackCount(target.id),
+      target.family ? familyCap(target.family) - familyLayers(target.family) : 99);
+    for (let i = 0; i < Math.max(0, room); i++) ownedGlobals.push(target.id);
+    text += ` 「${target.name}」+${Math.max(0, room)} 层（${stackCount(target.id)}/${relicStackLimit(target.id)}）；`;
   }
   if (g.shopIntel) {
     intelShops += g.shopIntel;
     text += ` 之后 ${intelShops} 家付费商店各多 1 张货；`;
   }
   if (g.freeRelic) {
-    const pool = relicPool().filter(r => r.type === 'global');
-    if (!pool.length) return '遗物池已空';
-    const got = pool[Math.floor(rnd() * pool.length)];
-    ownedGlobals.push(got.id);
-    text += ` 获得「${got.name}」；`;
+    const got = pickRelicByRarity(relicPool().filter(r => r.type === 'global'), new Set());
+    if (got) {
+      const refund = acquireRelic(got);
+      if (refund) gold += refund;
+      text += ` 获得「${got.name}」${refund ? `（家族替换退还 ${refund} 金）` : ''}；`;
+    }
   }
-  // 加注：先拿遗物、下一波加血。加压走 pendingMalus，与任务失败的同一根管子（waveHpMul 统一读）
   if (g.nextWaveHpMul) {
     pendingMalus = Math.max(pendingMalus, g.nextWaveHpMul);
     text += ` 下一波怪物血量 +${Math.round((g.nextWaveHpMul - 1) * 100)}%；`;
   }
-  // v6.7.6 空域租金：自动挑一个未连接出生点（外环优先），连接该点即终止
-  if (g.airRent) {
-    const target = pickAirRentSpawn();
-    if (!target) return '没有可租出的出生点';
-    airRent = { sid: target.id, amount: g.airRent.amount, left: g.airRent.waves, zone: target.zone };
-    text += ` 租出${ZONES[target.zone].name}出生点：${airRent.amount} 金 × ${airRent.left} 波（连接即终止）；`;
-  }
-  // v6.7.6 能量过载：消耗多少点就按多少点算本波攻速，最后波末清零
-  if (g.waveSpeed) {
-    const spent = spentEnergy != null ? spentEnergy : 0;
-    waveAtkSpeedBonus = Math.min(g.waveSpeed.cap, g.waveSpeed.per * spent);
-    text += ` 本波攻速 +${Math.round(waveAtkSpeedBonus * 100)}%；`;
-  }
   if (g.gambleRelic) {
-    // 保底机制：连续失败达 pity 次数后，下一次必中
     const pity = g.gambleRelic.pity != null ? g.gambleRelic.pity : 2;
-    const lucky = rnd() < g.gambleRelic.chance || pityCounter >= pity;
+    const chance = Math.min(DATA.luck.blindBoxCap,
+      g.gambleRelic.chance + DATA.luck.blindBoxPerPoint * luck());
+    const lucky = rnd() < chance || pityCounter >= pity;
     if (lucky) {
       pityCounter = 0;
-      const pool = relicPool().filter(r => r.type === 'global');
-      if (pool.length) {
-        const got = pool[Math.floor(rnd() * pool.length)];
-        ownedGlobals.push(got.id);
+      const got = pickRelicByRarity(relicPool().filter(r => r.type === 'global'), new Set());
+      if (got) {
+        const refund = acquireRelic(got);
+        if (refund) gold += refund;
         text += ` ✦ 开出了「${got.name}」！`;
       } else text += ' 但遗物池已空…';
     } else {
@@ -2180,101 +2449,20 @@ function applyEvent(ev) {
       text += ` 空手而归（保底计数 ${pityCounter}/${pity}，下次必中）`;
     }
   }
-  if (g.pawRelic) {
-    // 典当：拆掉最贵的一件已购遗物，返还基础价的 60%
-    const owned = ownedGlobals.map(id => relicDef(id)).filter(Boolean);
-    if (!owned.length) return '没有可典当的遗物';
-    owned.sort((a, b) => b.price - a.price);
-    const target = owned[0];
-    // v6.8.1：可叠件可能持有多份，典当只拆「一份」（旧写法按 id 全过滤会一次拆光还只退一份钱）
-    const at = ownedGlobals.lastIndexOf(target.id);
-    ownedGlobals = ownedGlobals.filter((id, i) => i !== at);
-    const refund = pawnRefund(target);
-    gold += refund;
-    text += ` 典当「${target.name}」→ +${refund} 金`;
-  }
-
-  eventLog.push({ wave, id: ev.id, text });
-  if (runLog) runLog.events.push({ wave, id: ev.id, name: ev.name, text });
+  supplyLog.push({ wave, id: s.id, text });
+  if (runLog) runLog.supplies.push({ wave, id: s.id, name: s.name, text });
   floats.push({ x: CX, y: CY - 170, text, color: '#aed6f1', life: 110 });
   playSound('clear');
   refreshUI();
-  return null;
+  return text;
 }
 
 function openNextShop() {
   if (shopQueue.length) {
     const mode = shopQueue.shift();
-    if (mode === 'event') openEvent();
-    else openShop(mode);
+    openShop(mode);
   }
 }
-
-// v6.4 事件房 UI
-function openEvent() {
-  const picks = rollEvents();
-  activeEvent = picks;
-  const room = document.getElementById('event-room');
-  document.getElementById('event-title').textContent = '✦ 途遇事件房 ✦';
-  document.getElementById('event-sub').textContent =
-    `第 ${wave} 波备战 · 生命 ${baseHP}/${baseMaxHp} · 金币 ${gold} · 能量 ${energy}`;
-  const cards = document.getElementById('event-cards');
-  cards.innerHTML = '';
-  if (!picks.length) {
-    const p = document.createElement('p');
-    p.style.cssText = 'color:#aaa;font-size:13px';
-    p.textContent = '此处空无一物';
-    cards.appendChild(p);
-  }
-  const tagName = { exchange: '置换', gamble: '赌注', upgrade: '强化' };
-  for (const ev of picks) {
-    const card = document.createElement('div');
-    card.className = 'event-card';
-    const nm = document.createElement('div');
-    nm.className = 'ename'; nm.textContent = ev.name;
-    const tp = document.createElement('span');
-    const tg = (ev.tags && ev.tags[0]) || 'exchange';
-    tp.className = 'etag ' + tg;
-    tp.textContent = tagName[tg] || '事件';
-    const de = document.createElement('div');
-    de.className = 'edesc'; de.textContent = ev.desc;
-    // v6.8.2：花费单独一行上卡面（之前只在选不了时让人猜要多少钱）
-    const cost = document.createElement('div');
-    cost.className = 'ecost';
-    cost.textContent = eventCostText(ev);
-    const why = document.createElement('div');
-    why.className = 'why';
-    const chk = eventUsable(ev);
-    if (!chk.ok) why.textContent = '✗ ' + chk.why;
-    const btn = document.createElement('button');
-    btn.className = 'ev-btn';
-    btn.textContent = '执行';
-    btn.disabled = !chk.ok;
-    btn.onclick = () => {
-      const err = applyEvent(ev);
-      if (err) { why.textContent = '✗ ' + err; return; }
-      activeEvent = null;
-      closeEvent();
-      openNextShop();
-    };
-    card.appendChild(nm); card.appendChild(tp); card.appendChild(de);
-    card.appendChild(cost); card.appendChild(why); card.appendChild(btn);
-    cards.appendChild(card);
-  }
-  room.style.display = 'block';
-}
-
-function closeEvent() {
-  const room = document.getElementById('event-room');
-  if (room) room.style.display = 'none';
-  activeEvent = null;
-}
-// 事件房「离开」绑定：关闭并继续队列（通常是商店）
-document.getElementById('event-leave').addEventListener('click', () => {
-  activeEvent = null;
-  closeEvent();
-  openNextShop();
-});
 
 // ===== 商店 =====
 function relicPool() {
@@ -2282,7 +2470,9 @@ function relicPool() {
   return RELICS.filter(r => {
     // 支持件：没持有指定引擎时不进商店池
     if (r.requiresAny && !r.requiresAny.some(id => owned.has(id))) return false;
-    // v6.8.1 可叠普通件：没满层就继续留在池里（能重复买到同一件）；其余全局件买过即移出
+    // v6.12.0 家族满层后只有更高档能替换最低层
+    if (r.family && !familyRoom(r)) return false;
+    // 可叠件：没满层就继续留在池里；其余全局件买过即移出
     if (r.type === 'global') return !owned.has(r.id) || stackCount(r.id) < relicStackLimit(r);
     return !ownedBuckles.some(b => b.defId === r.id);
   });
@@ -2308,40 +2498,78 @@ function weightedPick(pool, n) {
   return out;
 }
 function pick3() { return weightedPick(relicPool(), 3); }
-// 付费商店 = 2 遗物 + 1 卡扣；高阶波（≥ allRelicWavesFrom）= 3 遗物
-// 土豆兄弟式：每波重新随机；锁定的商品（lockedOffers）占位保留，已购不再入池
-function shopPicks(mode) {
+
+// v6.12.0 商店构成：
+//   付费店 4 档（情报 +1）；补给与遗物同池，每店最多 1 件；
+//   低波 = 3 全局 + 1 卡扣（有补给时 2 全局 + 1 卡扣 + 1 补给）；
+//   第 8 波起 = 全全局（有补给时 3 全局 + 1 补给）。
+//   每店同族最多 1 件；锁定商品占位保留，刷新只重掷未锁定格。
+function shopPicks(mode, intel) {
+  const free = mode === 'free';
+  const withIntel = !free && (intel != null ? intel : intelShops > 0);
+  const n = free ? 3 : DATA.shop.paidSlots + (withIntel ? DATA.shop.intelSlots : 0);
+  const picks = [];
+  const usedFamilies = new Set();
   const pool = relicPool();
-  // v6.8.2 黑市情报：付费店多 1 张主牌（3 → 4），免费店不受影响
-  const n = mode === 'free' ? 3 : 3 + (intelShops > 0 ? 1 : 0);
-  const picks = pool.filter(r => lockedOffers.has(r.id)).slice(0, n);
-  const rest = pool.filter(r => !picks.includes(r));
+  // 免费店是独立三选一，不继承付费店的锁定；锁定只在付费店之间保留
+  if (!free) {
+    for (const id of Array.from(lockedOffers)) {
+      if (supplyDef(id)) continue;
+      const r = relicDef(id);
+      if (!r || !pool.some(x => x.id === id)) { lockedOffers.delete(id); continue; }
+      picks.push(r);
+      if (r.family) usedFamilies.add(r.family);
+    }
+  }
+  let supply = null;
+  // 锁定商品占满货位时不再塞补给，避免出现第 5 张卡
+  if (!free && picks.length < n) {
+    const lockedSupply = Array.from(lockedOffers).map(supplyDef)
+      .find(s => s && (supplyBought[s.id] || 0) < (s.maxBuys || 1));
+    if (lockedSupply) supply = lockedSupply;
+    else if (rnd() < supplyChance()) supply = rollSupply();
+  }
+  if (supply) picks.push({ ...supply, type: 'supply' });
+  const early = wave < DATA.shop.allRelicWavesFrom;
+  const supplySlots = supply ? 1 : 0;
+  const buckleSlots = free ? 0 : (early ? 1 : 0);
+  const globalSlots = free ? 0 : n - supplySlots - buckleSlots;
+  const have = t => picks.filter(r => r.type === t).length;
   const fill = (type, k) => {
-    if (k <= 0) return;
-    const sub = rest.filter(r => !type || r.type === type);
-    const got = weightedPick(sub, Math.min(k, sub.length));
-    for (const g of got) { rest.splice(rest.indexOf(g), 1); picks.push(g); }
+    for (let i = 0; i < k; i++) {
+      const sub = relicPool().filter(r => (!type || r.type === type)
+        && !picks.some(p => p.id === r.id)
+        && (!r.family || !usedFamilies.has(r.family)));
+      const got = pickRelicByRarity(sub, usedFamilies);
+      if (!got) break;
+      picks.push(got);
+      if (got.family) usedFamilies.add(got.family);
+    }
   };
-  if (mode === 'free') { fill(null, n - picks.length); return picks; }
-  if (wave >= DATA.shop.allRelicWavesFrom || !rest.some(r => r.type === 'buckle')) { fill('global', n - picks.length); return ensureEngineOffer(picks, n); }
-  const gHave = picks.filter(r => r.type === 'global').length;
-  fill('global', Math.min(DATA.shop.paidRelics - gHave, n - picks.length));
-  fill('buckle', n - picks.length);
-  fill(null, n - picks.length);
-  return ensureEngineOffer(picks, n);
+  if (free) fill(null, n - picks.length);
+  else {
+    const capacity = n - picks.length;
+    const g = Math.min(capacity, Math.max(0, globalSlots - have('global')));
+    const b = Math.min(capacity - g, Math.max(0, buckleSlots - have('buckle')));
+    fill('global', g);
+    fill('buckle', b);
+    fill(null, n - picks.length);
+  }
+  if (!free) ensureEngineOffer(picks, n);
+  return picks;
 }
-// 1a：前 3 个付费店至少出现 1 个机制引擎（不指定哪个）。支持件没引擎不进池。
-// v6.7.7：不再有「留白」流派保底；引擎保底可替换任意未锁定的遗物位。
+// 前 3 个付费店至少出现 1 个机制引擎（不指定哪个）。支持件没引擎不进池。
 function ensureEngineOffer(picks, n) {
-  const want = n || 3;
+  const want = n || DATA.shop.paidSlots;
   if (paidShopCount > 3) return picks;
   const hasEngine = ownedGlobals.some(id => { const r = relicDef(id); return r && r.engine; });
   if (hasEngine || picks.some(r => r.engine)) return picks;
-  const cand = relicPool().filter(r => r.engine);
+  const used = new Set(picks.filter(p => p.family).map(p => p.family));
+  const cand = relicPool().filter(r => r.engine && !picks.some(p => p.id === r.id)
+    && (!r.family || !used.has(r.family)));
   if (!cand.length) return picks;
   const pick = cand[Math.floor(rnd() * cand.length)];
   if (picks.length < want) { picks.push(pick); return picks; }
-  // 只替换未锁定的遗物位，不挤掉卡扣位
   for (let i = picks.length - 1; i >= 0; i--) {
     if (picks[i].type === 'global' && !lockedOffers.has(picks[i].id)) {
       picks[i] = pick; break;
@@ -2349,18 +2577,7 @@ function ensureEngineOffer(picks, n) {
   }
   return picks;
 }
-// v6.8.2 常驻基础件货架：付费店固定 2 格，从「还没满层的普通件」里轮换，不占主牌 3 格。
-// 与主牌去重；每格每店限购 1 份（买完即撤）。货架是「想叠就有入口」，不保证同款连刷。
-function shelfPicks(mainPicks) {
-  const cand = RELICS.filter(r =>
-    r.stackable && stackCount(r.id) < relicStackLimit(r) && !mainPicks.includes(r));
-  const out = [];
-  while (out.length < 2 && cand.length) {
-    out.push(cand.splice(Math.floor(rnd() * cand.length), 1)[0]);
-  }
-  return out;
-}
-// v6.8.1 可叠件价格：每多持有一层，基础价 ×(1 + 0.15)，向下取整。
+// 可叠件价格：每多持有一层，基础价 ×(1 + 0.15)，向下取整。
 // 折扣券（shopPriceMul）作用在「已经涨过价的有效价」上，两件事分开算，验收也分开断言。
 function stackPriceMul(r) {
   if (!r || !r.stackable) return 1;
@@ -2371,32 +2588,68 @@ function shopPrice(r) {
   const base = Math.max(1, Math.floor(r.price * stackPriceMul(r)));
   return Math.max(1, Math.round(base * gHook('shopPriceMul')));
 }
-// 典当口径永远按基础价 60%，不按涨价后的有效价——否则"叠满再典当"会变成套利
+// 典当/家族替换口径永远按基础价 60%，不按涨价后的有效价——否则"叠满再替换"会变成套利
 function pawnRefund(r) { return Math.round(r.price * 0.6); }
+
+function shopTitleText() {
+  if (!currentShop) return '';
+  if (currentShop.free) return '◆ 任务完成！免费遗物三选一';
+  const reroll = currentShop.rerolls ? ` · 已刷新 ${currentShop.rerolls}` : '';
+  return `波间商店（金币 ${gold} · 幸运 ${luck()}${reroll}）`;
+}
 function openShop(mode) {
   const free = mode === 'free';
   if (!free) paidShopCount++;
-  const picks = shopPicks(mode);
-  // 黑市情报：本店若吃到 +1 主牌，就在开店这一刻消耗 1 家（shopPicks 读的是消耗前的值）
   const intel = !free && intelShops > 0;
   if (intel) intelShops--;
-  const shelf = free ? [] : shelfPicks(picks);
-  const shopLog = runLog ? {
-    wave, mode, offers: picks.map(r => r.id), bought: [],
-    shelfOffers: shelf.map(r => r.id), shelfBought: [], intel, skipped: false,
+  const log = runLog ? {
+    wave, mode, offers: [], bought: [], supplies: [], rerolls: 0, intel, skipped: false,
   } : null;
-  if (runLog) runLog.shops.push(shopLog);
-  let resolved = false;
+  if (runLog) runLog.shops.push(log);
+  currentShop = { mode, free, intel, rerolls: 0, log, resolved: false };
+  renderShop();
+}
+function syncReroll() {
+  const btn = document.getElementById('shop-reroll');
+  if (!btn) return;
+  const shop = currentShop;
+  if (!shop || shop.free || shop.resolved) { btn.style.display = 'none'; return; }
+  const costs = DATA.shop.rerollCosts || [];
+  const max = DATA.shop.rerollMax || costs.length;
+  btn.style.display = 'inline-block';
+  if (shop.rerolls >= max) {
+    btn.textContent = '刷新已达上限';
+    btn.disabled = true;
+    return;
+  }
+  const cost = costs[shop.rerolls];
+  btn.textContent = `刷新（${cost} 金）`;
+  btn.disabled = shop.rerolls >= max || gold < cost;
+}
+function rerollShop() {
+  const shop = currentShop;
+  if (!shop || shop.free || shop.resolved) return false;
+  const costs = DATA.shop.rerollCosts || [];
+  const max = DATA.shop.rerollMax || costs.length;
+  if (shop.rerolls >= max) return false;
+  const cost = costs[shop.rerolls];
+  if (cost == null || gold < cost) return false;
+  gold -= cost;
+  shop.rerolls++;
+  if (shop.log) shop.log.rerolls = shop.rerolls;
+  renderShop();
+  return true;
+}
+function renderShop() {
+  const shop = currentShop;
+  if (!shop) return;
+  const free = shop.free;
+  const picks = shopPicks(shop.mode, shop.intel);
+  if (shop.log) shop.log.offers.push(...picks.map(r => r.id));
   const el = document.getElementById('shop');
-  document.getElementById('shop-title').textContent = free
-    ? '◆ 任务完成！免费遗物三选一' : `波间商店（金币 ${gold}）`;
   const cards = document.getElementById('shop-cards');
-  const shelfWrap = document.getElementById('shop-shelf');
-  const shelfCards = document.getElementById('shelf-cards');
+  document.getElementById('shop-title').textContent = shopTitleText();
   cards.innerHTML = '';
-  shelfCards.innerHTML = '';
-  shelfWrap.style.display = shelf.length ? 'block' : 'none';
-  document.getElementById('shelf-title').textContent = '◆ 常驻基础件 · 本店每格限 1 份';
   if (!picks.length) {
     const p = document.createElement('p');
     p.style.cssText = 'color:#aaa;font-size:13px';
@@ -2404,154 +2657,164 @@ function openShop(mode) {
     cards.appendChild(p);
   }
   const syncAffordability = () => {
-    if (free) return;
-    for (const box of [cards, shelfCards]) {
-      for (const c of box.querySelectorAll('.shop-card, .shelf-card')) {
-        const rb = c.querySelector('.buy-btn');
-        if (rb) rb.disabled = gold < parseInt(rb.dataset.price, 10);
-      }
+    for (const c of cards.querySelectorAll('.shop-card')) {
+      const rb = c.querySelector('.buy-btn');
+      if (!rb) continue;
+      const price = parseInt(rb.dataset.price, 10) || 0;
+      const hp = parseInt(rb.dataset.hp, 10) || 0;
+      rb.disabled = !free && (gold < price || (hp > 0 && baseHP - hp < 15));
     }
   };
-  // 主牌与货架都空才关店；只空主牌时留一句话，避免玩家以为商店坏了
   const closeIfEmpty = () => {
-    const mainLeft = cards.querySelectorAll('.shop-card').length;
-    const shelfLeft = shelfCards.querySelectorAll('.shelf-card').length;
-    shelfWrap.style.display = shelfLeft ? 'block' : 'none';
-    if (!mainLeft && !shelfLeft) { closeShop(); openNextShop(); return true; }
-    if (!mainLeft && !cards.querySelector('.sold-out')) {
-      const p = document.createElement('p');
-      p.className = 'sold-out';
-      p.style.cssText = 'color:#888;font-size:12px';
-      p.textContent = '主牌已售罄，货架还有货';
-      cards.appendChild(p);
-    }
-    return false;
+    if (cards.querySelectorAll('.shop-card').length) return false;
+    closeShop(); openNextShop(); return true;
   };
   for (const r of picks) {
+    const isSup = r.type === 'supply';
+    const s = isSup ? supplyDef(r.id) : null;
+    const price = isSup ? supplyPrice(s) : shopPrice(r);
+    const hpCost = isSup && s && s.cost && s.cost.hp != null ? s.cost.hp : 0;
     const card = document.createElement('div');
-    card.className = 'shop-card';
+    card.className = 'shop-card rarity-' + (r.rarity || 'common');
     cards.appendChild(card);
-    // v6.8.2 一店一份：卡面只画一次，买完即撤；可叠件想再买一层，得等它下家店再刷出来。
-    // 价格仍在这里现算（叠层涨价 / 折扣券），不能挪到外面缓存。
-    const price = shopPrice(r);
     const nm = document.createElement('div');
     nm.className = 'rname'; nm.textContent = r.name;
     const tp = document.createElement('span');
-    tp.className = 'rtype ' + r.type;
-    tp.textContent = r.type === 'global' ? '全局遗物' : '卡扣';
+    tp.className = 'rtype ' + (isSup ? 'supply' : r.type);
+    tp.textContent = isSup ? '补给' : (r.type === 'global' ? '全局遗物' : '卡扣');
+    const rr = document.createElement('span');
+    rr.className = 'rrarity ' + (r.rarity || 'common');
+    rr.textContent = rarityLabel(r);
     const ds = document.createElement('div');
     ds.className = 'rdesc';
-    ds.innerHTML = r.desc + (r.cost ? `<span class="rcost">${r.cost}</span>` : '');
-    // 可叠件专有：已持有 N/上限 + 下一层净效果。不写「纯收益/交换」这类设计标签。
+    ds.innerHTML = r.desc + (typeof r.cost === 'string' ? `<span class="rcost">${r.cost}</span>` : '');
+    let pr = null;
+    if (isSup) {
+      pr = document.createElement('div');
+      pr.className = 'rprice';
+      pr.textContent = supplyCostText(s);
+    }
+    // 购买后预览：付费店全局件显示核心数值变化；卡扣装上才生效
+    let pv = null;
+    if (!free && !isSup) {
+      pv = document.createElement('div');
+      pv.className = 'rpreview';
+      for (const line of previewPurchase(r)) {
+        const d = document.createElement('div');
+        if (line.warn) d.className = 'warn';
+        d.textContent = (line.warn ? '⚠ ' : '') + line.text;
+        pv.appendChild(d);
+      }
+    }
     let st = null;
     if (r.stackable) {
       st = document.createElement('div');
       st.className = 'rstack';
-      st.textContent = `已持有 ${stackCount(r.id)}/${relicStackLimit(r)} · 下一层 ${r.stackDesc || ''}`;
+      let text = `已持有 ${stackCount(r.id)}/${relicStackLimit(r)}`;
+      if (r.family) text += ` · 家族 ${familyLayers(r.family)}/${familyCap(r.family)}`;
+      text += ` · 下一层 ${r.stackDesc || ''}`;
+      if (r.family && familyLayers(r.family) >= familyCap(r.family)) text += ' · 满层：替换最低层';
+      st.textContent = text;
     }
-    const lk = document.createElement('button');
-    lk.className = 'lock-btn';
-    const syncLock = () => {
-      const on = lockedOffers.has(r.id);
-      lk.textContent = on ? '🔒 已锁定 · 下波保留' : '🔒 锁定此商品';
-      lk.classList.toggle('on', on);
-    };
-    syncLock();
-    lk.onclick = ev => {
-      ev.stopPropagation();
-      if (lockedOffers.has(r.id)) lockedOffers.delete(r.id); else lockedOffers.add(r.id);
+    let lk = null;
+    if (!free) {
+      lk = document.createElement('button');
+      lk.className = 'lock-btn';
+      const syncLock = () => {
+        const on = lockedOffers.has(r.id);
+        lk.textContent = on ? '🔒 已锁定 · 下波保留' : '🔒 锁定此商品';
+        lk.classList.toggle('on', on);
+      };
       syncLock();
-    };
+      lk.onclick = ev => {
+        ev.stopPropagation();
+        if (lockedOffers.has(r.id)) lockedOffers.delete(r.id); else lockedOffers.add(r.id);
+        syncLock();
+      };
+    }
     const btn = document.createElement('button');
     btn.className = 'buy-btn';
-    btn.textContent = free ? '免费领取' : `购买（${price} 金）`;
+    btn.textContent = free ? '免费领取'
+      : isSup ? (price > 0 ? `购买（${price} 金）` : (hpCost ? `交易（${hpCost} 生命）` : '免费领取'))
+      : `购买（${price} 金）`;
     btn.dataset.price = price;
-    btn.disabled = !free && gold < price;
+    btn.dataset.hp = hpCost;
+    btn.disabled = !free && (gold < price || (hpCost > 0 && baseHP - hpCost < 15)
+      || (!isSup && r.type === 'global' && r.family && !familyRoom(r)));
     btn.onclick = () => {
       if (btn.disabled) return;
-      if (!free) gold -= price;
-      if (shopLog) shopLog.bought.push(r.id);
-      lockedOffers.delete(r.id);
-      if (r.type === 'global') {
-        ownedGlobals.push(r.id);
-        // v6.2.5 远征法典：获得时按比例扣基地生命（比例在 hooks，文案自动跟随）
-        if (r.id === 'g_frontier') {
-          const hpMul = (r.hooks && r.hooks.frontierHpCostMul != null) ? r.hooks.frontierHpCostMul : 0.8;
-          const pctText = Math.round((1 - hpMul) * 100);
-          baseHP = Math.max(1, Math.round(baseHP * hpMul));
-          floats.push({ x: CX, y: CY - 90, text: `远征法典：基地 -${pctText}% 生命`, color: '#e74c3c', life: 80 });
-        }
-        // v6.3 血契：获得时立即扣固定血量（有概率致死，故做保底）
-        if (r.hooks && r.hooks.hpCostOnBuy) {
-          const c = r.hooks.hpCostOnBuy;
-          baseHP = Math.max(1, baseHP - c);
-          floats.push({ x: CX, y: CY - 90, text: `${r.name}：基地 -${c} 血`, color: '#e74c3c', life: 80 });
-        }
+      if (isSup) {
+        if (!free) gold -= price;
+        lockedOffers.delete(r.id);
+        supplyBought[s.id] = (supplyBought[s.id] || 0) + 1;
+        if (shop.log) shop.log.supplies.push(s.id);
+        applySupply(s);
+        card.remove();
+        document.getElementById('shop-title').textContent = shopTitleText();
+        refreshUI();
+        syncAffordability();
+        syncReroll();
+        closeIfEmpty();
+        return;
       }
-      else ownedBuckles.push({ iid: 'b' + (iidCounter++), defId: r.id });
+      if (!free) gold -= price;
+      if (shop.log) shop.log.bought.push(r.id);
+      lockedOffers.delete(r.id);
+      let refund = 0;
+      if (r.type === 'global') {
+        refund = acquireRelic(r);
+        if (refund) {
+          gold += refund;
+          floats.push({ x: CX, y: CY - 110, text: `家族替换退还 ${refund} 金`, color: '#f9e79f', life: 90 });
+        }
+      } else {
+        ownedBuckles.push({ iid: 'b' + (iidCounter++), defId: r.id });
+      }
       floats.push({ x: CX, y: CY - 70, text: `获得「${r.name}」${r.stackable ? ` ${stackCount(r.id)}/${relicStackLimit(r)}` : ''}`, color: '#f9e79f', life: 80 });
       if (free) {
-        // 免费三选一：拿 1 其余消
         card.remove();
-        resolved = true;
+        shop.resolved = true;
         refreshUI();
         closeShop();
         openNextShop();
         return;
       }
-      card.remove();   // v6.8.2 一店一份：不论还能不能叠，本店这张买完就撤
-      document.getElementById('shop-title').textContent = `波间商店（金币 ${gold}）`;
-      refreshUI();
-      syncAffordability();
-      closeIfEmpty();
-    };
-    card.append(nm, tp);
-    if (st) card.append(st);
-    card.append(ds, lk, btn);
-  }
-  // v6.8.2 货架：便宜、可叠、每店每格 1 份；不占主牌 3 格，也不参与锁定
-  for (const r of shelf) {
-    const card = document.createElement('div');
-    card.className = 'shelf-card';
-    shelfCards.appendChild(card);
-    const price = shopPrice(r);
-    const nm = document.createElement('div');
-    nm.className = 'rname'; nm.textContent = r.name;
-    const st = document.createElement('div');
-    st.className = 'rstack';
-    st.textContent = `${stackCount(r.id)}/${relicStackLimit(r)} · 下一层 ${r.stackDesc || ''}`;
-    const btn = document.createElement('button');
-    btn.className = 'buy-btn';
-    btn.textContent = `购买（${price} 金）`;
-    btn.dataset.price = price;
-    btn.disabled = gold < price;
-    btn.onclick = () => {
-      if (btn.disabled || gold < price) return;
-      gold -= price;
-      if (shopLog) shopLog.shelfBought.push(r.id);
-      ownedGlobals.push(r.id);
-      floats.push({ x: CX, y: CY - 70, text: `获得「${r.name}」${stackCount(r.id)}/${relicStackLimit(r)}`, color: '#f9e79f', life: 80 });
       card.remove();
-      document.getElementById('shop-title').textContent = `波间商店（金币 ${gold}）`;
+      document.getElementById('shop-title').textContent = shopTitleText();
       refreshUI();
       syncAffordability();
+      syncReroll();
       closeIfEmpty();
     };
-    card.append(nm, st, btn);
+    card.append(nm, tp, rr);
+    if (st) card.append(st);
+    card.append(ds);
+    if (pr) card.append(pr);
+    if (pv) card.append(pv);
+    if (lk) card.append(lk);
+    card.append(btn);
   }
+  document.getElementById('shop-reroll').onclick = () => rerollShop();
   document.getElementById('shop-skip').onclick = () => {
-    if (resolved) return;
-    resolved = true;
-    if (shopLog) shopLog.skipped = true;
+    if (!currentShop || currentShop.resolved) return;
+    currentShop.resolved = true;
+    if (currentShop.log) currentShop.log.skipped = true;
     closeShop();
     openNextShop();
   };
+  syncReroll();
   el.style.display = 'block';
 }
-function closeShop() { document.getElementById('shop').style.display = 'none'; }
+function closeShop() {
+  document.getElementById('shop').style.display = 'none';
+  currentShop = null;
+}
+
 
 // ===== 游戏壳 =====
 function closeOverlays() {
+  closeStats();
+  closeRelicList();
   for (const id of ['title-overlay', 'pause-overlay', 'result-overlay']) document.getElementById(id).style.display = 'none';
 }
 function enterTitle() {
@@ -2613,7 +2876,9 @@ function playtestExport() {
     buckles: ownedBuckles.map(b => b.defId),
     waves: runLog ? runLog.waves.slice() : [],
     shops: runLog ? runLog.shops.slice() : [],
-    events: runLog ? runLog.events.slice() : [],
+    supplies: runLog ? runLog.supplies.slice() : [],
+    supplyBought: { ...supplyBought },
+    luck: luck(),
   };
 }
 
@@ -2634,6 +2899,8 @@ function copyText(text) {
 function showResult(result) {
   const win = result === 'WIN', stars = win ? starsFor(enemyLeakDamage, baseMaxHp) : 0, seconds = elapsedSeconds();
   recordResult(result, stars, seconds); paused = false;
+  closeStats();
+  closeRelicList();
   document.getElementById('result-title').textContent = win ? `守住 ${MAXWAVE} 波` : `败于第 ${Math.min(wave, MAXWAVE)} 波`;
   document.getElementById('result-stars').textContent = '★'.repeat(stars) || '无星';
   // v6.8.1：可叠件会重复出现在 ownedGlobals 里，结算按「名称 ×N」聚合，别让同一件印三遍
@@ -2890,6 +3157,13 @@ document.getElementById('title-help-back').addEventListener('click', () => {
 document.getElementById('pause-btn').addEventListener('click', () => togglePause());
 document.getElementById('resume-btn').addEventListener('click', () => togglePause(false));
 document.getElementById('sound-btn').addEventListener('click', () => setSound(!soundOn));
+document.getElementById('stats-btn').addEventListener('click', () => toggleStats());
+document.getElementById('stats-close').addEventListener('click', () => toggleStats(false));
+document.getElementById('stats-tab-main').addEventListener('click', () => setStatsTab('main'));
+document.getElementById('stats-tab-detail').addEventListener('click', () => setStatsTab('detail'));
+document.getElementById('shop-stats').addEventListener('click', () => toggleStats(true));
+document.getElementById('relics').addEventListener('click', () => toggleRelicList());
+document.getElementById('relic-list-close').addEventListener('click', () => toggleRelicList(false));
 document.getElementById('result-retry').addEventListener('click', () => initGame(nextSeed()));
 document.getElementById('copy-run').addEventListener('click', () => {
   const status = document.getElementById('copy-status');
@@ -2903,7 +3177,14 @@ document.getElementById('tutorial-skip').addEventListener('click', finishTutoria
 document.getElementById('tutorial-next').addEventListener('click', () => {
   if (tutorialStep === 3) { finishTutorial(); startWave(); } else advanceTutorial();
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && phase === PHASE.WAVE) togglePause(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'd' || e.key === 'D') { e.preventDefault(); toggleStats(); return; }
+  if (e.key === 'Escape') {
+    if (relicListOpen) { toggleRelicList(false); return; }
+    if (statsOpen) { toggleStats(false); return; }
+    if (phase === PHASE.WAVE) togglePause();
+  }
+});
 document.addEventListener('pointerdown', unlockAudio, { once: true });
 
 // ===== 塔菜单（卡扣管理） =====
@@ -2923,7 +3204,11 @@ function openTowerMenu(n) {
   tip.className = 'menu-tip';
   let stat = '';
   if (n.ttype === 'arrow') stat = `伤害 ${t.dmg}`;
-  else if (n.ttype === 'slow') stat = `减速 ${Math.round((1 - t.factor) * 100)}%`;
+  else if (n.ttype === 'slow') {
+    // v6.13.0：读数改走 towerSlowStats，与实际命中同一公式；顺带显示持续时长
+    const st = towerSlowStats(n);
+    stat = `减速 ${st.pct}% / ${(st.dur / 60).toFixed(1)} 秒`;
+  }
   else stat = `溅射 ${Math.round((t.dmg || 0) * gHook('blastDmgMul'))} / 半径 ${splashRadius(n)}`;
   tip.innerHTML = `<b style="color:${t.color}">${t.sym} ${t.label}</b> · ${stat} · ${onPath ? '<span style="color:#2ecc71">已激活</span>' : '<span style="color:#e67e22">休眠中</span>'}`;
   menuEl.appendChild(tip);
@@ -2943,6 +3228,9 @@ function openTowerMenu(n) {
     cond.push(`群塔 +${Math.round((condHooks.denseBuckleMul - 1) * 100)}%（${dn >= need ? '生效' : '未生效'}，紧挨 ${dn}/${need} 塔）`);
   }
   if (condHooks.firstBuckleGold) cond.push(`首杀 +${condHooks.firstBuckleGold} 金（${n.firstBuckleUsed ? '本波已拿' : '本波未拿'}）`);
+  // v6.13.0：霜结（对已减速目标增伤，条件在目标身上）与矿镐（开荒倍率）的读数
+  if (condHooks.slowTargetDmgMul) cond.push(`对减速目标 +${Math.round((condHooks.slowTargetDmgMul - 1) * 100)}%（需场上有减速塔）`);
+  if (condHooks.buckleReclaimMul) cond.push(`开荒 ×${condHooks.buckleReclaimMul}`);
   if (cond.length) {
     const c = document.createElement('p');
     c.className = 'menu-tip';
@@ -2966,11 +3254,8 @@ function openTowerMenu(n) {
     un.onclick = () => { n.buckle = null; n.idleFrames = 0; openTowerMenu(n); refreshUI(); };
     menuEl.appendChild(un);
   }
-  const loose = ownedBuckles.filter(b => {
-    if (nodes.some(o => o.buckle === b.iid)) return false;
-    const def = RELICS.find(r => r.id === b.defId);
-    return !(def.hooks.splashMul && n.ttype !== 'blast');
-  });
+  // v6.13.0：余震退役后卡扣池里不再有塔型前提，装卡扣不再按塔型过滤
+  const loose = ownedBuckles.filter(b => !nodes.some(o => o.buckle === b.iid));
   for (const b of loose) {
     const def = RELICS.find(r => r.id === b.defId);
     const eq = document.createElement('button');
@@ -3080,6 +3365,28 @@ function draw() {
       ctx.strokeStyle = '#7ef0cf'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 4, 0, Math.PI * 2); ctx.stroke();
     }
+  }
+  // ===== v6.10.0 读数上画布：只加标记，不改任何数值与门槛 =====
+  // 主流税契：给「严格过半」的那一型套金环；条件不成立时保持干净，避免假读数。
+  for (const n of majorityTowerNodes()) {
+    ctx.strokeStyle = 'rgba(247,220,111,0.9)'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 6, 0, Math.PI * 2); ctx.stroke();
+  }
+  // 双生塔：异型紧邻的每一对画紫线 + 中点小点，玩家能直接看出哪一对在吃加成。
+  for (const [a, b] of twinLinkPairs()) {
+    ctx.strokeStyle = 'rgba(187,143,206,0.85)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    ctx.fillStyle = '#bb8fce';
+    ctx.beginPath(); ctx.arc((a.x + b.x) / 2, (a.y + b.y) / 2, 2.5, 0, Math.PI * 2); ctx.fill();
+  }
+  // 火力：持有爆破件时，把爆破塔的溅射半径画成淡虚线；支持件的 +20% 直接看半径变化。
+  if (hasGlobal('g_barrage')) {
+    ctx.save(); ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = 'rgba(229,152,102,0.28)'; ctx.lineWidth = 1;
+    for (const n of blastReadoutNodes()) {
+      ctx.beginPath(); ctx.arc(n.x, n.y, splashRadius(n), 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
   }
   if (drawing && drawing.temp.length > 1) {
     ctx.strokeStyle = drawing.valid ? '#1abc9c' : '#e67e22';
@@ -3205,6 +3512,50 @@ function draw() {
   ctx.beginPath(); ctx.arc(base.x, base.y, base.r, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#fff'; ctx.font = 'bold 13px sans-serif';
   ctx.fillText('基地', base.x, base.y);
+  // v6.10.0 三色均衡：基地外圈三段弧（箭/减/爆各一段），有几型就亮几段；
+  // 三型齐全时再叠一圈白环，表示加成正在生效。
+  if (hasGlobal('g_tricolor')) {
+    const ts = tricolorStats();
+    const types = [['arrow', '#2e86c1'], ['slow', '#d4ac0d'], ['blast', '#cb4335']];
+    const R = base.r + 11;
+    for (let i = 0; i < 3; i++) {
+      const [type, color] = types[i];
+      const a0 = -Math.PI / 2 + i * (Math.PI * 2 / 3) + 0.07;
+      const a1 = a0 + Math.PI * 2 / 3 - 0.14;
+      ctx.strokeStyle = (ts.counts[type] || 0) > 0 ? color : 'rgba(120,120,140,0.25)';
+      ctx.lineWidth = ts.ok ? 4 : 2;
+      ctx.beginPath(); ctx.arc(base.x, base.y, R, a0, a1); ctx.stroke();
+    }
+    if (ts.ok) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(base.x, base.y, R + 3, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+  // v6.10.0 残血协议：基地外圈按缺血比例画红弧；满血时不画，避免常驻红圈。
+  if (hasGlobal('g_last') && missingHp() > 0) {
+    const ratio = Math.min(1, missingHp() / Math.max(1, baseMaxHp));
+    ctx.strokeStyle = `rgba(231,76,60,${0.35 + 0.45 * ratio})`;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(base.x, base.y, base.r + 19, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ratio);
+    ctx.stroke();
+  }
+  // v6.10.0 首杀：本波第一杀来自哪座塔，就在塔下标一个金色「首杀 ×4」；每波开波清掉。
+  const fk = firstKillTowerNode();
+  if (fk && hasGlobal('g_firstblood')) {
+    ctx.fillStyle = '#f7dc6f'; ctx.font = 'bold 11px sans-serif';
+    ctx.fillText('首杀 ×4', fk.x - 14, fk.y + fk.r + 15);
+    ctx.font = '11px sans-serif';
+  }
+
+  // v6.13.0 燃地：画在塔与怪物之下，剩 30 帧内淡出
+  for (const b of burning || []) {
+    const k = Math.max(0, Math.min(1, (b.until - spawnTimer) / 30));
+    ctx.fillStyle = `rgba(230,120,50,${0.10 + 0.10 * k})`;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = `rgba(230,120,50,${0.35 * k})`; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 0.85, 0, Math.PI * 2); ctx.stroke();
+  }
 
   for (const m of monsters) {
     ctx.globalAlpha = (m.tags || []).includes('invis') && m.revealed <= 0 ? 0.3 : 1;
@@ -3229,16 +3580,20 @@ function draw() {
 
   for (const e of effects) {
     if (e.boom) {
-      ctx.strokeStyle = `rgba(229,152,102,${e.life / 12})`;
+      const rr = e.r || 55;
+      const k = e.life / 12;
+      ctx.fillStyle = `rgba(229,152,102,${0.12 * k})`;
+      ctx.beginPath(); ctx.arc(e.x, e.y, rr, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = `rgba(229,152,102,${k})`;
       ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(e.x, e.y, (12 - e.life) * 5 + 6, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(e.x, e.y, rr * (1.05 - k * 0.35), 0, Math.PI * 2); ctx.stroke();
     } else {
       line({ x: e.x1, y: e.y1 }, { x: e.x2, y: e.y2 }, e.color, 2);
     }
   }
   for (const p of projectiles) {
     ctx.fillStyle = p.color;
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.kind === 'blast' ? 4.5 : 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.kind === 'blast' ? 5.5 : 3, 0, Math.PI * 2); ctx.fill();
   }
   ctx.font = 'bold 13px sans-serif';
   for (const f of floats) {
@@ -3332,6 +3687,622 @@ function draw() {
   }
 }
 
+// ===== v6.11.0 数据看板 =====
+// 口径：重要数据 = 道具会直接改写的核心数值（伤害/间隔/射程/经济/资源）；
+// 次要数据 = 条件乘区、逐塔明细、代价与持有物。看板只读当前状态，不推进战斗、不消耗次数。
+const TYPE_CN = { arrow: '箭', blast: '爆', slow: '减' };
+const fmtMul = m => `×${(Math.round(m * 100) / 100).toFixed(2)}`;
+const fmtSigned = v => `${v >= 0 ? '+' : ''}${Math.round(v * 100) / 100}`;
+const fmtNum1 = v => (Math.round(v * 10) / 10).toFixed(1);
+const fmtNum2 = v => String(Math.round(v * 100) / 100);
+
+function statGlobals() {
+  const cdMul = gHook('globalCdMul') * swarmCdMul() * stackCdMul();
+  return {
+    dmg: gHook('globalDmgMul') * stackDmgMul(),
+    cdMul,
+    atkSpeed: 1 / cdMul,
+    range: gHook('globalRangeMul') * stackRangeMul(),
+    arrowDmg: gHook('arrowDmgMul'),
+    blastDmg: gHook('blastDmgMul'),
+    killGold: gHook('goldMul'),
+    shopPrice: gHook('shopPriceMul'),
+    waveGold: (ECO.goldPerWaveBase != null ? ECO.goldPerWaveBase : 20)
+      + stackSum('stackGoldPerWave') - gHookAdd('waveGoldCost'),
+    waveEnergy: Math.max(0, (ECO.energyPerWaveBase != null ? ECO.energyPerWaveBase : 3) + gHookAdd('forgeEnergyMod')),
+    heal: healMul(),
+    leak: hasGlobal('g_thorns') ? gHook('leakReduceMul') : 1,
+    luck: luck(),
+  };
+}
+
+function statTowers() {
+  const rows = [];
+  for (const n of nodes) {
+    if (n.kind !== 'tower' || !path.includes(n.id)) continue;
+    const t = TOWER[n.ttype];
+    const bk = buckleHooks(n) || {};
+    const sacrifice = isSacrificeNode(n);
+    const cd = sacrifice ? 0 : towerCooldownFrames(n, bk);
+    const range = sacrifice ? 0 : towerRangePx(n, bk);
+    const parts = (!sacrifice && t.dmg) ? towerDamageParts(n, t, bk) : null;
+    const dmg = parts ? parts.final : 0;
+    const row = {
+      id: n.id, ttype: n.ttype, label: t.label, sym: t.sym, color: t.color,
+      sacrifice, damage: dmg, cd, aps: cd > 0 ? 60 / cd : 0,
+      dps: cd > 0 ? dmg * 60 / cd : 0, range,
+      pathIndex: path.indexOf(n.id),
+      targets: (n.ttype === 'arrow' && hasGlobal('g_volley')) ? 2 : 1,
+      lonely: hasGlobal('g_lonely') && isLonelyTower(n),
+      nearTurn: isTowerNearTurn(n),
+    };
+    if (n.ttype === 'blast' && !sacrifice) row.splash = splashRadius(n);
+    if (n.ttype === 'slow' && !sacrifice) {
+      const s = towerSlowStats(n, bk);
+      row.slowPct = s.pct; row.slowDur = s.dur;
+    }
+    rows.push(row);
+  }
+  return rows;
+}
+
+function statConditions(towers) {
+  towers = towers || [];
+  const rows = [];
+  const add = (name, value, active, note) => rows.push({ name, value, active, note });
+  const rep = towers.find(t => !t.sacrifice) || null;
+  const rn = rep ? byId[rep.id] : null;
+  if (hasGlobal('g_tax')) {
+    const ts = activeTowerTypeStats();
+    const mul = mainTypeDmgMul();
+    let note = '无激活塔';
+    if (ts.total) {
+      note = `${TYPE_CN[ts.best]} ${ts.bestN}/${ts.total}`;
+      if (ts.tie || ts.bestN * 2 <= ts.total) note += ' · 未过半';
+    }
+    add('主流税契', fmtMul(mul), mul > 1, note);
+  }
+  if (hasGlobal('g_lonely')) {
+    const n = lonelyCount(), mul = gHook('lonelyMul');
+    add('孤塔誓约', fmtMul(mul), n > 0, `路径孤塔 ${n} 座`);
+  }
+  if (hasGlobal('g_last')) {
+    const mul = lastDmgMul();
+    add('残血协议', fmtMul(mul), mul > 1, `缺血 ${Math.round(missingHp())} · 治疗 ×${healMul().toFixed(2)}`);
+  }
+  if (hasGlobal('g_twin')) {
+    const pairs = twinPairCount();
+    const mul = rn ? twinDmgMul(rn) : 1;
+    add('双生塔', fmtMul(mul), mul > 1, `异型紧挨 ${pairs} 对 · 以首座塔计`);
+  }
+  if (hasGlobal('g_corner')) {
+    const mul = cornerDmgMul();
+    add('拐角协议', fmtMul(mul), mul > 1, `急转弯 ${pathTurnCount()} 处`);
+  }
+  if (hasGlobal('g_tricolor')) {
+    const tcs = tricolorStats();
+    if (!tcs.ok) {
+      const miss = ['arrow', 'slow', 'blast'].filter(k => !(tcs.counts[k] > 0)).map(k => TYPE_CN[k]);
+      add('三色均衡', '×1.00', false, tcs.total ? `缺${miss.join('/')}` : '无激活塔');
+    } else {
+      const arrowAdd = tricolorArrowMul() - 1, blastAdd = tricolorBlastMul() - 1, slowAdd = tricolorSlowAdd();
+      const pct1 = v => `+${Math.round(v * 1000) / 10}%`;
+      add('三色·箭塔', pct1(arrowAdd), arrowAdd > 0, `箭塔 ${tcs.counts.arrow} 座`);
+      add('三色·爆破', pct1(blastAdd), blastAdd > 0, `爆破塔 ${tcs.counts.blast} 座`);
+      add('三色·减速', `+${Math.round(slowAdd * 1000) / 10} 点`, slowAdd > 0,
+        `减速塔 ${tcs.counts.slow} 座 · 单塔减速 ${towerSlowStats(rn || {}).pct}%`);
+    }
+  }
+  if (hasGlobal('g_corridor')) {
+    const mul = corridorDmgMul();
+    add('走廊协议', fmtMul(mul), mul > 1, `最长直段 ${longestStraightRun()} 节点`);
+  }
+  if (hasGlobal('g_firstblood')) {
+    const used = firstKillThisWave;
+    add('首杀赏金', used ? `其余 ${fmtMul(gHook('firstRestMul'))}` : `首杀 ${fmtMul(gHook('firstBloodMul'))}`,
+      !used, used ? '本波首杀已用' : '本波首杀未用');
+  }
+  if (hasGlobal('g_frontier')) {
+    let connected = 0;
+    for (let z = 0; z < ZONES.length; z++) if (zoneCovered(z)) connected++;
+    const mul = expeditionDmgMul();
+    add('远征法典', fmtMul(mul), mul > 1, `覆盖 ${connected} 环`);
+  }
+  if (hasGlobal('g_bastion')) {
+    const mul = rn ? bastionDmgMul(rn) : 1;
+    add('深垒誓约', fmtMul(mul), mul > 1, `基地 ${baseHP}/${baseMaxHp} · 以首座塔计`);
+  }
+  if (hasGlobal('g_resonance')) {
+    const mul = rn ? resonanceDmgMul(rn) : 1;
+    add('共鸣线圈', fmtMul(mul), mul > 1, '以首座塔计，逐塔不同');
+  }
+  if (hasGlobal('g_idle')) {
+    const mul = idleDmgMul();
+    add('闲置产能', fmtMul(mul), mul > 1, `未用能量 ${energy}`);
+  }
+  if (hasGlobal('g_swarm')) {
+    const cd = swarmCdMul();
+    add('蜂群协议', fmtMul(1 / cd), cd < 1, `激活塔 ${activeTowers().length} 座 · 攻速`);
+  }
+  if (hasGlobal('g_hoard')) {
+    const mul = hoardDmgMul();
+    add('封存账本', fmtMul(mul), mul > 1, `开波金币 ${hoardSnapshot}`);
+  }
+  if (hasGlobal('g_winter')) {
+    const mul = gHook('chillDmgMul');
+    add('冬寂之息', fmtMul(mul), true, '对减速目标');
+  }
+  if (hasGlobal('g_tide')) {
+    const cap = gHook('tideMax');
+    add('潮汐引擎', `至多 +${Math.round(cap * 100)}%`, true, '按怪物已走节点');
+  }
+  if (hasGlobal('g_endure')) {
+    add('绵长战意', `${fmtMul(gHook('endureEarlyMul'))} → ${fmtMul(gHook('endureLateMul'))}`, true,
+      `第 ${gHook('endureFrames')} 帧后换档`);
+  }
+  if (hasGlobal('g_exec')) {
+    const thr = gHook('executeThreshold') + (hasGlobal('g_guillotine') ? gHook('executeThresholdAdd') : 0);
+    add('处决协议', fmtMul(gHook('executeMul') + (hasGlobal('g_guillotine') ? gHook('executeBonusAdd') : 0)), true,
+      `目标低于 ${Math.round(thr * 100)}% 血`);
+  }
+  if (hasGlobal('g_volley')) add('箭雨敕令', `每次 ${2} 目标`, true, `箭塔伤害 ${fmtMul(gHook('arrowDmgMul'))}`);
+  if (hasGlobal('g_focus')) add('点杀矩阵', `每层 +${Math.round((ECO.focusPerStack != null ? ECO.focusPerStack : 0.15) * 100)}%`, true,
+    `上限 ${ECO.focusMaxStacks != null ? ECO.focusMaxStacks : 5} 层 · 逐塔蓄层`);
+  if (hasGlobal('g_chain')) add('共振尖塔', `${fmtMul(gHook('chainDmgMul'))} 追击`, true,
+    `溅射命中 ≥${gHook('chainTrigger')} 目标`);
+  // v6.13.0 塔型件读数：只报当前生效范围，不报“值不值”
+  if (hasGlobal('g_pierce')) add('穿甲弹头', `身后 ${fmtMul(gHook('pierceDmgMul'))}`, true,
+    `半径 ${gHook('pierceRadius')} · 全部箭塔`);
+  if (hasGlobal('g_ember')) add('燃地', `${gHook('emberDps')}/秒`, true,
+    `持续 ${(gHook('emberDur') / 60).toFixed(1)} 秒 · 爆破塔`);
+  return rows;
+}
+
+function statEconomyDetail() {
+  const rows = [];
+  const add = (k, v, cls) => rows.push({ k, v, cls });
+  const waveGold = (ECO.goldPerWaveBase != null ? ECO.goldPerWaveBase : 20) + stackSum('stackGoldPerWave');
+  const goldCost = gHookAdd('waveGoldCost');
+  add('每波金币', goldCost > 0 ? `${waveGold} − ${goldCost}` : `${waveGold}`, goldCost > 0 ? 'bad' : '');
+  const waveEnergy = Math.max(0, (ECO.energyPerWaveBase != null ? ECO.energyPerWaveBase : 3) + gHookAdd('forgeEnergyMod'));
+  add('每波能量', `${waveEnergy}`, gHookAdd('forgeEnergyMod') < 0 ? 'bad' : '');
+  if (hasGlobal('g_firstblood')) add('击杀金币', `首杀 ${fmtMul(gHook('firstBloodMul'))} · 其余 ${fmtMul(gHook('firstRestMul'))}`);
+  if (hasGlobal('g_harvest')) add('每波基地', `−${gHook('waveHpCost')} 血`, 'bad');
+  if (hasGlobal('g_bloodpact')) add('每波基地', `+${Math.round(gHook('waveHpGain') * healMul())} 血`, 'good');
+  if (hasGlobal('g_convert')) add('余能折现', `每点 ${gHook('energyGoldPer')} 金 · 上限 ${gHook('energyGoldCap')} 金`);
+  if (hasGlobal('g_discount')) add('商店价格', fmtMul(gHook('shopPriceMul')), 'good');
+  if (hasGlobal('g_thorns')) add('漏怪伤害', fmtMul(gHook('leakReduceMul')), 'good');
+  if (hasGlobal('g_last')) add('治疗', fmtMul(gHook('healMul')), 'bad');
+  const lk = luck();
+  add('幸运', `${lk}/${DATA.luck.max}`);
+  const w = rarityWeights();
+  const wTotal = w[0] + w[1] + w[2];
+  if (wTotal > 0) {
+    const pct = v => `${Math.round(v / wTotal * 1000) / 10}%`;
+    add('商店稀有度', `普通 ${pct(w[0])} · 稀有 ${pct(w[1])} · 传说 ${pct(w[2])}`);
+  }
+  const famNames = { dmg: '伤害', spd: '攻速', rng: '射程', luck: '幸运' };
+  const famText = ['dmg', 'spd', 'rng', 'luck']
+    .filter(f => familyLayers(f) > 0)
+    .map(f => `${famNames[f]} ${familyLayers(f)}/${familyCap(f)}`).join(' · ');
+  if (famText) add('数值件家族', famText);
+  if (supplyLog.length) add('补给已买', `${supplyLog.length} 件`);
+  if (!rows.length) add('经济修正', '无', 'muted');
+  return rows;
+}
+
+function statSnapshot() {
+  const towers = statTowers();
+  return {
+    wave, phase, gold, energy, hp: baseHP, maxHp: baseMaxHp,
+    globals: statGlobals(),
+    towers,
+    conditions: statConditions(towers),
+    economy: statEconomyDetail(),
+    relics: ownedGlobals.slice(),
+    buckles: ownedBuckles.map(b => b.defId),
+  };
+}
+
+// 购买后预览：临时把候选件塞进 ownedGlobals 再取一次快照，算完立刻还原。
+// 只读函数不写战斗状态；一次性代价（扣血/扣上限）单独用警示行提示，不在这里模拟。
+function previewPurchase(r) {
+  if (!r) return [];
+  if (r.type !== 'global') return [{ text: '卡扣：装上塔后生效，逐塔不同', warn: false }];
+  const before = statSnapshot();
+  const saved = ownedGlobals;
+  // 家族满层时按真实获取规则预演替换：只有更高阶能顶掉最低层
+  const famFull = r.family && familyLayers(r.family) >= familyCap(r.family);
+  const famLow = famFull ? familyLowest(r.family) : null;
+  const replaces = famFull && famLow && (r.tier || 0) > (famLow.tier || 0) ? famLow : null;
+  let afterOwned = saved.concat([r.id]);
+  if (replaces) {
+    const at = afterOwned.lastIndexOf(replaces.id);
+    if (at >= 0) afterOwned = afterOwned.slice(0, at).concat(afterOwned.slice(at + 1));
+  }
+  ownedGlobals = afterOwned;
+  let after;
+  try { after = statSnapshot(); } finally { ownedGlobals = saved; }
+  const lines = [];
+  const push = (label, a, b, fmt) => {
+    if (Math.abs(a - b) < 1e-9) return;
+    lines.push({ text: `${label} ${fmt(a)} → ${fmt(b)}`, warn: false });
+  };
+  push('伤害', before.globals.dmg, after.globals.dmg, fmtMul);
+  push('攻速', before.globals.atkSpeed, after.globals.atkSpeed, fmtMul);
+  push('射程', before.globals.range, after.globals.range, fmtMul);
+  push('箭塔伤害', before.globals.arrowDmg, after.globals.arrowDmg, fmtMul);
+  push('爆破伤害', before.globals.blastDmg, after.globals.blastDmg, fmtMul);
+  push('击杀金币', before.globals.killGold, after.globals.killGold, fmtMul);
+  push('每波金币', before.globals.waveGold, after.globals.waveGold, fmtSigned);
+  push('每波能量', before.globals.waveEnergy, after.globals.waveEnergy, fmtSigned);
+  push('商店价格', before.globals.shopPrice, after.globals.shopPrice, fmtMul);
+  push('漏怪伤害', before.globals.leak, after.globals.leak, fmtMul);
+  push('治疗', before.globals.heal, after.globals.heal, fmtMul);
+  push('幸运', before.globals.luck, after.globals.luck, v => `${v}`);
+  // 逐塔变化只报变化最大的那一座，避免卡面被三行数字挤爆
+  const oldById = new Map(before.towers.map(t => [t.id, t]));
+  let bestDmg = null, bestCd = null, bestRange = null;
+  for (const a of after.towers) {
+    const b = oldById.get(a.id);
+    if (!b) continue;
+    const dDmg = Math.abs(a.damage - b.damage);
+    if (dDmg > 0 && (!bestDmg || dDmg > bestDmg.d)) bestDmg = { b, a, d: dDmg };
+    const dCd = Math.abs(a.cd - b.cd);
+    if (dCd > 0 && (!bestCd || dCd > bestCd.d)) bestCd = { b, a, d: dCd };
+    const dRange = Math.abs(a.range - b.range);
+    if (dRange > 0 && (!bestRange || dRange > bestRange.d)) bestRange = { b, a, d: dRange };
+  }
+  if (bestDmg) lines.push({ text: `${bestDmg.a.label}单发 ${bestDmg.b.damage} → ${bestDmg.a.damage}`, warn: false });
+  if (bestCd) lines.push({ text: `${bestCd.a.label}间隔 ${bestCd.b.cd} → ${bestCd.a.cd} 帧`, warn: false });
+  if (bestRange) lines.push({ text: `${bestRange.a.label}射程 ${bestRange.b.range} → ${bestRange.a.range}`, warn: false });
+  if (replaces) {
+    lines.push({ text: `家族满层：替换「${replaces.name}」，退还 ${pawnRefund(replaces)} 金`, warn: true });
+  } else if (famFull && famLow) {
+    lines.push({ text: `家族满层且该件不高于最低层，无法继续叠加`, warn: true });
+  }
+  if (r.hooks && r.hooks.frontierHpCostMul) {
+    lines.push({ text: `获得时基地生命 −${Math.round((1 - r.hooks.frontierHpCostMul) * 100)}%`, warn: true });
+  }
+  if (r.hooks && r.hooks.hpCostOnBuy) {
+    lines.push({ text: `获得时基地 −${r.hooks.hpCostOnBuy} 血`, warn: true });
+  }
+  if (r.hooks && r.hooks.waveHpCost) {
+    lines.push({ text: `每波开始基地 −${r.hooks.waveHpCost} 血`, warn: true });
+  }
+  if (r.hooks && r.hooks.waveGoldCost) {
+    lines.push({ text: `每波开始金币 −${r.hooks.waveGoldCost}`, warn: true });
+  }
+  if (r.hooks && r.hooks.waveHpGain) {
+    lines.push({ text: `每波结束基地 +${Math.round(r.hooks.waveHpGain * healMul())} 血`, warn: false });
+  }
+  // v6.13.0 塔型件卡面读数：只说路径上现在有几座，不写“值不值得买”的结论
+  if (r.towerType) {
+    const cnt = activeTowers().filter(o => o.ttype === r.towerType).length;
+    lines.push({ text: `路径上 ${cnt} 座${TOWER[r.towerType].label}`, warn: cnt === 0 });
+  }
+  if (!lines.length) lines.push({ text: '核心数值无变化（机制件，效果见卡面）', warn: false });
+  return lines;
+}
+
+function statsSection(title) {
+  const sec = document.createElement('div');
+  sec.className = 'stats-section';
+  const h = document.createElement('h3');
+  h.textContent = title;
+  sec.appendChild(h);
+  return sec;
+}
+function statsGrid(parent, tiles) {
+  const grid = document.createElement('div');
+  grid.className = 'stats-grid';
+  for (const t of tiles) {
+    const d = document.createElement('div');
+    d.className = 'stat-tile';
+    const k = document.createElement('div'); k.className = 'k'; k.textContent = t.k;
+    const v = document.createElement('div'); v.className = 'v'; v.textContent = t.v;
+    d.append(k, v);
+    if (t.s) {
+      const s = document.createElement('div'); s.className = 's'; s.textContent = t.s;
+      d.appendChild(s);
+    }
+    grid.appendChild(d);
+  }
+  parent.appendChild(grid);
+}
+function statsRows(parent, rows) {
+  for (const r of rows) {
+    const d = document.createElement('div');
+    d.className = 'stat-row';
+    const k = document.createElement('span'); k.className = 'k'; k.textContent = r.k;
+    const v = document.createElement('span');
+    v.className = 'v' + (r.cls ? ' ' + r.cls : '');
+    v.textContent = r.v;
+    d.append(k, v);
+    parent.appendChild(d);
+  }
+}
+function statsTable(parent, headers, rows) {
+  const table = document.createElement('table');
+  table.className = 'stat-table';
+  const thead = document.createElement('thead');
+  const htr = document.createElement('tr');
+  for (const h of headers) {
+    const th = document.createElement('th'); th.textContent = h; htr.appendChild(th);
+  }
+  thead.appendChild(htr);
+  table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  for (const row of rows) {
+    const tr = document.createElement('tr');
+    for (const cell of row) {
+      const td = document.createElement('td'); td.textContent = cell; tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  parent.appendChild(table);
+}
+function statRangeText(list, key, fmt) {
+  const f = fmt || (v => `${v}`);
+  const vals = list.map(x => x[key]);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  return min === max ? f(min) : `${f(min)}–${f(max)}`;
+}
+function renderStatsMain(body, snap) {
+  const res = statsSection('资源');
+  statsGrid(res, [
+    { k: '金币', v: `${snap.gold}` },
+    { k: '能量', v: `${snap.energy}` },
+    { k: '基地', v: `${snap.hp}/${snap.maxHp}` },
+    { k: '波次', v: `${Math.min(snap.wave, MAXWAVE)}/${MAXWAVE}` },
+  ]);
+  body.appendChild(res);
+
+  const g = snap.globals;
+  const glob = statsSection('全局乘区');
+  statsRows(glob, [
+    { k: '伤害', v: fmtMul(g.dmg) },
+    { k: '攻速', v: `${fmtMul(g.atkSpeed)} · 间隔 ${fmtMul(g.cdMul)}` },
+    { k: '射程', v: fmtMul(g.range) },
+    { k: '箭塔伤害', v: fmtMul(g.arrowDmg) },
+    { k: '爆破伤害', v: fmtMul(g.blastDmg) },
+    { k: '击杀金币', v: fmtMul(g.killGold) },
+    { k: '每波金币', v: `${g.waveGold >= 0 ? '+' : ''}${g.waveGold}` },
+    { k: '每波能量', v: `${g.waveEnergy >= 0 ? '+' : ''}${g.waveEnergy}` },
+    { k: '商店价格', v: fmtMul(g.shopPrice) },
+    { k: '漏怪伤害', v: fmtMul(g.leak) },
+    { k: '治疗', v: fmtMul(g.heal) },
+    { k: '幸运', v: `${g.luck}/${DATA.luck.max}` },
+  ]);
+  body.appendChild(glob);
+
+  const towerSec = statsSection('塔');
+  if (!snap.towers.length) {
+    const p = document.createElement('p');
+    p.className = 'stat-note';
+    p.textContent = '还没有激活的塔。连上塔后这里会显示每座塔的实际伤害、间隔与射程。';
+    towerSec.appendChild(p);
+  } else {
+    const rows = [];
+    const notes = [];
+    for (const type of ['arrow', 'slow', 'blast']) {
+      const list = snap.towers.filter(t => t.ttype === type && !t.sacrifice);
+      if (!list.length) continue;
+      const isSlow = type === 'slow', isBlast = type === 'blast';
+      rows.push([
+        TOWER[type].label,
+        `${list.length}`,
+        isSlow ? '—' : statRangeText(list, 'damage'),
+        statRangeText(list, 'cd'),
+        statRangeText(list, 'aps', fmtNum2),
+        statRangeText(list, 'range'),
+        isSlow ? '—' : fmtNum1(list.reduce((s, t) => s + t.dps, 0)),
+      ]);
+      if (isSlow) notes.push(`减速 ${list[0].slowPct}% · 持续 ${list[0].slowDur} 帧`);
+      if (isBlast) notes.push(`溅射半径 ${statRangeText(list, 'splash')}`);
+      if (type === 'arrow' && list.some(t => t.targets > 1)) notes.push('箭雨敕令：每次攻击 2 个目标');
+    }
+    statsTable(towerSec, ['塔型', '数量', '单发', '间隔帧', '次/秒', '射程', '合计DPS'], rows);
+    const sac = snap.towers.filter(t => t.sacrifice).length;
+    if (sac) notes.push(`载体塔 ${sac} 座（停止攻击，只提供相邻增益）`);
+    if (notes.length) {
+      const p = document.createElement('p');
+      p.className = 'stat-note';
+      p.textContent = notes.join(' · ');
+      towerSec.appendChild(p);
+    }
+    const p = document.createElement('p');
+    p.className = 'stat-note';
+    p.textContent = '单发已计全局与条件乘区，未计目标血量条件（处决/潮汐/冬寂等）；DPS 为理论单目标，未计弹道与溅射。';
+    towerSec.appendChild(p);
+  }
+  body.appendChild(towerSec);
+}
+function renderStatsDetail(body, snap) {
+  const cond = statsSection('条件乘区');
+  if (!snap.conditions.length) {
+    const p = document.createElement('p');
+    p.className = 'stat-note';
+    p.textContent = '当前没有条件型遗物。';
+    cond.appendChild(p);
+  } else {
+    statsRows(cond, snap.conditions.map(r => ({
+      k: r.note ? `${r.name} · ${r.note}` : r.name,
+      v: r.value,
+      cls: r.active ? 'good' : 'muted',
+    })));
+  }
+  body.appendChild(cond);
+
+  const towerSec = statsSection('逐塔明细');
+  if (!snap.towers.length) {
+    const p = document.createElement('p');
+    p.className = 'stat-note';
+    p.textContent = '还没有激活的塔。';
+    towerSec.appendChild(p);
+  } else {
+    const rows = snap.towers.map(t => {
+      const status = [];
+      if (t.sacrifice) status.push('载体');
+      if (t.lonely) status.push('孤塔');
+      if (t.nearTurn) status.push('拐角');
+      const special = t.sacrifice ? '停止攻击'
+        : t.ttype === 'slow' ? `减速 ${t.slowPct}% / ${t.slowDur}帧`
+        : t.ttype === 'blast' ? `溅射 ${t.splash}`
+        : (t.targets > 1 ? '2 目标' : '—');
+      return [
+        `${t.pathIndex}`, t.label, t.sacrifice || !t.damage ? '—' : `${t.damage}`,
+        t.sacrifice ? '—' : `${t.cd}`, t.sacrifice ? '—' : fmtNum2(t.aps),
+        t.sacrifice ? '—' : `${t.range}`, special, status.join('/') || '—',
+      ];
+    });
+    statsTable(towerSec, ['路径位', '塔', '单发', '间隔', '次/秒', '射程', '特性', '状态'], rows);
+  }
+  body.appendChild(towerSec);
+
+  const econ = statsSection('经济与代价');
+  statsRows(econ, snap.economy);
+  body.appendChild(econ);
+
+  const owned = statsSection('本局持有');
+  const grouped = [];
+  for (const id of snap.relics.concat(snap.buckles)) {
+    const def = relicDef(id);
+    if (!def) continue;
+    const hit = grouped.find(o => o.id === id);
+    if (hit) hit.n++; else grouped.push({ id, name: def.name, n: 1 });
+  }
+  if (!grouped.length) {
+    const p = document.createElement('p');
+    p.className = 'stat-note';
+    p.textContent = '还没有购买遗物或卡扣。';
+    owned.appendChild(p);
+  } else {
+    statsRows(owned, grouped.map(o => ({ k: o.name, v: o.n > 1 ? `×${o.n}` : '1' })));
+  }
+  body.appendChild(owned);
+}
+function renderStats() {
+  const body = document.getElementById('stats-body');
+  if (!body) return;
+  const snap = statSnapshot();
+  body.innerHTML = '';
+  if (statsTab === 'detail') renderStatsDetail(body, snap);
+  else renderStatsMain(body, snap);
+  document.getElementById('stats-tab-main').classList.toggle('on', statsTab === 'main');
+  document.getElementById('stats-tab-detail').classList.toggle('on', statsTab === 'detail');
+}
+function setStatsTab(tab) {
+  statsTab = tab === 'detail' ? 'detail' : 'main';
+  renderStats();
+}
+function closeStats() {
+  statsOpen = false;
+  statsPausedBefore = false;
+  const el = document.getElementById('stats-overlay');
+  if (el) el.style.display = 'none';
+}
+function toggleStats(force) {
+  const open = typeof force === 'boolean' ? force : !statsOpen;
+  if (open && phase !== PHASE.PREP && phase !== PHASE.WAVE) return false;
+  if (!open) {
+    if (!statsOpen) return false;
+    statsOpen = false;
+    document.getElementById('stats-overlay').style.display = 'none';
+    if (phase === PHASE.WAVE && !statsPausedBefore && paused) togglePause(false);
+    statsPausedBefore = false;
+    return false;
+  }
+  if (statsOpen) { renderStats(); return true; }
+  if (relicListOpen) closeRelicList();
+  statsPausedBefore = paused;
+  if (phase === PHASE.WAVE && !paused) togglePause(true);
+  statsOpen = true;
+  renderStats();
+  document.getElementById('stats-overlay').style.display = 'flex';
+  return true;
+}
+// ===== v6.13.1：持有遗物清单 =====
+// 卡扣显示挂在哪座塔、第几个路径位；全局件按层数聚合，一件只占一行。
+function relicMountText(iid) {
+  const n = nodes.find(o => o.kind === 'tower' && o.buckle === iid);
+  if (!n) return '未安装';
+  return `装在 ${TOWER[n.ttype].label} · 路径位 ${path.indexOf(n.id)}`;
+}
+function renderRelicList() {
+  const body = document.getElementById('relic-list-body');
+  if (!body) return;
+  body.innerHTML = '';
+  const mk = (def, meta, extra) => {
+    const item = document.createElement('div');
+    item.className = 'relic-item';
+    item.dataset.relicId = def.id;
+    const head = document.createElement('div');
+    head.className = 'rname';
+    head.textContent = def.name;
+    const metaEl = document.createElement('span');
+    metaEl.className = 'rmeta';
+    metaEl.textContent = meta;
+    head.appendChild(metaEl);
+    item.appendChild(head);
+    const desc = document.createElement('div');
+    desc.className = 'rdesc';
+    desc.innerHTML = def.desc + (typeof def.cost === 'string' ? `<span class="rcost">${def.cost}</span>` : '');
+    item.appendChild(desc);
+    if (extra) {
+      const mount = document.createElement('div');
+      mount.className = 'rmount';
+      mount.textContent = extra;
+      item.appendChild(mount);
+    }
+    body.appendChild(item);
+  };
+  let any = false;
+  const counts = new Map();
+  for (const id of ownedGlobals) counts.set(id, (counts.get(id) || 0) + 1);
+  for (const [id, n] of counts) {
+    const def = relicDef(id);
+    if (!def) continue;
+    any = true;
+    const limit = relicStackLimit(def);
+    mk(def, limit > 1 ? `全局 · ${n}/${limit} 层` : '全局');
+  }
+  for (const b of ownedBuckles) {
+    const def = relicDef(b.defId);
+    if (!def) continue;
+    any = true;
+    mk(def, '卡扣', relicMountText(b.iid));
+  }
+  if (!any) {
+    const p = document.createElement('p');
+    p.className = 'stat-note';
+    p.textContent = '本局还没有遗物或卡扣。第 3/6/9 波任务奖励与波间商店都可以获得。';
+    body.appendChild(p);
+  }
+}
+function closeRelicList() {
+  if (!relicListOpen) return;
+  relicListOpen = false;
+  const el = document.getElementById('relic-list-overlay');
+  if (el) el.style.display = 'none';
+  if (phase === PHASE.WAVE && !relicPausedBefore && paused) togglePause(false);
+  relicPausedBefore = false;
+}
+function toggleRelicList(force) {
+  const open = typeof force === 'boolean' ? force : !relicListOpen;
+  if (open && phase !== PHASE.PREP && phase !== PHASE.WAVE) return false;
+  if (!open) { closeRelicList(); return false; }
+  if (relicListOpen) { renderRelicList(); return true; }
+  if (statsOpen) toggleStats(false);
+  relicPausedBefore = paused;
+  if (phase === PHASE.WAVE && !paused) togglePause(true);
+  relicListOpen = true;
+  renderRelicList();
+  document.getElementById('relic-list-overlay').style.display = 'flex';
+  return true;
+}
+
 // ===== UI =====
 function refreshBuildTag() {
   const el = document.getElementById('build-tag');
@@ -3349,11 +4320,10 @@ function refreshUI() {
   document.getElementById('energy').textContent = `能量 ${energy}`;
   document.getElementById('gold').textContent = `金币 ${gold}`;
   document.getElementById('relics').textContent = `遗物 ${ownedGlobals.length + ownedBuckles.length}`;
-  // v6.7.7 结构读数：塔型/孤塔/残血/双生/拐角/本波攻速。
+  // v6.7.7 结构读数：塔型/孤塔/残血/双生/拐角。
   // 界面只显示数值，不出现「留白/引擎/支持」等设计标签。
   const lbEl = document.getElementById('school');
   const readouts = [];
-  const TYPE_CN = { arrow: '箭', blast: '爆', slow: '减' };
   if (hasGlobal('g_tax')) {
     const ts = activeTowerTypeStats();
     if (!ts.total) readouts.push('主流 无塔');
@@ -3361,20 +4331,22 @@ function refreshUI() {
     else readouts.push(`主流 ${TYPE_CN[ts.best]}${ts.bestN}/${ts.total} · +${Math.round((mainTypeDmgMul() - 1) * 100)}%`);
   }
   if (hasGlobal('g_lonely')) readouts.push(`孤塔 ${lonelyCount()}`);
-  if (waveAtkSpeedBonus > 0) readouts.push(`本波攻速 +${Math.round(waveAtkSpeedBonus * 100)}%`);
   if (hasGlobal('g_last')) readouts.push(`缺血 ${Math.round(missingHp())} · +${Math.round((lastDmgMul() - 1) * 100)}%`);
   if (hasGlobal('g_twin')) readouts.push(`异型 ${twinPairCount()} 对`);
   if (hasGlobal('g_corner')) readouts.push(`转弯 ${pathTurnCount()} · +${Math.round((cornerDmgMul() - 1) * 100)}%`);
-  // v6.8.0 1b-1a：塔型结构 / 空间几何 / 首杀时机
+  // v6.13.1：塔型三轴读数——缺型才失效，三型齐后各轴按自己的座数成长
   if (hasGlobal('g_tricolor')) {
     const tcs = tricolorStats();
     if (!tcs.total) readouts.push('塔型 无塔');
     else if (!tcs.ok) {
-      // 失效原因必须可读：缺型 vs 某型过半（后者正是主流税契吃到的那一档）
       const miss = ['arrow', 'slow', 'blast'].filter(k => !(tcs.counts[k] > 0)).map(k => TYPE_CN[k]);
-      readouts.push(miss.length ? `塔型 缺${miss.join('/')} · +0%`
-        : `塔型 ${TYPE_CN[tcs.best]}${tcs.bestN}/${tcs.total} 过半 · +0%`);
-    } else readouts.push(`塔型 最少${tcs.min}座 · +${Math.round((tricolorDmgMul() - 1) * 100)}%`);
+      readouts.push(`塔型 缺${miss.join('/')} · +0%`);
+    } else {
+      const pct1 = v => `+${Math.round(v * 1000) / 10}%`;
+      readouts.push(`塔型 箭${tcs.counts.arrow} 爆${tcs.counts.blast} 减${tcs.counts.slow}`
+        + ` · 箭伤 ${pct1(tricolorArrowMul() - 1)} · 爆伤 ${pct1(tricolorBlastMul() - 1)}`
+        + ` · 减速 +${Math.round(tricolorSlowAdd() * 1000) / 10}点`);
+    }
   }
   if (hasGlobal('g_corridor')) readouts.push(`直段 ${longestStraightRun()} · +${Math.round((corridorDmgMul() - 1) * 100)}%`);
   if (hasGlobal('g_firstblood')) readouts.push(`首杀 ×4 ${firstKillThisWave ? '已用' : '未用'}`);
@@ -3388,6 +4360,7 @@ function refreshUI() {
   }
   document.getElementById('start-btn').style.display = phase === PHASE.PREP ? 'inline-block' : 'none';
   document.getElementById('pause-btn').style.display = phase === PHASE.WAVE ? 'inline-block' : 'none';
+  document.getElementById('stats-btn').style.display = (phase === PHASE.PREP || phase === PHASE.WAVE) ? 'inline-block' : 'none';
   const sb = document.getElementById('start-btn');
   if (draft) { sb.disabled = true; sb.textContent = '路径未连到出生点 ✗'; }
   else {
@@ -3417,16 +4390,21 @@ window.__ringTest = {
   worldToScreen: (wx, wy) => ({ x: (wx - cam.x) * cam.z, y: (wy - cam.y) * cam.z }),
   setCam: (x, y, z) => { cam.x = x; cam.y = y; if (z != null) cam.z = z; },
   hasGlobal, shopPicks, weightedPick, mutexWeight, expeditionDmgMul, bastionDmgMul,
-  focusDmgMul, applyPoison, applyMirrorAtWaveStart, clearMirrors, explode, finishWave, zoneOf, gHook,
+  focusDmgMul, applyPoison, applyMirrorAtWaveStart, clearMirrors, explode, blastReclaim, finishWave, zoneOf, gHook,
+  getProjectiles: () => projectiles.map(p => ({ ...p })),
+  getBurning: () => burning.map(b => ({ ...b })),
+  pierceSecondary,
   // v6.3 新遗物钩子
   gHookAdd, activeTowers, swarmCdMul, endureDmgMul, tideDmgMul, resonanceDmgMul, markChill, takeBurstShot,
-  // v6.4 资源运营层
-  shouldOfferEvent, rollEvents, eventUsable, applyEvent, openEvent, closeEvent,
-  // v6.7.6 1a-2 收尾：种子审计/空域租金/能量过载
-  unconnectedSpawns, pickAirRentSpawn, eventVisible, waveSpeedCdMul,
-  // v6.8.2：事件花费行 / 抽卡权重 / 基础件货架 / 任务视野外箭头
-  eventCostText, eventWeight, shelfPicks, questEdgeIndicator,
-  getEventState: () => ({ activeEvent, pendingDebt, deposit, airRent, waveAtkSpeedBonus, eventLog: eventLog.slice(), pityCounter, baseMaxHp }),
+  // v6.12.0 商店 2.0：补给 / 幸运 / 稀有度 / 数值件家族 / 刷新
+  SUPPLIES, supplyDef, luck, supplyChance, supplyPrice, supplyCostText, supplyRarityWeights,
+  stackableCandidates, supplyUsable, rollSupply, applySupply,
+  familyCap, familyLayers, familyLowest, familyRoom,
+  rarityLabel, rarityWeights, pickRelicByRarity, acquireRelic,
+  rerollShop, shopTitleText,
+  getSupplyState: () => ({ deposit, pityCounter, supplyBought: { ...supplyBought }, supplyLog: supplyLog.slice(), luck: luck(), currentShop: currentShop ? { ...currentShop } : null, baseMaxHp }),
+  // v6.9.0 删货架后保留：任务视野外箭头
+  questEdgeIndicator,
   // v6.5 统一"相邻"判据 + 少塔流三件
   isSacrificeNode, isTowerAtPathIndex, pathNeighborTowers, pathAdjacentNodes, isLonelyTower,
   idleDmgMul, lonelyDmgMul, hubAdjDmgMul,
@@ -3435,8 +4413,16 @@ window.__ringTest = {
   // v6.7.5 1a-2：残血 / 双生 / 拐角 / 条件卡扣
   pathTurnIndices, pathTurnCount, isTowerNearTurn, cornerDmgMul, twinDmgMul, twinPairCount,
   missingHp, lastDmgMul, healMul, buckleConditionalDmgMul, idleEnergyCdMul, towerShotDamage,
+  // v6.11.0 数据看板：战斗与看板共用的纯函数 + 快照/预览/开关
+  towerDamageParts, towerCooldownFrames, towerRangePx, towerSlowStats,
+  statGlobals, statTowers, statConditions, statEconomyDetail, statSnapshot, previewPurchase,
+  renderStats, toggleStats, setStatsTab, toggleRelicList, renderRelicList,
+  getRelicListState: () => ({ relicListOpen, relicPausedBefore }),
+  getStatsState: () => ({ statsOpen, statsTab, statsPausedBefore }),
   // v6.8.0 1b-1a：三色均衡 / 走廊协议 / 首杀赏金 / 群塔卡扣
-  tricolorStats, tricolorDmgMul, longestStraightRun, longestStraightRunRange, corridorDmgMul, denseNeighborCount,
+  tricolorStats, tricolorArrowMul, tricolorBlastMul, tricolorSlowAdd, longestStraightRun, longestStraightRunRange, corridorDmgMul, denseNeighborCount,
+  // v6.10.0 读数上画布
+  majorityTowerNodes, twinLinkPairs, firstKillTowerNode, blastReadoutNodes,
   getFirstKill: () => firstKillThisWave,
   // v6.8.1 1b-1b：可叠普通件（层数/加法聚合/有效价/池子）
   stackCount, stackSum, relicStackLimit, stackDmgMul, stackCdMul, stackRangeMul,
@@ -3446,7 +4432,7 @@ window.__ringTest = {
   getPlaytestExport: () => lastRunExport || playtestExport(),
   getRunLog: () => runLog,
   playtestExport, copyText,
-  getState: () => ({ phase, wave, path: path.slice(), monsters, gold, baseHP, baseMaxHp, kills, everConnected, queue, spawnTimer, paused, currentSeed, tutorialStep, ringLostHpMul, waveHpMul, draft: draft ? draft.slice() : null, energy, nodes, ownedGlobals, ownedBuckles, lockedOffers: Array.from(lockedOffers), hoardSnapshot, paidShopCount, enemyLeakDamage, intelShops, pendingMalus, quest: quest ? { ...quest } : null }),
+  getState: () => ({ phase, wave, path: path.slice(), monsters, gold, baseHP, baseMaxHp, kills, everConnected, queue, spawnTimer, paused, currentSeed, tutorialStep, ringLostHpMul, waveHpMul, draft: draft ? draft.slice() : null, energy, nodes, ownedGlobals, ownedBuckles, lockedOffers: Array.from(lockedOffers), hoardSnapshot, paidShopCount, enemyLeakDamage, intelShops, pendingMalus, quest: quest ? { ...quest } : null, deposit, pityCounter, supplyBought: { ...supplyBought }, supplyLog: supplyLog.slice(), luck: luck(), currentShop: currentShop ? { mode: currentShop.mode, rerolls: currentShop.rerolls, resolved: currentShop.resolved } : null, burning: burning.map(b => ({ ...b })) }),
   setState: s => {
     if ('wave' in s) wave = s.wave;
     if ('path' in s) path = s.path.slice();
@@ -3468,14 +4454,15 @@ window.__ringTest = {
     if ('hoardSnapshot' in s) hoardSnapshot = s.hoardSnapshot;
     if ('paidShopCount' in s) paidShopCount = s.paidShopCount;
     if ('enemyLeakDamage' in s) enemyLeakDamage = s.enemyLeakDamage;
-    if ('airRent' in s) airRent = s.airRent;
-    if ('waveAtkSpeedBonus' in s) waveAtkSpeedBonus = s.waveAtkSpeedBonus;
     if ('firstKillThisWave' in s) firstKillThisWave = s.firstKillThisWave;
-    if ('pendingDebt' in s) pendingDebt = s.pendingDebt;
     if ('deposit' in s) deposit = s.deposit;
+    if ('pityCounter' in s) pityCounter = s.pityCounter;
+    if ('supplyBought' in s) supplyBought = { ...s.supplyBought };
+    if ('supplyLog' in s) supplyLog = s.supplyLog.slice();
     if ('intelShops' in s) intelShops = s.intelShops;
     if ('pendingMalus' in s) pendingMalus = s.pendingMalus;
     if ('quest' in s) quest = s.quest ? { ...s.quest } : null;
+    if ('burning' in s) burning = s.burning.map(b => ({ ...b }));
   },
   nodes: () => ({ nodes, byId, spawnIds, adj }),
 };
